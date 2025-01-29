@@ -59,16 +59,18 @@ class Enemy:
                 self.dot_tick_timer -= 1
                 if self.dot_tick_timer <= 0:
                     if self.take_damage(self.dot_damage):
-                        return True
+                        self.health = 0  # Garante que o inimigo está morto
+                        return "died"  # Retorna um indicador específico de morte por DoT
                     self.dot_tick_timer = 30
         return False
         
     def move(self):
-        if self.update():
-            return True
+        update_result = self.update()
+        if update_result == "died":  # Se morreu por DoT
+            return "died"  # Propaga o indicador de morte por DoT
         
         if self.path_index >= len(self.path) - 1:
-            return True
+            return True  # Chegou ao final do caminho
             
         target_x, target_y = self.path[self.path_index + 1]
         
@@ -156,7 +158,7 @@ class ArmoredEnemy(Enemy):
     BASE_HEALTH = 150  # 50% mais vida
     BASE_SPEED = 1.5  # 25% mais lento
     SPAWN_CHANCE = 25  # 25% de chance de spawn
-    NAME = "Defensor"  # Nome do inimigo blindado
+    NAME = "Blindado"  # Nome do inimigo blindado
     
     def __init__(self, path):
         super().__init__(path)

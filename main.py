@@ -155,7 +155,7 @@ def main():
 
     # Sistema de ondas e recursos
     wave_manager = WaveManager()
-    gold = 300
+    gold = 200  # Ouro inicial
 
     # Calcula as posições dos botões para centralizá-los
     button_spacing = 120
@@ -261,7 +261,10 @@ def main():
             
         # Atualização dos inimigos
         for enemy in enemies[:]:
-            if enemy.move():  # Se retornar True, chegou ao fim do caminho
+            move_result = enemy.move()  # Agora pode retornar True, False ou "died"
+            if move_result == "died":  # Morreu por dano ao longo do tempo
+                enemies.remove(enemy)
+            elif move_result:  # True significa que chegou ao final do caminho
                 enemies.remove(enemy)
                 if base.take_damage(10):  # Inimigo atingiu a base
                     running = False  # Game over se a base for destruída

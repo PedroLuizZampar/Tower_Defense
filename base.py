@@ -39,7 +39,7 @@ class Base:
 
 class SkipButton:
     def __init__(self):
-        self.width = 120
+        self.width = 150
         self.height = 40
         self.rect = pygame.Rect(0, 0, self.width, self.height)  # Posição será definida no draw_wave_menu
         
@@ -57,7 +57,7 @@ class SkipButton:
         
         # Texto do botão
         font = pygame.font.Font(None, 28)
-        text = font.render("Pular Onda", True, text_color)
+        text = font.render("Próxima Onda", True, text_color)
         text_rect = text.get_rect(center=self.rect.center)
         screen.blit(text, text_rect)
         

@@ -202,7 +202,7 @@ class Defender:
 class BlueDefender(Defender):
     COLOR = (0, 0, 255)  # Azul
     PROJECTILE_COLOR = (43, 181, 255)  # Azul claro
-    COST = 100
+    COST = 75  # Reduzido de 100 para 75 (defensor básico mais acessível)
     NAME = "Congelante"
     BASE_DAMAGE = 10
     BASE_ATTACK_COOLDOWN = 30
@@ -241,7 +241,7 @@ class BlueDefender(Defender):
 class RedDefender(Defender):
     COLOR = (255, 0, 0)  # Vermelho
     PROJECTILE_COLOR = (255, 100, 100)  # Vermelho claro
-    COST = 125
+    COST = 100  # Reduzido de 125 para 100
     NAME = "Flamejante"
     BASE_DAMAGE = 12  # Mais dano base
     BASE_ATTACK_COOLDOWN = 25  # Ataca mais rápido
@@ -282,7 +282,7 @@ class RedDefender(Defender):
 class YellowDefender(Defender):
     COLOR = (194, 187, 0)  # Amarelo
     PROJECTILE_COLOR = (255, 255, 150)  # Amarelo claro
-    COST = 150
+    COST = 125  # Reduzido de 150 para 125
     RANGE = 200  # Maior alcance
     NAME = "Luminoso"
     BASE_DAMAGE = 15  # Ainda mais dano base

@@ -53,7 +53,7 @@ class EnemyStatusMenu:
             special_text = "Resistente a Slow"
         elif enemy_class.NAME == "Célere":
             special_text = "Resistente a DoT"
-        elif enemy_class.NAME == "Defensor":
+        elif enemy_class.NAME == "Blindado":
             special_text = "-30% Dano Recebido"
             
         if special_text:

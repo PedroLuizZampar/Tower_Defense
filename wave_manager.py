@@ -91,14 +91,17 @@ class WaveManager:
         return False
         
     def enemy_defeated(self, enemy_type):
-        # Recompensas base por tipo de inimigo
+        # Recompensas base ajustadas por tipo de inimigo
         base_rewards = {
-            'normal': 2,
-            'speed': 1,
-            'tank': 5,
-            'armored': 3
+            'normal': 5,    # Aumentado de 2 para 5
+            'speed': 8,     # Aumentado de 1 para 8
+            'tank': 12,     # Aumentado de 5 para 12
+            'armored': 10   # Aumentado de 3 para 10
         }
-        return base_rewards[enemy_type]
+        
+        # Aplica multiplicador de onda e retorna o valor final
+        gold = base_rewards[enemy_type] * self.get_gold_multiplier()
+        return int(gold)  # Arredonda para número inteiro
         
     def check_wave_complete(self, active_enemies):
         if self.enemies_spawned >= self.enemies_in_wave and len(active_enemies) == 0:
