@@ -282,18 +282,20 @@ def main():
                     if projectile.target and hasattr(projectile.target, 'take_damage'):
                         # Se o inimigo morreu com este projétil
                         if projectile.target.take_damage(projectile.damage):
-                            # Identifica o tipo do inimigo antes de removê-lo
-                            if isinstance(projectile.target, SpeedEnemy):
-                                enemy_type = 'speed'
-                            elif isinstance(projectile.target, TankEnemy):
-                                enemy_type = 'tank'
-                            elif isinstance(projectile.target, ArmoredEnemy):
-                                enemy_type = 'armored'
-                            else:
-                                enemy_type = 'normal'
+                            if not hasattr(projectile.target, 'defeated') or not projectile.target.defeated:
+                                # Identifica o tipo do inimigo antes de removê-lo
+                                if isinstance(projectile.target, SpeedEnemy):
+                                    enemy_type = 'speed'
+                                elif isinstance(projectile.target, TankEnemy):
+                                    enemy_type = 'tank'
+                                elif isinstance(projectile.target, ArmoredEnemy):
+                                    enemy_type = 'armored'
+                                else:
+                                    enemy_type = 'normal'
                                 
-                            # Adiciona o ouro imediatamente
-                            gold += wave_manager.enemy_defeated(enemy_type)
+                                # Adiciona o ouro imediatamente
+                                gold += wave_manager.enemy_defeated(enemy_type)
+                                projectile.target.defeated = True  # Mark the enemy as defeated
                             
                             # Remove o inimigo da lista
                             if projectile.target in enemies:
