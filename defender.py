@@ -57,7 +57,7 @@ class Defender:
         cost = self.get_upgrade_cost()
         self.level += 1
         self.total_invested += cost
-        self.bonus_damage += 5 # Aumenta o dano em 2 por upgrade
+        self.bonus_damage += round(self.base_damage * 0.1, 1) # Aumenta o dano em 2 por upgrade
         self.attack_cooldown = self.base_attack_cooldown * (0.99 ** (self.level - 1))
         self.upgrades_count += 1
         return cost

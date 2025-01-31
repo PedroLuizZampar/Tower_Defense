@@ -2,7 +2,8 @@ import pygame
 import math
 import os
 import sys
-from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy
+import random
+from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, SplitEnemy, HealerEnemy
 from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton
 from wave_manager import WaveManager
 from base import Base, SkipButton
@@ -155,7 +156,7 @@ def main():
 
     # Sistema de ondas e recursos
     wave_manager = WaveManager()
-    gold = 200  # Ouro inicial
+    gold = 250  # Ouro inicial
 
     # Calcula as posições dos botões para centralizá-los
     button_spacing = 120
@@ -192,7 +193,8 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            enemy_menu.handle_scroll(event)  # Adiciona tratamento do scroll do menu de inimigos
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 # Verifica clique no botão de pular
                 if skip_button.handle_click(mouse_pos, wave_manager.wave_active):
                     wave_manager.skip_preparation()
@@ -261,14 +263,39 @@ def main():
             
         # Atualização dos inimigos
         for enemy in enemies[:]:
-            move_result = enemy.move()  # Agora pode retornar True, False ou "died"
-            if move_result == "died":  # Morreu por dano ao longo do tempo
-                enemies.remove(enemy)
-            elif move_result:  # True significa que chegou ao final do caminho
+            move_result = enemy.move()  # Agora pode retornar True, False, "died" ou "heal"
+            
+            # Primeiro verifica se chegou ao final do caminho
+            if move_result is True:  # True significa que chegou ao final do caminho
                 enemies.remove(enemy)
                 if base.take_damage(10):  # Inimigo atingiu a base
                     running = False  # Game over se a base for destruída
+                continue
             
+            # Depois verifica cura
+            if isinstance(enemy, HealerEnemy) and move_result == "heal":
+                # Cria efeito visual de cura
+                heal_effect = pygame.Surface((enemy.heal_radius * 2, enemy.heal_radius * 2), pygame.SRCALPHA)
+                pygame.draw.circle(heal_effect, (*enemy.COLOR, 100), 
+                                (enemy.heal_radius, enemy.heal_radius), enemy.heal_radius)
+                screen.blit(heal_effect, (int(enemy.x - enemy.heal_radius), 
+                                        int(enemy.y - enemy.heal_radius)))
+                # Cura todos os inimigos próximos
+                for other_enemy in enemies:
+                    if other_enemy != enemy:
+                        dx = other_enemy.x - enemy.x
+                        dy = other_enemy.y - enemy.y
+                        distance = math.sqrt(dx ** 2 + dy ** 2)
+                        if distance <= enemy.heal_radius:
+                            other_enemy.health = min(other_enemy.max_health, 
+                                                   other_enemy.health + enemy.heal_amount)
+            
+            # Verifica morte por DoT
+            elif move_result == "died":  # Morreu por dano ao longo do tempo
+                if isinstance(enemy, SplitEnemy):
+                    gold += wave_manager.enemy_defeated('split')
+                enemies.remove(enemy)
+        
         # Atualização dos defensores
         for defender in defenders:
             if isinstance(defender, YellowDefender):
@@ -281,28 +308,48 @@ def main():
                 if projectile.move():
                     if projectile.target and hasattr(projectile.target, 'take_damage'):
                         # Se o inimigo morreu com este projétil
-                        if projectile.target.take_damage(projectile.damage):
-                            if not hasattr(projectile.target, 'defeated') or not projectile.target.defeated:
-                                # Identifica o tipo do inimigo antes de removê-lo
-                                if isinstance(projectile.target, SpeedEnemy):
-                                    enemy_type = 'speed'
-                                elif isinstance(projectile.target, TankEnemy):
-                                    enemy_type = 'tank'
-                                elif isinstance(projectile.target, ArmoredEnemy):
-                                    enemy_type = 'armored'
-                                else:
-                                    enemy_type = 'normal'
-                                
-                                # Adiciona o ouro imediatamente
-                                gold += wave_manager.enemy_defeated(enemy_type)
-                                projectile.target.defeated = True  # Mark the enemy as defeated
+                        damage_result = projectile.target.take_damage(projectile.damage)
+                        
+                        if damage_result == "split":
+                            # Cria dois inimigos menores no lugar
+                            for _ in range(2):
+                                small_enemy = Enemy(PATH)
+                                small_enemy.x = projectile.target.x + random.randint(-20, 20)
+                                small_enemy.y = projectile.target.y + random.randint(-20, 20)
+                                small_enemy.path_index = projectile.target.path_index
+                                small_enemy.max_health = projectile.target.max_health * 0.4
+                                small_enemy.health = small_enemy.max_health
+                                small_enemy.radius = projectile.target.radius * 0.7
+                                small_enemy.base_speed = projectile.target.speed * 1.2
+                                small_enemy.speed = small_enemy.base_speed
+                                small_enemy.color = projectile.target.COLOR
+                                enemies.append(small_enemy)
                             
-                            # Remove o inimigo da lista
-                            if projectile.target in enemies:
-                                enemies.remove(projectile.target)
-                                if projectile.target == defender.current_target:
-                                    defender.current_target = None
-                                    
+                            # Adiciona o ouro e remove o inimigo original
+                            gold += wave_manager.enemy_defeated('split')
+                            enemies.remove(projectile.target)
+                            if projectile.target == defender.current_target:
+                                defender.current_target = None
+                                
+                        elif damage_result:  # Se morreu normalmente
+                            # Identifica o tipo do inimigo
+                            if isinstance(projectile.target, SpeedEnemy):
+                                enemy_type = 'speed'
+                            elif isinstance(projectile.target, TankEnemy):
+                                enemy_type = 'tank'
+                            elif isinstance(projectile.target, ArmoredEnemy):
+                                enemy_type = 'armored'
+                            elif isinstance(projectile.target, HealerEnemy):
+                                enemy_type = 'healer'
+                            else:
+                                enemy_type = 'normal'
+                            
+                            # Adiciona o ouro e remove o inimigo
+                            gold += wave_manager.enemy_defeated(enemy_type)
+                            enemies.remove(projectile.target)
+                            if projectile.target == defender.current_target:
+                                defender.current_target = None
+                    
                     defender.projectiles.remove(projectile)
             
         # Verifica se a onda terminou

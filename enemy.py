@@ -170,6 +170,70 @@ class ArmoredEnemy(Enemy):
         self.health -= reduced_damage
         return self.health <= 0
 
+class SplitEnemy(Enemy):
+    COLOR = (255, 165, 0)  # Laranja
+    BASE_HEALTH = 120  # 20% mais vida
+    BASE_SPEED = 1.8  # 10% mais lento
+    SPAWN_CHANCE = 15  # 15% de chance de spawn
+    NAME = "Dividido"  # Nome do inimigo que se divide
+    
+    def __init__(self, path):
+        super().__init__(path)
+        self.radius = 14  # Tamanho um pouco maior
+        self.has_split = False  # Controla se já se dividiu
+        
+    def take_damage(self, damage):
+        self.health -= damage
+        if self.health <= 0:
+            if not self.has_split:
+                self.has_split = True  # Marca que já se dividiu
+                return "split"  # Retorna indicador especial de divisão
+            return True  # Morreu sem se dividir (já tinha se dividido antes)
+        return False  # Ainda está vivo
+
+class HealerEnemy(Enemy):
+    COLOR = (144, 238, 144)  # Verde claro
+    BASE_HEALTH = 80  # 20% menos vida
+    BASE_SPEED = 1.5  # 25% mais lento
+    SPAWN_CHANCE = 20  # 20% de chance de spawn
+    NAME = "Curador"  # Nome do inimigo curador
+    
+    def __init__(self, path):
+        super().__init__(path)
+        self.radius = 10  # Tamanho menor
+        self.heal_timer = 120  # 2 segundos (120 frames)
+        self.heal_amount = 5  # Quantidade de cura
+        self.heal_radius = 100  # Raio de cura
+        
+    def move(self):
+        # Primeiro verifica se deve curar
+        should_heal = False
+        self.heal_timer -= 1
+        if self.heal_timer <= 0:
+            self.heal_timer = 120  # Reseta o timer
+            should_heal = True
+            
+        # Depois move normalmente
+        move_result = super().move()
+        
+        # Se chegou ao final do caminho ou morreu, retorna isso
+        if move_result is True or move_result == "died":
+            return move_result
+            
+        # Se deve curar, retorna "heal"
+        if should_heal:
+            return "heal"
+            
+        # Caso contrário, retorna False (continua movendo)
+        return False
+        
+    def draw(self, screen):
+        super().draw(screen)
+        # Desenha o raio de cura como um círculo semi-transparente
+        heal_surface = pygame.Surface((self.heal_radius * 2, self.heal_radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(heal_surface, (*self.COLOR, 50), (self.heal_radius, self.heal_radius), self.heal_radius)
+        screen.blit(heal_surface, (int(self.x - self.heal_radius), int(self.y - self.heal_radius)))
+
 def spawn_random_enemy(path, wave_manager=None):
     """Função para gerar um inimigo aleatório baseado nas chances de spawn"""
     if not wave_manager:
@@ -187,32 +251,42 @@ def spawn_random_enemy(path, wave_manager=None):
                 enemy = TankEnemy(path)
             elif remaining <= chances['tank'] + chances['armored']:
                 enemy = ArmoredEnemy(path)
+            elif remaining <= chances['tank'] + chances['armored'] + chances['split']:
+                enemy = SplitEnemy(path)
+            elif remaining <= chances['tank'] + chances['armored'] + chances['split'] + chances['healer']:
+                enemy = HealerEnemy(path)
             else:
                 enemy = SpeedEnemy(path)
         elif wave_manager.current_wave % 2 == 0:  # Ondas pares
             if remaining <= chances['speed']:
                 enemy = SpeedEnemy(path)
-            elif remaining <= chances['speed'] + chances['tank']:
-                enemy = TankEnemy(path)
+            elif remaining <= chances['speed'] + chances['healer']:
+                enemy = HealerEnemy(path)
+            elif remaining <= chances['speed'] + chances['healer'] + chances['split']:
+                enemy = SplitEnemy(path)
             else:
-                enemy = ArmoredEnemy(path)
+                enemy = TankEnemy(path)
         else:  # Ondas normais
             if remaining <= chances['tank']:
                 enemy = TankEnemy(path)
             elif remaining <= chances['tank'] + chances['speed']:
                 enemy = SpeedEnemy(path)
+            elif remaining <= chances['tank'] + chances['speed'] + chances['split']:
+                enemy = SplitEnemy(path)
+            elif remaining <= chances['tank'] + chances['speed'] + chances['split'] + chances['healer']:
+                enemy = HealerEnemy(path)
             else:
                 enemy = ArmoredEnemy(path)
                 
         # Aplica o aumento de vida
         health_increase = wave_manager.get_health_increase()
-        enemy.max_health += health_increase
+        enemy.max_health *= health_increase
         enemy.health = enemy.max_health
         return enemy, True
     
     # Inimigo normal
     enemy = Enemy(path)
     health_increase = wave_manager.get_health_increase()
-    enemy.max_health += health_increase
+    enemy.max_health *= health_increase
     enemy.health = enemy.max_health
     return enemy, False 

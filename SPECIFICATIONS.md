@@ -34,6 +34,8 @@ O projeto é dividido em vários módulos:
    - Mostra status dos inimigos
    - Informações detalhadas de cada tipo
    - Estatísticas atualizadas por onda
+   - Sistema de scroll vertical
+   - Navegação com roda do mouse
 
 3. **Menu da Loja**
    - Exibe defensores disponíveis
@@ -84,7 +86,7 @@ O projeto é dividido em vários módulos:
 
 ### Sistema de Melhorias
 - Custo base: 15 ouro × nível atual
-- Aumenta dano em 5 por nível
+- Aumenta dano em 10% por nível
 - Reduz tempo entre ataques em 1% por nível
 - Valor de venda aumenta com melhorias
 
@@ -129,6 +131,30 @@ O projeto é dividido em vários módulos:
 - **Recompensa**: 8 ouro
 - **Habilidade**: Reduz dano recebido em 30%
 
+#### 5. Inimigo Dividido (Laranja)
+- **Vida**: 120 + bônus por onda
+- **Velocidade**: 1.8
+- **Chance de Spawn**: 15%
+- **Recompensa**: 7 ouro
+- **Habilidade**: Ao morrer, divide-se em dois inimigos menores
+- **Inimigos Divididos**:
+  - 40% da vida original
+  - 70% do tamanho original
+  - 20% mais rápidos
+- **Tamanho**: Maior que normal
+
+#### 6. Inimigo Curador (Verde Claro)
+- **Vida**: 80 + bônus por onda
+- **Velocidade**: 1.5
+- **Chance de Spawn**: 20%
+- **Recompensa**: 6 ouro
+- **Habilidade**: Cura aliados próximos
+- **Cura**:
+  - 5 HP a cada 2 segundos
+  - Raio de 100 pixels
+  - Efeito visual de cura
+- **Tamanho**: Menor que normal
+
 ### Efeitos de Status
 1. **Lentidão**
    - Reduz velocidade em 50%
@@ -162,22 +188,28 @@ O projeto é dividido em vários módulos:
 ### Distribuição de Inimigos
 
 #### Ondas Múltiplas de 5
-- Normal: 75%
+- Normal: 65%
 - Tanque: 10%
 - Veloz: 5%
-- Blindado: 10%
+- Blindado: 8%
+- Dividido: 7%
+- Curador: 5%
 
 #### Ondas Pares
-- Normal: 85%
+- Normal: 75%
 - Tanque: 2.5%
-- Veloz: 10%
+- Veloz: 8%
 - Blindado: 2.5%
+- Dividido: 7%
+- Curador: 5%
 
 #### Ondas Normais
-- Normal: 90%
-- Tanque: 3.33%
-- Veloz: 3.33%
-- Blindado: 3.34%
+- Normal: 80%
+- Tanque: 3%
+- Veloz: 3%
+- Blindado: 4%
+- Dividido: 5%
+- Curador: 5%
 
 ## Sistema de Recursos
 

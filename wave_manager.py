@@ -6,7 +6,7 @@ class WaveManager:
     BASE_SPAWN_INTERVAL = 120  # Intervalo base entre spawns (em frames)
     PREPARATION_TIME = 10 * 60  # 10 segundos em frames
     INITIAL_PREPARATION_TIME = 60 * 60  # 60 segundos em frames para a primeira onda
-    HEALTH_INCREASE_PER_WAVE = 15  # Aumento fixo de vida por onda
+    HEALTH_INCREASE_PER_WAVE = 1.05  # Aumento de vida por onda
     
     def __init__(self):
         self.current_wave = 1
@@ -49,30 +49,39 @@ class WaveManager:
         
     def get_health_increase(self):
         # Retorna o aumento total de vida baseado na onda atual
-        return (self.current_wave - 1) * self.HEALTH_INCREASE_PER_WAVE
+        if self.current_wave > 1:
+            return (self.current_wave - 1) * self.HEALTH_INCREASE_PER_WAVE
+        else:
+            return 1
         
     def get_spawn_chances(self):
         # Retorna as chances de spawn para cada tipo de inimigo baseado na onda atual
         if self.current_wave % 5 == 0:  # Ondas múltiplas de 5
             return {
-                'normal': 75,
+                'normal': 65,  # Reduzido para acomodar novos inimigos
                 'tank': 10,
                 'speed': 5,
-                'armored': 10
+                'armored': 8,
+                'split': 7,
+                'healer': 5
             }
         elif self.current_wave % 2 == 0:  # Ondas pares
             return {
-                'normal': 85,
+                'normal': 75,  # Reduzido para acomodar novos inimigos
                 'tank': 2.5,
-                'speed': 10,
-                'armored': 2.5
+                'speed': 8,
+                'armored': 2.5,
+                'split': 7,
+                'healer': 5
             }
         else:  # Ondas normais
             return {
-                'normal': 90,
-                'tank': 3.33,
-                'speed': 3.33,
-                'armored': 3.34
+                'normal': 80,  # Reduzido para acomodar novos inimigos
+                'tank': 3,
+                'speed': 3,
+                'armored': 4,
+                'split': 5,
+                'healer': 5
             }
         
     def get_gold_multiplier(self):
@@ -96,7 +105,9 @@ class WaveManager:
             'normal': 5,    # Aumentado de 2 para 5
             'speed': 8,     # Aumentado de 1 para 8
             'tank': 12,     # Aumentado de 5 para 12
-            'armored': 10   # Aumentado de 3 para 10
+            'armored': 10,  # Aumentado de 3 para 10
+            'split': 7,     # Novo inimigo dividido
+            'healer': 6     # Novo inimigo curador
         }
         
         # Aplica multiplicador de onda e retorna o valor final
