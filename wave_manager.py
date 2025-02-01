@@ -48,39 +48,34 @@ class WaveManager:
         return max(45, self.BASE_SPAWN_INTERVAL - (self.current_wave * 1.5))
         
     def get_health_increase(self):
-        # Retorna o aumento total de vida baseado na onda atual
-        if self.current_wave > 1:
-            return (self.current_wave - 1) * self.HEALTH_INCREASE_PER_WAVE
-        else:
-            return 1
+        """Retorna o multiplicador de vida baseado na onda atual"""
+        # Retorna o multiplicador de vida (8% de aumento por onda)
+        return 1 + ((self.current_wave - 1) * 0.08)
         
     def get_spawn_chances(self):
         # Retorna as chances de spawn para cada tipo de inimigo baseado na onda atual
         if self.current_wave % 5 == 0:  # Ondas múltiplas de 5
             return {
-                'normal': 65,  # Reduzido para acomodar novos inimigos
+                'normal': 72,  # Aumentado para compensar a remoção do split
                 'tank': 10,
                 'speed': 5,
                 'armored': 8,
-                'split': 7,
                 'healer': 5
             }
         elif self.current_wave % 2 == 0:  # Ondas pares
             return {
-                'normal': 75,  # Reduzido para acomodar novos inimigos
+                'normal': 82,  # Aumentado para compensar a remoção do split
                 'tank': 2.5,
                 'speed': 8,
                 'armored': 2.5,
-                'split': 7,
                 'healer': 5
             }
         else:  # Ondas normais
             return {
-                'normal': 80,  # Reduzido para acomodar novos inimigos
+                'normal': 85,  # Aumentado para compensar a remoção do split
                 'tank': 3,
                 'speed': 3,
                 'armored': 4,
-                'split': 5,
                 'healer': 5
             }
         
@@ -102,12 +97,11 @@ class WaveManager:
     def enemy_defeated(self, enemy_type):
         # Recompensas base ajustadas por tipo de inimigo
         base_rewards = {
-            'normal': 5,    # Aumentado de 2 para 5
-            'speed': 8,     # Aumentado de 1 para 8
-            'tank': 12,     # Aumentado de 5 para 12
-            'armored': 10,  # Aumentado de 3 para 10
-            'split': 7,     # Novo inimigo dividido
-            'healer': 6     # Novo inimigo curador
+            'normal': 3,    # 3 de ouro
+            'speed': 5,     # 5 de ouro
+            'tank': 12,     # 12 de ouro
+            'armored': 10,  # 10 de ouro
+            'healer': 8     # 8 de ouro
         }
         
         # Aplica multiplicador de onda e retorna o valor final

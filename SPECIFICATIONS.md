@@ -105,14 +105,14 @@ O projeto é dividido em vários módulos:
 - **Vida**: 100 + bônus por onda
 - **Velocidade**: 2
 - **Chance de Spawn**: 60%
-- **Recompensa**: 5 ouro
+- **Recompensa**: 3 ouro
 - **Vulnerável a**: Todos os efeitos
 
 #### 2. Inimigo Tanque (Marrom)
 - **Vida**: 200 + bônus por onda
 - **Velocidade**: 1.2
 - **Chance de Spawn**: 20%
-- **Recompensa**: 10 ouro
+- **Recompensa**: 12 ouro
 - **Imune a**: Efeito de lentidão
 - **Tamanho**: Maior que normal
 
@@ -120,7 +120,7 @@ O projeto é dividido em vários módulos:
 - **Vida**: 60 + bônus por onda
 - **Velocidade**: 3
 - **Chance de Spawn**: 30%
-- **Recompensa**: 3 ouro
+- **Recompensa**: 5 ouro
 - **Imune a**: Dano ao longo do tempo
 - **Tamanho**: Menor que normal
 
@@ -128,37 +128,48 @@ O projeto é dividido em vários módulos:
 - **Vida**: 150 + bônus por onda
 - **Velocidade**: 1.5
 - **Chance de Spawn**: 25%
-- **Recompensa**: 8 ouro
+- **Recompensa**: 10 ouro
 - **Habilidade**: Reduz dano recebido em 30%
 
-#### 5. Inimigo Dividido (Laranja)
-- **Vida**: 120 + bônus por onda
-- **Velocidade**: 1.8
-- **Chance de Spawn**: 15%
-- **Recompensa**: 7 ouro
-- **Habilidade**: Ao morrer, divide-se em dois inimigos menores
-- **Inimigos Divididos**:
-  - 40% da vida original
-  - 70% do tamanho original
-  - 20% mais rápidos
-- **Tamanho**: Maior que normal
-
-#### 6. Inimigo Curador (Verde Claro)
-- **Vida**: 80 + bônus por onda
-- **Velocidade**: 1.5
+#### 5. Inimigo Curador (Verde Claro)
+- **Vida**: 180 + bônus por onda
+- **Velocidade**: 1.4
 - **Chance de Spawn**: 20%
-- **Recompensa**: 6 ouro
+- **Recompensa**: 8 ouro
 - **Habilidade**: Cura aliados próximos
 - **Cura**:
   - 5 HP a cada 2 segundos
-  - Raio de 100 pixels
+  - Raio de 150 pixels
   - Efeito visual de cura
 - **Tamanho**: Menor que normal
 
+### Distribuição de Inimigos
+
+#### Ondas Múltiplas de 5
+- Normal: 72%
+- Tanque: 10%
+- Veloz: 5%
+- Blindado: 8%
+- Curador: 5%
+
+#### Ondas Pares
+- Normal: 82%
+- Tanque: 2.5%
+- Veloz: 8%
+- Blindado: 2.5%
+- Curador: 5%
+
+#### Ondas Normais
+- Normal: 85%
+- Tanque: 3%
+- Veloz: 3%
+- Blindado: 4%
+- Curador: 5%
+
 ### Efeitos de Status
-1. **Lentidão**
-   - Reduz velocidade em 50%
-   - Duração: 120 frames
+1. **Congelamento**
+   - Paralisa o inimigo
+   - Duração: 90 frames
    - Efeito visual azul
 
 2. **Queimadura (DoT)**
@@ -181,45 +192,20 @@ O projeto é dividido em vários módulos:
 - Opção de pular preparação
 
 ### Escalamento
-- **Vida dos Inimigos**: +15 por onda
+- **Vida dos Inimigos**: +8% por onda
 - **Ouro por Inimigo**: +5% por onda
 - **Intervalo de Spawn**: Reduz 1.5 frames por onda (mínimo 45)
-
-### Distribuição de Inimigos
-
-#### Ondas Múltiplas de 5
-- Normal: 65%
-- Tanque: 10%
-- Veloz: 5%
-- Blindado: 8%
-- Dividido: 7%
-- Curador: 5%
-
-#### Ondas Pares
-- Normal: 75%
-- Tanque: 2.5%
-- Veloz: 8%
-- Blindado: 2.5%
-- Dividido: 7%
-- Curador: 5%
-
-#### Ondas Normais
-- Normal: 80%
-- Tanque: 3%
-- Veloz: 3%
-- Blindado: 4%
-- Dividido: 5%
-- Curador: 5%
 
 ## Sistema de Recursos
 
 ### Ouro
-- **Inicial**: 200
+- **Inicial**: 300
 - **Recompensas Base**:
-  - Inimigo Normal: 5
-  - Inimigo Veloz: 3
-  - Inimigo Tanque: 10
-  - Inimigo Blindado: 8
+  - Inimigo Normal: 3
+  - Inimigo Veloz: 5
+  - Inimigo Tanque: 12
+  - Inimigo Blindado: 10
+  - Inimigo Curador: 8
 
 ### Sistema de Venda
 - **Mesma Onda**: 100% do valor investido
@@ -237,4 +223,4 @@ O projeto é dividido em vários módulos:
 
 ## Condições de Vitória/Derrota
 - **Vitória**: Completar 60 ondas
-- **Derrota**: Base chegar a 0 de vida 
+- **Derrota**: Base chegar a 0 de vida

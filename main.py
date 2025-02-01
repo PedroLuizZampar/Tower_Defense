@@ -3,12 +3,13 @@ import math
 import os
 import sys
 import random
-from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, SplitEnemy, HealerEnemy
+from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy
 from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton
 from wave_manager import WaveManager
 from base import Base, SkipButton
 from upgrade_menu import UpgradeMenu
 from enemy_status import EnemyStatusMenu
+from spell import DamageSpell, FreezeSpell, DotSpell, SpellButton
 
 # Inicialização do Pygame
 pygame.init()
@@ -150,13 +151,14 @@ def draw_enemy_path(screen, path):
     pass  # Removida a visualização do caminho
 
 def main():
-    # Lista de inimigos e defensores
+    # Lista de inimigos, defensores e feitiços
     enemies = []
     defenders = []
+    spells = []  # Nova lista para feitiços ativos
 
     # Sistema de ondas e recursos
     wave_manager = WaveManager()
-    gold = 250  # Ouro inicial
+    gold = 300  # Ouro inicial
 
     # Calcula as posições dos botões para centralizá-los
     button_spacing = 120
@@ -174,6 +176,18 @@ def main():
     base = Base()
     upgrade_menu = UpgradeMenu()
     enemy_menu = EnemyStatusMenu(ENEMY_MENU_WIDTH)
+
+    # Calcula as posições dos botões de feitiço
+    spell_spacing = 60
+    spell_start_x = ENEMY_MENU_WIDTH + 400  # Posição inicial dos botões de feitiço
+    
+    # Interface
+    spell_buttons = [
+        SpellButton(FreezeSpell, spell_start_x),
+        SpellButton(DotSpell, spell_start_x + spell_spacing),
+        SpellButton(DamageSpell, spell_start_x + spell_spacing * 2),
+    ]
+    selected_spell = None
 
     # Fonte para textos
     font = pygame.font.Font(None, 36)
@@ -198,6 +212,28 @@ def main():
                 # Verifica clique no botão de pular
                 if skip_button.handle_click(mouse_pos, wave_manager.wave_active):
                     wave_manager.skip_preparation()
+                    continue
+                    
+                # Verifica clique nos botões de feitiço
+                clicked_spell = False
+                for button in spell_buttons:
+                    if button.handle_click(mouse_pos, gold):
+                        # Desseleciona outros botões
+                        for other_button in spell_buttons:
+                            if other_button != button:
+                                other_button.selected = False
+                        selected_spell = button if button.selected else None
+                        clicked_spell = True
+                        # Desseleciona defensor e botão de defensor
+                        if selected_defender:
+                            selected_defender.selected = False
+                            selected_defender = None
+                        if selected_button:
+                            selected_button.selected = False
+                            selected_button = None
+                        break
+                        
+                if clicked_spell:
                     continue
                     
                 # Verifica clique nos botões de defensor
@@ -253,8 +289,48 @@ def main():
                         
                     selected_defender = clicked_defender
                 
+                # Se um feitiço estiver selecionado e tem ouro suficiente
+                if selected_spell and selected_spell.selected and gold >= selected_spell.cost:
+                    # Verifica se o ponto é válido para colocação
+                        if isinstance(selected_spell.spell_class, DamageSpell):
+                            spells.append(selected_spell.spell_class(mouse_pos[0], mouse_pos[1], wave_manager))
+                        else:
+                            spells.append(selected_spell.spell_class(mouse_pos[0], mouse_pos[1]))
+                        gold -= selected_spell.cost
+                        selected_spell.selected = False
+                        selected_spell = None
+                        continue
+
         # Atualização da onda
         wave_manager.update()
+        
+        # Atualização dos feitiços
+        for spell in spells[:]:  # Usa uma cópia da lista para poder modificá-la durante a iteração
+            spell_result = spell.update(enemies)
+            
+            # Se o feitiço matou um inimigo
+            if spell_result == "died":
+                # Identifica o tipo do inimigo e adiciona o ouro
+                for enemy in enemies[:]:  # Verifica todos os inimigos
+                    if enemy.health <= 0 and not enemy.reward_given:  # Se morreu e não deu recompensa
+                        # Identifica o tipo do inimigo
+                        if isinstance(enemy, SpeedEnemy):
+                            enemy_type = 'speed'
+                        elif isinstance(enemy, TankEnemy):
+                            enemy_type = 'tank'
+                        elif isinstance(enemy, ArmoredEnemy):
+                            enemy_type = 'armored'
+                        elif isinstance(enemy, HealerEnemy):
+                            enemy_type = 'healer'
+                        else:
+                            enemy_type = 'normal'
+                        
+                        # Adiciona o ouro
+                        gold += wave_manager.enemy_defeated(enemy_type)
+                        enemy.reward_given = True
+                        enemies.remove(enemy)
+            elif not spell_result:  # Se o feitiço terminou
+                spells.remove(spell)
         
         # Spawn de inimigos
         if wave_manager.should_spawn_enemy():
@@ -292,8 +368,21 @@ def main():
             
             # Verifica morte por DoT
             elif move_result == "died":  # Morreu por dano ao longo do tempo
-                if isinstance(enemy, SplitEnemy):
-                    gold += wave_manager.enemy_defeated('split')
+                # Identifica o tipo do inimigo e adiciona o ouro
+                if isinstance(enemy, SpeedEnemy):
+                    enemy_type = 'speed'
+                elif isinstance(enemy, TankEnemy):
+                    enemy_type = 'tank'
+                elif isinstance(enemy, ArmoredEnemy):
+                    enemy_type = 'armored'
+                elif isinstance(enemy, HealerEnemy):
+                    enemy_type = 'healer'
+                else:
+                    enemy_type = 'normal'
+                
+                if not enemy.reward_given:
+                    gold += wave_manager.enemy_defeated(enemy_type)
+                    enemy.reward_given = True
                 enemies.remove(enemy)
         
         # Atualização dos defensores
@@ -310,28 +399,7 @@ def main():
                         # Se o inimigo morreu com este projétil
                         damage_result = projectile.target.take_damage(projectile.damage)
                         
-                        if damage_result == "split":
-                            # Cria dois inimigos menores no lugar
-                            for _ in range(2):
-                                small_enemy = Enemy(PATH)
-                                small_enemy.x = projectile.target.x + random.randint(-20, 20)
-                                small_enemy.y = projectile.target.y + random.randint(-20, 20)
-                                small_enemy.path_index = projectile.target.path_index
-                                small_enemy.max_health = projectile.target.max_health * 0.4
-                                small_enemy.health = small_enemy.max_health
-                                small_enemy.radius = projectile.target.radius * 0.7
-                                small_enemy.base_speed = projectile.target.speed * 1.2
-                                small_enemy.speed = small_enemy.base_speed
-                                small_enemy.color = projectile.target.COLOR
-                                enemies.append(small_enemy)
-                            
-                            # Adiciona o ouro e remove o inimigo original
-                            gold += wave_manager.enemy_defeated('split')
-                            enemies.remove(projectile.target)
-                            if projectile.target == defender.current_target:
-                                defender.current_target = None
-                                
-                        elif damage_result:  # Se morreu normalmente
+                        if damage_result:  # Se morreu normalmente
                             # Identifica o tipo do inimigo
                             if isinstance(projectile.target, SpeedEnemy):
                                 enemy_type = 'speed'
@@ -345,8 +413,11 @@ def main():
                                 enemy_type = 'normal'
                             
                             # Adiciona o ouro e remove o inimigo
-                            gold += wave_manager.enemy_defeated(enemy_type)
-                            enemies.remove(projectile.target)
+                            if not projectile.target.reward_given:  # Verifica se já deu recompensa
+                                gold += wave_manager.enemy_defeated(enemy_type)
+                                projectile.target.reward_given = True  # Marca que já deu recompensa
+                            if projectile.target in enemies:  # Verifica se o inimigo ainda está na lista
+                                enemies.remove(projectile.target)
                             if projectile.target == defender.current_target:
                                 defender.current_target = None
                     
@@ -377,13 +448,17 @@ def main():
         # Desenha todos os inimigos
         for enemy in enemies:
             enemy.draw(screen)
-        
-        # Desenha o menu da loja
-        draw_shop_menu(screen, gold)
+            
+        # Desenha todos os feitiços ativos
+        for spell in spells:
+            spell.draw(screen)
         
         # Desenha todos os defensores
         for defender in defenders:
             defender.draw(screen)
+            
+        # Desenha o menu da loja
+        draw_shop_menu(screen, gold)
         
         # Desenha a interface
         for button in defender_buttons:
@@ -394,6 +469,18 @@ def main():
                 stats_x = button.rect.x
                 stats_y = button.rect.y - 130  # Altura do menu de stats + margem
                 upgrade_menu.draw_preview(screen, button.defender_class, stats_x, stats_y)
+                
+        # Desenha os botões de feitiço
+        for button in spell_buttons:
+            button.draw(screen, gold)
+            
+        # Se um feitiço estiver selecionado, mostra a prévia
+        if selected_spell and selected_spell.selected:            
+            # Desenha o raio do feitiço
+            color = (*selected_spell.spell_class.COLOR, 128)
+            spell_surface = pygame.Surface((selected_spell.radius * 2, selected_spell.radius * 2), pygame.SRCALPHA)
+            pygame.draw.circle(spell_surface, color, (selected_spell.radius, selected_spell.radius), selected_spell.radius)
+            screen.blit(spell_surface, (mouse_pos[0] - selected_spell.radius, mouse_pos[1] - selected_spell.radius))
         
         # Desenha o menu de upgrade se houver um defensor selecionado
         if selected_defender:

@@ -3,7 +3,7 @@ import pygame
 class EnemyStatusMenu:
     def __init__(self, width=300):
         self.width = width
-        self.font = pygame.font.Font(None, 24)
+        self.font = pygame.font.Font(None, 22)
         self.title_font = pygame.font.Font(None, 32)
         self.background_color = (40, 40, 40)
         self.text_color = (255, 255, 255)
@@ -21,8 +21,8 @@ class EnemyStatusMenu:
                               
     def get_total_height(self):
         """Calcula a altura total necessária para todos os cards"""
-        from enemy import Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, SplitEnemy, HealerEnemy
-        return 120 + len([Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, SplitEnemy, HealerEnemy]) * self.spacing
+        from enemy import Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, HealerEnemy
+        return 120 + len([Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, HealerEnemy]) * self.spacing
         
     def get_enemy_stats(self, enemy_class, wave_manager):
         """Retorna as estatísticas do inimigo sem criar uma instância"""
@@ -64,9 +64,9 @@ class EnemyStatusMenu:
         # Características especiais
         special_text = None
         if enemy_class.NAME == "Tanque":
-            special_text = "Resistente a Slow"
+            special_text = "Resistente a Congelamento"
         elif enemy_class.NAME == "Célere":
-            special_text = "Resistente a DoT"
+            special_text = "Resistente a Queimaduras"
         elif enemy_class.NAME == "Blindado":
             special_text = "-30% Dano Recebido"
         elif enemy_class.NAME == "Dividido":
@@ -84,8 +84,8 @@ class EnemyStatusMenu:
         content_surface = pygame.Surface((self.width, content_height), pygame.SRCALPHA)
         
         # Desenha os cards dos inimigos na superfície de conteúdo
-        from enemy import Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, SplitEnemy, HealerEnemy
-        enemy_classes = [Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, SplitEnemy, HealerEnemy]
+        from enemy import Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, HealerEnemy
+        enemy_classes = [Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, HealerEnemy]
         
         # Título do menu (fixo, não rola)
         title = self.title_font.render("INIMIGOS", True, self.text_color)
