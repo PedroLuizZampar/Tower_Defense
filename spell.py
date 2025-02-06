@@ -3,10 +3,11 @@ import math
 from enemy import TankEnemy, ArmoredEnemy, SpeedEnemy, HealerEnemy
 
 class Spell:
-    COST = 100  # Custo base
+    COST = 0  # Removido custo em ouro
     RADIUS = 100  # Raio base
     COLOR = (255, 255, 255)  # Cor base
     NAME = "Feitiço Base"
+    COOLDOWN = 600  # Cooldown base (10 segundos)
     
     def __init__(self, x, y):
         self.x = x
@@ -49,11 +50,12 @@ class Spell:
         pass
 
 class DamageSpell(Spell):
-    COST = 150
+    COST = 0  # Removido custo em ouro
     RADIUS = 100
     COLOR = (255, 50, 50)  # Vermelho
     NAME = "Explosão"
     DAMAGE = 200
+    COOLDOWN = 900  # 15 segundos de cooldown
     
     def __init__(self, x, y):
         super().__init__(x, y)
@@ -98,11 +100,12 @@ class DamageSpell(Spell):
                     return "died"  # Retorna "died" assim como o DoT faz
 
 class FreezeSpell(Spell):
-    COST = 100
+    COST = 0  # Removido custo em ouro
     RADIUS = 150
     COLOR = (50, 150, 255)  # Azul claro
-    NAME = "Congelar"
+    NAME = "Gelo"
     FREEZE_DURATION = 90  # 1.5 segundos
+    COOLDOWN = 600  # 10 segundos de cooldown
     
     def __init__(self, x, y):
         super().__init__(x, y)
@@ -110,19 +113,20 @@ class FreezeSpell(Spell):
         self.current_duration = self.duration
         
     def apply_effect(self, enemies):
-        """Aplica efeito de lentidão em área"""
+        """Aplica efeito de congelamento em área"""
         affected = self.affect_enemies(enemies)
         for enemy in affected:
             if not isinstance(enemy, TankEnemy):  # Tanques são imunes ao congelamento
-                enemy.apply_slow(self.FREEZE_DURATION)
+                enemy.apply_freeze(self.FREEZE_DURATION)
 
 class DotSpell(Spell):
-    COST = 125
+    COST = 0  # Removido custo em ouro
     RADIUS = 200
     COLOR = (255, 165, 0)  # Laranja
-    NAME = "Veneno"
+    NAME = "Fogo"
     DOT_DAMAGE = 20
     DOT_DURATION = 300  # 5 segundos
+    COOLDOWN = 720  # 12 segundos de cooldown
     
     def __init__(self, x, y):
         super().__init__(x, y)
@@ -145,15 +149,16 @@ class SpellButton:
         self.width = 50  # Botões menores que os de defensores
         self.height = 50
         self.color = spell_class.COLOR
-        self.rect = pygame.Rect(x_pos, 610, self.width, self.height)  # Posicionado acima da loja
+        # Posiciona os botões no canto direito da tela, acima do menu inferior
+        self.rect = pygame.Rect(x_pos, 605, self.width, self.height)
         self.selected = False
-        self.cost = spell_class.COST
         self.spell_class = spell_class
         self.radius = spell_class.RADIUS
+        self.cooldown_timer = 0  # Timer para controlar o cooldown
         
     def draw(self, screen, gold):
         # Desenha o fundo do botão
-        button_color = self.color if gold >= self.cost else (100, 100, 100)
+        button_color = self.color if self.cooldown_timer <= 0 else (100, 100, 100)
         pygame.draw.rect(screen, (60, 60, 60), self.rect)
         
         # Desenha o círculo do feitiço
@@ -166,15 +171,30 @@ class SpellButton:
         if self.selected:
             pygame.draw.rect(screen, (255, 255, 255), self.rect, 3)
             
-        # Desenha o custo
-        font = pygame.font.Font(None, 24)
-        text_color = (255, 215, 0) if gold >= self.cost else (255, 0, 0)
-        text = font.render(str(self.cost), True, text_color)
+        # Se estiver em cooldown, desenha o tempo restante
+        if self.cooldown_timer > 0:
+            font = pygame.font.Font(None, 24)
+            seconds = self.cooldown_timer // 60  # Converte frames para segundos
+            text = font.render(str(seconds), True, (255, 255, 255))
+            text_rect = text.get_rect(center=(self.rect.centerx, self.rect.bottom - 25))
+            screen.blit(text, text_rect)
+            
+        # Desenha o nome do feitiço
+        font = pygame.font.Font(None, 20)
+        text = font.render(self.spell_class.NAME, True, (255, 255, 255))
         text_rect = text.get_rect(center=(self.rect.centerx, self.rect.bottom + 10))
         screen.blit(text, text_rect)
         
+    def update(self):
+        if self.cooldown_timer > 0:
+            self.cooldown_timer -= 2
+        
     def handle_click(self, pos, gold):
-        if self.rect.collidepoint(pos) and gold >= self.cost:
+        if self.rect.collidepoint(pos) and self.cooldown_timer <= 0:
             self.selected = not self.selected
             return True
-        return False 
+        return False
+        
+    def start_cooldown(self):
+        self.cooldown_timer = self.spell_class.COOLDOWN
+        self.selected = False 

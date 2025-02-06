@@ -4,12 +4,13 @@ import os
 import sys
 import random
 from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy
-from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton
+from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender
 from wave_manager import WaveManager
 from base import Base, SkipButton
 from upgrade_menu import UpgradeMenu
 from enemy_status import EnemyStatusMenu
 from spell import DamageSpell, FreezeSpell, DotSpell, SpellButton
+from mission_manager import MissionManager  # Importa o gerenciador de missões
 
 # Inicialização do Pygame
 pygame.init()
@@ -18,7 +19,7 @@ pygame.init()
 ENEMY_MENU_WIDTH = 300  # Largura do menu lateral
 SCREEN_WIDTH = 1000 + ENEMY_MENU_WIDTH  # 1000 para o jogo + menu lateral
 WAVE_MENU_HEIGHT = 100  # Altura do menu superior
-SCREEN_HEIGHT = 800  # Diminuído para reduzir altura da loja
+SCREEN_HEIGHT = 850  # Diminuído para reduzir altura da loja
 GAME_HEIGHT = 600
 SHOP_HEIGHT = 100  # Altura da loja reduzida
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -83,7 +84,7 @@ def draw_shop_menu(screen, gold):
     # Desenha o título da loja
     font = pygame.font.Font(None, 36)
     title = font.render("LOJA DE DEFENSORES", True, WHITE)
-    title_rect = title.get_rect(midtop=(SCREEN_WIDTH // 2 - 180, GAME_HEIGHT + 10))
+    title_rect = title.get_rect(midtop=(SCREEN_WIDTH // 2 - 180, GAME_HEIGHT + 50))
     screen.blit(title, title_rect)
     
     # Desenha o ouro
@@ -116,33 +117,35 @@ def draw_wave_menu(screen, wave_manager, skip_button):
     skip_button.rect.y = WAVE_MENU_HEIGHT//2 - skip_button.height//2
     skip_button.draw(screen, wave_manager.wave_active)
 
-def is_valid_placement(x, y, path, game_height, defenders):
-    """Verifica se é uma posição válida para colocar um defensor"""
-    # Verifica pontos em um raio de 20px ao redor do mouse
-    for angle in range(0, 360, 45):  # Verifica 8 pontos ao redor
-        rad = math.radians(angle)
-        check_x = x + 25 * math.cos(rad)
-        check_y = y + 25 * math.sin(rad)
-        
-        # Não pode colocar no caminho
-        if is_point_on_path(check_x, check_y, path):
-            return False
-        
-        # Não pode colocar no menu lateral
-        if check_x <= ENEMY_MENU_WIDTH:
-            return False
-        
-        # Não pode colocar no menu superior
-        if check_y <= WAVE_MENU_HEIGHT:
-            return False
-        
-        # Não pode colocar na área da loja
-        if check_y >= GAME_HEIGHT:
-            return False
-    
-    # Não pode colocar muito próximo de outros defensores
-    if Defender.is_too_close(x, y, defenders):
+def is_valid_placement(x, y, path, game_height, defenders, is_spell=False):
+    """Verifica se é uma posição válida para colocar um defensor ou feitiço"""
+    # Não pode colocar no menu lateral
+    if x <= ENEMY_MENU_WIDTH:
         return False
+    
+    # Não pode colocar no menu superior
+    if y <= WAVE_MENU_HEIGHT:
+        return False
+    
+    # Não pode colocar na área da loja
+    if y >= GAME_HEIGHT:
+        return False
+    
+    # Se for um defensor, verifica regras específicas
+    if not is_spell:
+        # Verifica pontos em um raio de 20px ao redor do mouse
+        for angle in range(0, 360, 45):
+            rad = math.radians(angle)
+            check_x = x + 25 * math.cos(rad)
+            check_y = y + 25 * math.sin(rad)
+            
+            # Não pode colocar no caminho
+            if is_point_on_path(check_x, check_y, path):
+                return False
+        
+        # Não pode colocar muito próximo de outros defensores
+        if Defender.is_too_close(x, y, defenders):
+            return False
     
     return True
 
@@ -158,7 +161,10 @@ def main():
 
     # Sistema de ondas e recursos
     wave_manager = WaveManager()
-    gold = 300  # Ouro inicial
+    gold = 200  # Ouro inicial
+    
+    # Sistema de missões
+    mission_manager = MissionManager()
 
     # Calcula as posições dos botões para centralizá-los
     button_spacing = 120
@@ -167,9 +173,10 @@ def main():
 
     # Interface
     defender_buttons = [
-        DefenderButton(BlueDefender, start_x),
-        DefenderButton(RedDefender, start_x + button_spacing),
-        DefenderButton(YellowDefender, start_x + button_spacing * 2),
+        DefenderButton(BasicDefender, start_x, mission_manager),
+        DefenderButton(BlueDefender, start_x + button_spacing, mission_manager),
+        DefenderButton(RedDefender, start_x + button_spacing * 2, mission_manager),
+        DefenderButton(YellowDefender, start_x + button_spacing * 3, mission_manager)
     ]
     selected_button = None
     skip_button = SkipButton()
@@ -178,7 +185,7 @@ def main():
     enemy_menu = EnemyStatusMenu(ENEMY_MENU_WIDTH)
 
     # Calcula as posições dos botões de feitiço
-    spell_spacing = 60
+    spell_spacing = 50
     spell_start_x = ENEMY_MENU_WIDTH + 400  # Posição inicial dos botões de feitiço
     
     # Interface
@@ -212,6 +219,10 @@ def main():
                 # Verifica clique no botão de pular
                 if skip_button.handle_click(mouse_pos, wave_manager.wave_active):
                     wave_manager.skip_preparation()
+                    continue
+                    
+                # Verifica clique nas missões
+                if mission_manager.handle_click(mouse_pos):
                     continue
                     
                 # Verifica clique nos botões de feitiço
@@ -290,16 +301,16 @@ def main():
                     selected_defender = clicked_defender
                 
                 # Se um feitiço estiver selecionado e tem ouro suficiente
-                if selected_spell and selected_spell.selected and gold >= selected_spell.cost:
+                if selected_spell and selected_spell.selected:
                     # Verifica se o ponto é válido para colocação
+                    if is_valid_placement(mouse_pos[0], mouse_pos[1], PATH, GAME_HEIGHT, defenders, is_spell=True):
                         if isinstance(selected_spell.spell_class, DamageSpell):
                             spells.append(selected_spell.spell_class(mouse_pos[0], mouse_pos[1], wave_manager))
                         else:
                             spells.append(selected_spell.spell_class(mouse_pos[0], mouse_pos[1]))
-                        gold -= selected_spell.cost
-                        selected_spell.selected = False
+                        selected_spell.start_cooldown()  # Inicia o cooldown do feitiço
                         selected_spell = None
-                        continue
+                    continue
 
         # Atualização da onda
         wave_manager.update()
@@ -329,8 +340,13 @@ def main():
                         gold += wave_manager.enemy_defeated(enemy_type)
                         enemy.reward_given = True
                         enemies.remove(enemy)
+                        mission_manager.update_kills()  # Atualiza contagem de kills
             elif not spell_result:  # Se o feitiço terminou
                 spells.remove(spell)
+        
+        # Atualiza os cooldowns dos botões de feitiço
+        for button in spell_buttons:
+            button.update()
         
         # Spawn de inimigos
         if wave_manager.should_spawn_enemy():
@@ -383,6 +399,7 @@ def main():
                 if not enemy.reward_given:
                     gold += wave_manager.enemy_defeated(enemy_type)
                     enemy.reward_given = True
+                    mission_manager.update_kills()
                 enemies.remove(enemy)
         
         # Atualização dos defensores
@@ -416,6 +433,7 @@ def main():
                             if not projectile.target.reward_given:  # Verifica se já deu recompensa
                                 gold += wave_manager.enemy_defeated(enemy_type)
                                 projectile.target.reward_given = True  # Marca que já deu recompensa
+                                mission_manager.update_kills()  # Atualiza contagem de kills quando inimigo morre por projétil
                             if projectile.target in enemies:  # Verifica se o inimigo ainda está na lista
                                 enemies.remove(projectile.target)
                             if projectile.target == defender.current_target:
@@ -429,7 +447,9 @@ def main():
                 # Jogador venceu o jogo
                 running = False
                 print("Parabéns! Você completou todas as ondas!")
-            
+            else:
+                mission_manager.update_wave(wave_manager.current_wave - 1)  # Atualiza contagem de ondas
+        
         # Desenho
         screen.fill(MENU_GRAY)
         
@@ -460,7 +480,11 @@ def main():
         # Desenha o menu da loja
         draw_shop_menu(screen, gold)
         
-        # Desenha a interface
+        # Desenha os botões de feitiço primeiro (camada inferior)
+        for button in spell_buttons:
+            button.draw(screen, gold)
+        
+        # Desenha a interface dos defensores por último (camada superior)
         for button in defender_buttons:
             button.draw(screen, gold)
             # Se o mouse estiver sobre o botão, mostra as estatísticas
@@ -469,27 +493,19 @@ def main():
                 stats_x = button.rect.x
                 stats_y = button.rect.y - 130  # Altura do menu de stats + margem
                 upgrade_menu.draw_preview(screen, button.defender_class, stats_x, stats_y)
-                
-        # Desenha os botões de feitiço
-        for button in spell_buttons:
-            button.draw(screen, gold)
-            
+        
         # Se um feitiço estiver selecionado, mostra a prévia
-        if selected_spell and selected_spell.selected:            
-            # Desenha o raio do feitiço
-            color = (*selected_spell.spell_class.COLOR, 128)
-            spell_surface = pygame.Surface((selected_spell.radius * 2, selected_spell.radius * 2), pygame.SRCALPHA)
-            pygame.draw.circle(spell_surface, color, (selected_spell.radius, selected_spell.radius), selected_spell.radius)
-            screen.blit(spell_surface, (mouse_pos[0] - selected_spell.radius, mouse_pos[1] - selected_spell.radius))
+        if selected_spell and selected_spell.selected:
+            # Verifica se a posição é válida
+            is_valid = is_valid_placement(mouse_pos[0], mouse_pos[1], PATH, GAME_HEIGHT, defenders, is_spell=True)
+            if is_valid:
+                # Desenha o raio do feitiço
+                color = (*selected_spell.spell_class.COLOR, 128)
+                spell_surface = pygame.Surface((selected_spell.radius * 2, selected_spell.radius * 2), pygame.SRCALPHA)
+                pygame.draw.circle(spell_surface, color, (selected_spell.radius, selected_spell.radius), selected_spell.radius)
+                screen.blit(spell_surface, (mouse_pos[0] - selected_spell.radius, mouse_pos[1] - selected_spell.radius))
         
-        # Desenha o menu de upgrade se houver um defensor selecionado
-        if selected_defender:
-            upgrade_menu.draw(screen, selected_defender, gold, current_wave)
-            
-        # Desenha a barra de vida da base
-        base.draw(screen)
-        
-        # Se um botão estiver selecionado, mostra a prévia do defensor e seu range
+        # Se um botão de defensor estiver selecionado, mostra a prévia
         if selected_button and selected_button.selected:
             # Verifica se a posição é válida
             is_valid = is_valid_placement(mouse_pos[0], mouse_pos[1], PATH, GAME_HEIGHT, defenders)
@@ -507,6 +523,16 @@ def main():
             
             # Desenha a prévia do defensor
             selected_button.defender_class.draw_preview(screen, mouse_pos[0], mouse_pos[1], is_valid)
+        
+        # Desenha o menu de upgrade se houver um defensor selecionado
+        if selected_defender:
+            upgrade_menu.draw(screen, selected_defender, gold, current_wave)
+            
+        # Desenha a barra de vida da base
+        base.draw(screen)
+        
+        # Desenha o menu de missões por último para ficar sempre visível
+        mission_manager.draw(screen)
         
         pygame.display.flip()
         clock.tick(60)

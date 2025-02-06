@@ -3,7 +3,7 @@ import random
 class WaveManager:
     MAX_WAVES = 60
     BASE_ENEMIES = 5  # Número base de inimigos na primeira onda
-    BASE_SPAWN_INTERVAL = 120  # Intervalo base entre spawns (em frames)
+    BASE_SPAWN_INTERVAL = 90  # Intervalo base entre spawns (em frames)
     PREPARATION_TIME = 10 * 60  # 10 segundos em frames
     INITIAL_PREPARATION_TIME = 60 * 60  # 60 segundos em frames para a primeira onda
     HEALTH_INCREASE_PER_WAVE = 1.05  # Aumento de vida por onda
@@ -20,7 +20,7 @@ class WaveManager:
         
     def update(self):
         if not self.wave_active:
-            self.preparation_timer -= 1
+            self.preparation_timer -= 2
             if self.preparation_timer <= 0:
                 self.wave_active = True
                 
@@ -32,7 +32,7 @@ class WaveManager:
     def calculate_wave_size(self):
         """Calcula o número de inimigos para a onda atual"""
         # Inimigos base + 1 por onda
-        enemies = self.BASE_ENEMIES + (self.current_wave - 1)
+        enemies = self.BASE_ENEMIES + self.current_wave
         
         # +1 inimigo extra a cada 5 ondas
         enemies += (self.current_wave // 5)
@@ -45,7 +45,7 @@ class WaveManager:
     def get_spawn_interval(self):
         # Diminui o intervalo entre spawns conforme as ondas avançam
         # Mínimo de 45 frames entre spawns
-        return max(45, self.BASE_SPAWN_INTERVAL - (self.current_wave * 1.5))
+        return self.BASE_SPAWN_INTERVAL - (self.current_wave * 0.35)
         
     def get_health_increase(self):
         """Retorna o multiplicador de vida baseado na onda atual"""

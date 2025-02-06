@@ -18,8 +18,8 @@ class Enemy:
         self.speed = self.base_speed
         self.max_health = self.BASE_HEALTH
         self.health = self.max_health
-        self.slow_timer = 0
-        self.is_slowed = False
+        self.freeze_timer = 0
+        self.is_frozen = False
         self.dot_timer = 0
         self.dot_tick_timer = 0
         self.dot_damage = 0
@@ -35,12 +35,12 @@ class Enemy:
         self.health -= damage
         return self.health <= 0
         
-    def apply_slow(self, duration_frames=120):
-        """Aplica efeito de lentidão"""
-        if not self.is_slowed:  # Só aplica se não estiver já sob efeito
-            self.slow_timer = duration_frames
-            self.speed = 0  # Paralisa completamente o inimigo
-            self.is_slowed = True
+    def apply_freeze(self, duration_frames=90):
+        """Aplica efeito de congelamento"""
+        if not self.is_frozen:  # Só aplica se não estiver já sob efeito
+            self.freeze_timer = duration_frames
+            self.speed = 0  # Paralisa completamente
+            self.is_frozen = True
         
     def apply_dot(self, damage, duration_frames=120):
         """Aplica dano ao longo do tempo"""
@@ -53,12 +53,12 @@ class Enemy:
         
     def update(self):
         """Atualiza os efeitos de status"""
-        # Atualiza efeito de lentidão
-        if self.slow_timer > 0:
-            self.slow_timer -= 1
-            if self.slow_timer <= 0:
+        # Atualiza efeito de congelamento
+        if self.freeze_timer > 0:
+            self.freeze_timer -= 1
+            if self.freeze_timer <= 0:
                 self.speed = self.base_speed
-                self.is_slowed = False
+                self.is_frozen = False
                 
         # Atualiza dano ao longo do tempo
         if self.dot_timer > 0:
@@ -119,9 +119,9 @@ class Enemy:
                         (bar_x, bar_y, bar_width * health_percentage, bar_height))
         
         # Desenha efeitos de status
-        if self.is_slowed:
+        if self.is_frozen:
             pygame.draw.circle(screen, (50, 150, 255), (int(self.x), int(self.y)), 
-                             self.radius, 3)  # Círculo azul para lentidão
+                             self.radius, 3)  # Círculo azul para congelamento
         if self.is_burning:
             pygame.draw.circle(screen, (255, 165, 0), (int(self.x), int(self.y)), 
                              self.radius + 3, 3)  # Círculo laranja para DoT
@@ -137,8 +137,8 @@ class TankEnemy(Enemy):
         super().__init__(path)
         self.radius = 15  # Maior tamanho
         
-    def apply_slow(self, duration_frames=120):
-        # Imune a slow
+    def apply_freeze(self, duration_frames=120):
+        # Imune a freeze
         pass
 
 class SpeedEnemy(Enemy):

@@ -199,146 +199,91 @@ class Defender:
                 return True
         return False
 
-class BlueDefender(Defender):
-    COLOR = (0, 0, 255)  # Azul
-    PROJECTILE_COLOR = (43, 181, 255)  # Azul claro
-    COST = 75  # Reduzido de 100 para 75 (defensor básico mais acessível)
-    NAME = "Congelante"
-    BASE_DAMAGE = 10
-    BASE_ATTACK_COOLDOWN = 30
+class BasicDefender(Defender):
+    COLOR = (28, 43, 61)  # Cinza azulado escuro
+    PROJECTILE_COLOR = (66, 86, 110)  # Cinza azulado escuro mais claro
+    COST = 50  # Defensor mais barato
+    NAME = "Básico"
+    BASE_DAMAGE = 8
+    BASE_ATTACK_COOLDOWN = 35  # Ataque mais lento
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
-        self.attacks_until_slow = 8  # Contador para a habilidade especial
-        self.attack_counter = 0  # Contador atual de ataques
-        
-    def update(self, enemies):
-        # Atualiza o cooldown
-        if self.cooldown_timer > 0:
-            self.cooldown_timer -= 1
-            
-        # Procura alvo e atira
-        if self.cooldown_timer <= 0:
-            target = self.find_target(enemies)
-            if target:
-                projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
-                projectile.damage = self.get_total_damage()
-                self.projectiles.append(projectile)
-                self.cooldown_timer = self.attack_cooldown
-                self.has_damage_buff = False  # Remove o buff após o ataque
-                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
-                
-                # Incrementa o contador de ataques
-                self.attack_counter += 1
-                
-                # Se atingiu o número necessário de ataques, ativa a habilidade especial
-                if self.attack_counter >= self.attacks_until_slow:
-                    self.attack_counter = 0  # Reseta o contador
-                    # Aplica lentidão em todos os inimigos no alcance
-                    for enemy in self.get_enemies_in_range(enemies):
-                        enemy.apply_slow()
+        self.damage_multiplier = 1.0
+
+class BlueDefender(Defender):
+    COLOR = (0, 0, 255)  # Azul
+    PROJECTILE_COLOR = (43, 181, 255)  # Azul claro
+    COST = 75
+    NAME = "Congelante"
+    BASE_DAMAGE = 10
+    BASE_ATTACK_COOLDOWN = 30
+    UNLOCK_COST = 2  # Custo em orbes para desbloquear
+    
+    def __init__(self, x, y, current_wave):
+        super().__init__(x, y, current_wave)
+        self.attacks_until_slow = 8
+        self.attack_counter = 0
 
 class RedDefender(Defender):
     COLOR = (255, 0, 0)  # Vermelho
     PROJECTILE_COLOR = (255, 100, 100)  # Vermelho claro
-    COST = 100  # Reduzido de 125 para 100
+    COST = 100
     NAME = "Flamejante"
-    BASE_DAMAGE = 12  # Mais dano base
-    BASE_ATTACK_COOLDOWN = 25  # Ataca mais rápido
+    BASE_DAMAGE = 12
+    BASE_ATTACK_COOLDOWN = 25
+    UNLOCK_COST = 3  # Custo em orbes para desbloquear
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
-        self.damage_multiplier = 1.2  # 20% mais dano
-        self.attacks_until_burn = 5  # Contador para a habilidade especial
-        self.attack_counter = 0  # Contador atual de ataques
-        
-    def update(self, enemies):
-        # Atualiza o cooldown
-        if self.cooldown_timer > 0:
-            self.cooldown_timer -= 1
-            
-        # Procura alvo e atira
-        if self.cooldown_timer <= 0:
-            target = self.find_target(enemies)
-            if target:
-                projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
-                projectile.damage = self.get_total_damage()
-                self.projectiles.append(projectile)
-                self.cooldown_timer = self.attack_cooldown
-                self.has_damage_buff = False  # Remove o buff após o ataque
-                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
-                
-                # Incrementa o contador de ataques
-                self.attack_counter += 1
-                
-                # Se atingiu o número necessário de ataques, ativa a habilidade especial
-                if self.attack_counter >= self.attacks_until_burn:
-                    self.attack_counter = 0  # Reseta o contador
-                    # Aplica dano ao longo do tempo em todos os inimigos no alcance
-                    dot_damage = projectile.damage * 0.5  # 50% do dano normal
-                    for enemy in self.get_enemies_in_range(enemies):
-                        enemy.apply_dot(dot_damage)
+        self.damage_multiplier = 1.2
+        self.attacks_until_burn = 5
+        self.attack_counter = 0
 
 class YellowDefender(Defender):
     COLOR = (194, 187, 0)  # Amarelo
     PROJECTILE_COLOR = (255, 255, 150)  # Amarelo claro
-    COST = 125  # Reduzido de 150 para 125
-    RANGE = 200  # Maior alcance
+    COST = 125
     NAME = "Luminoso"
-    BASE_DAMAGE = 15  # Ainda mais dano base
-    BASE_ATTACK_COOLDOWN = 35  # Mais lento
+    BASE_DAMAGE = 15
+    BASE_ATTACK_COOLDOWN = 35
+    UNLOCK_COST = 5  # Custo em orbes para desbloquear
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
-        self.damage_multiplier = 1.5  # 50% mais dano
-        self.attacks_until_buff = 10  # Contador para a habilidade especial
-        self.attack_counter = 0  # Contador atual de ataques
-        
-    def update(self, enemies, defenders=None):
-        # Atualiza o cooldown
-        if self.cooldown_timer > 0:
-            self.cooldown_timer -= 1
-            
-        # Procura alvo e atira
-        if self.cooldown_timer <= 0:
-            target = self.find_target(enemies)
-            if target:
-                projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
-                projectile.damage = self.get_total_damage()
-                self.projectiles.append(projectile)
-                self.cooldown_timer = self.attack_cooldown
-                self.has_damage_buff = False  # Remove o buff após o ataque
-                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
-                
-                # Incrementa o contador de ataques
-                self.attack_counter += 1
-                
-                # Se atingiu o número necessário de ataques, ativa a habilidade especial
-                if self.attack_counter >= self.attacks_until_buff and defenders:
-                    self.attack_counter = 0  # Reseta o contador
-                    # Aplica buff de dano em todos os defensores no alcance
-                    for defender in self.get_defenders_in_range(defenders):
-                        defender.apply_damage_buff()
+        self.damage_multiplier = 1.5
+        self.attacks_until_buff = 10
+        self.attack_counter = 0
 
 class DefenderButton:
-    def __init__(self, defender_class, x_pos):
-        self.width = 100  # Botões um pouco maiores
+    def __init__(self, defender_class, x_pos, mission_manager=None):
+        self.width = 100
         self.height = 100
         self.color = defender_class.get_preview_color()
-        # Posiciona o botão no menu inferior
-        self.rect = pygame.Rect(x_pos, 670, self.width, self.height)  # Ajustado para a nova altura
+        self.rect = pygame.Rect(x_pos, 700, self.width, self.height)
         self.selected = False
         self.cost = defender_class.COST
         self.defender_class = defender_class
         self.range = defender_class.RANGE
+        self.mission_manager = mission_manager
+        self.unlocked = not hasattr(defender_class, 'UNLOCK_COST')  # Básico já vem desbloqueado
+        
+    def is_available(self, gold):
+        if not self.unlocked:
+            return False
+        return gold >= self.cost
         
     def draw(self, screen, gold):
         # Desenha o fundo do botão
-        button_color = self.color if gold >= self.cost else (100, 100, 100)
-        pygame.draw.rect(screen, (60, 60, 60), self.rect)  # Fundo mais escuro
+        button_color = (100, 100, 100)  # Cor base para botão bloqueado/indisponível
         
-        # Desenha o defensor (menor que o botão)
-        inner_size = 70  # Tamanho interno aumentado
+        if self.unlocked:
+            button_color = self.color if gold >= self.cost else (100, 100, 100)
+        
+        pygame.draw.rect(screen, (60, 60, 60), self.rect)
+        
+        # Desenha o defensor
+        inner_size = 70
         inner_rect = pygame.Rect(
             self.rect.centerx - inner_size//2,
             self.rect.centery - inner_size//2,
@@ -351,16 +296,33 @@ class DefenderButton:
         if self.selected:
             pygame.draw.rect(screen, (255, 255, 255), self.rect, 3)
             
-        # Desenha o custo
-        font = pygame.font.Font(None, 28)  # Fonte um pouco maior
-        # Define a cor do texto baseado no ouro disponível
-        text_color = (255, 215, 0) if gold >= self.cost else (255, 0, 0)
-        text = font.render(str(self.cost), True, text_color)
+        # Desenha o custo ou requisito de desbloqueio
+        font = pygame.font.Font(None, 24)
+        if not self.unlocked and hasattr(self.defender_class, 'UNLOCK_COST'):
+            text = font.render(f"{self.defender_class.UNLOCK_COST} Orbes", True, (50, 255, 50))
+        else:
+            text_color = (255, 215, 0) if gold >= self.cost else (255, 0, 0)
+            text = font.render(str(self.cost), True, text_color)
+        
         text_rect = text.get_rect(center=(self.rect.centerx, self.rect.bottom + 10))
         screen.blit(text, text_rect)
+        
+        # Se estiver bloqueado, desenha um cadeado
+        if not self.unlocked:
+            lock_text = font.render("Bloqueado", True, (255, 15, 15))
+            lock_rect = lock_text.get_rect(center=inner_rect.center)
+            screen.blit(lock_text, lock_rect)
             
     def handle_click(self, pos, gold):
-        if self.rect.collidepoint(pos) and gold >= self.cost:
-            self.selected = not self.selected
-            return True
+        if self.rect.collidepoint(pos):
+            if not self.unlocked and hasattr(self.defender_class, 'UNLOCK_COST'):
+                # Tenta desbloquear com orbes
+                if (self.mission_manager and 
+                    self.mission_manager.orbes >= self.defender_class.UNLOCK_COST):
+                    self.mission_manager.orbes -= self.defender_class.UNLOCK_COST
+                    self.unlocked = True
+                return False
+            elif self.unlocked and gold >= self.cost:
+                self.selected = not self.selected
+                return True
         return False 

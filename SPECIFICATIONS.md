@@ -1,226 +1,171 @@
 # Tower Defense - Especificações do Projeto
 
 ## Visão Geral
-Este é um jogo de Tower Defense desenvolvido em Python usando Pygame. O jogador deve defender uma base contra ondas de inimigos usando diferentes tipos de torres defensivas.
-
-## Estrutura do Projeto
-O projeto é dividido em vários módulos:
-- `base.py`: Gerencia a base do jogador e o botão de pular onda
-- `defender.py`: Implementa as torres defensivas e seus botões
-- `enemy.py`: Define os diferentes tipos de inimigos
-- `enemy_status.py`: Interface do menu de status dos inimigos
-- `main.py`: Loop principal do jogo e gerenciamento geral
-- `projectile.py`: Sistema de projéteis
-- `upgrade_menu.py`: Interface de melhorias das torres
-- `wave_manager.py`: Sistema de gerenciamento de ondas
+Um jogo de Tower Defense em Pygame onde o jogador defende uma base contra ondas de inimigos usando torres defensivas e feitiços. O objetivo é sobreviver a 60 ondas de inimigos.
 
 ## Interface do Jogo
 
-### Layout da Tela
-- Largura total: 1300px (1000px jogo + 300px menu lateral)
-- Altura total: 800px
-- Menu superior: 100px altura
-- Área de jogo: 600px altura
-- Menu da loja: 100px altura
-- Menu lateral: 300px largura
+### Layout
+- Tela total: 1300x850px
+- Área de jogo: 1000x600px
+- Menu lateral: 300px largura (status dos inimigos)
+- Menu superior: 100px altura (informações da onda)
+- Menu inferior: 100px altura (loja de defensores)
 
 ### Menus
 1. **Menu Superior**
-   - Exibe informações da onda atual
-   - Mostra tempo de preparação
-   - Botão de pular onda
+   - Status da onda atual e próxima
+   - Tempo de preparação
+   - Botão de pular preparação
+   - Missões retráteis
 
 2. **Menu Lateral**
-   - Mostra status dos inimigos
-   - Informações detalhadas de cada tipo
-   - Estatísticas atualizadas por onda
-   - Sistema de scroll vertical
-   - Navegação com roda do mouse
+   - Status detalhado dos inimigos
+   - Scroll vertical com roda do mouse
+   - Estatísticas por tipo de inimigo
+   - Informações da onda atual
 
-3. **Menu da Loja**
-   - Exibe defensores disponíveis
-   - Mostra custo de cada defensor
-   - Indica se há ouro suficiente para compra
+3. **Loja**
+   - Defensores disponíveis para compra
+   - Custo e status de desbloqueio
+   - Ouro atual do jogador
+   - Preview de alcance ao selecionar
 
-## Sistema de Base
+## Mecânicas Principais
 
-### Características da Base
-- Vida máxima: 100
-- Barra de vida visual
-- Localização: Canto inferior direito
-- Game over quando vida chega a 0
+### Base
+- 100 pontos de vida
+- Barra de vida visual com texto
+- Game over ao chegar a 0
 
-### Visualização
-- Barra vermelha (fundo)
-- Barra verde (vida atual)
-- Borda branca
-- Texto indicando vida atual/máxima
+### Defensores
 
-## Sistema de Defensores
+#### Tipos e Custos
+1. **Básico**
+   - 50 ouro
+   - Dano: 8
+   - Ataque: 35 frames
+   - Disponível inicialmente
 
-### Tipos de Defensores
+2. **Congelante (Azul)**  
+   - 75 ouro + 2 orbes
+   - Dano: 10
+   - Ataque: 30 frames
+   - Congela a cada 8 ataques
 
-#### 1. Defensor Azul (Congelante)
-- **Custo**: 75 ouro
-- **Dano Base**: 10
-- **Velocidade de Ataque**: 2/s
-- **Habilidade Especial**: Congela inimigos após 8 ataques
-- **Projétil**: Azul claro
+3. **Flamejante (Vermelho)**
+   - 100 ouro + 3 orbes
+   - Dano: 12
+   - Ataque: 25 frames
+   - DoT a cada 5 ataques
 
-#### 2. Defensor Vermelho (Flamejante)
-- **Custo**: 100 ouro
-- **Dano Base**: 12
-- **Velocidade de Ataque**: 2.4/s
-- **Multiplicador de Dano**: 1.2x
-- **Habilidade Especial**: Dano ao longo do tempo após 5 ataques
-- **Projétil**: Vermelho claro
+4. **Luminoso (Amarelo)**
+   - 125 ouro + 5 orbes
+   - Dano: 15
+   - Ataque: 35 frames
+   - Buff de dano em área a cada 10 ataques
 
-#### 3. Defensor Amarelo (Luminoso)
-- **Custo**: 125 ouro
-- **Dano Base**: 15
-- **Velocidade de Ataque**: 1.7/s
-- **Alcance**: 200 (maior que outros)
-- **Multiplicador de Dano**: 1.5x
-- **Habilidade Especial**: Buff de dano para outros defensores após 10 ataques
-- **Projétil**: Amarelo claro
-
-### Sistema de Melhorias
-- Custo base: 15 ouro × nível atual
-- Aumenta dano em 10% por nível
-- Reduz tempo entre ataques em 1% por nível
+#### Melhorias
+- Custo: 15 ouro × nível
+- +10% dano por nível
+- -1% tempo de ataque por nível
 - Valor de venda aumenta com melhorias
 
-### Mecânicas de Posicionamento
-- Distância mínima entre defensores: 40px
-- Não pode ser colocado no caminho dos inimigos
-- Não pode ser colocado nos menus
-- Visualização de alcance ao posicionar
-- Indicador visual de posição válida/inválida
+#### Posicionamento
+- 40px mínimo entre torres
+- Fora do caminho dos inimigos
+- Preview de alcance e validade
+- Não pode ser nos menus
 
-## Sistema de Inimigos
+### Inimigos
 
-### Tipos de Inimigos
+#### Tipos
+1. **Básico (Roxo)**
+   - 100 vida + bônus/onda
+   - Velocidade 2
+   - 3 ouro
+   - Sem resistências
 
-#### 1. Inimigo Básico (Roxo)
-- **Vida**: 100 + bônus por onda
-- **Velocidade**: 2
-- **Chance de Spawn**: 60%
-- **Recompensa**: 3 ouro
-- **Vulnerável a**: Todos os efeitos
+2. **Tanque (Marrom)**
+   - 200 vida + bônus/onda
+   - Velocidade 1.2
+   - 12 ouro
+   - Imune a congelamento
 
-#### 2. Inimigo Tanque (Marrom)
-- **Vida**: 200 + bônus por onda
-- **Velocidade**: 1.2
-- **Chance de Spawn**: 20%
-- **Recompensa**: 12 ouro
-- **Imune a**: Efeito de lentidão
-- **Tamanho**: Maior que normal
+3. **Veloz (Verde)**
+   - 60 vida + bônus/onda
+   - Velocidade 3
+   - 5 ouro
+   - Imune a DoT
 
-#### 3. Inimigo Veloz (Verde)
-- **Vida**: 60 + bônus por onda
-- **Velocidade**: 3
-- **Chance de Spawn**: 30%
-- **Recompensa**: 5 ouro
-- **Imune a**: Dano ao longo do tempo
-- **Tamanho**: Menor que normal
+4. **Blindado (Cinza)**
+   - 150 vida + bônus/onda
+   - Velocidade 1.5
+   - 10 ouro
+   - -30% dano recebido
 
-#### 4. Inimigo Blindado (Cinza)
-- **Vida**: 150 + bônus por onda
-- **Velocidade**: 1.5
-- **Chance de Spawn**: 25%
-- **Recompensa**: 10 ouro
-- **Habilidade**: Reduz dano recebido em 30%
+5. **Curador (Verde Claro)**
+   - 180 vida + bônus/onda
+   - Velocidade 1.4
+   - 8 ouro
+   - Cura 5 HP/2s em 150px
 
-#### 5. Inimigo Curador (Verde Claro)
-- **Vida**: 180 + bônus por onda
-- **Velocidade**: 1.4
-- **Chance de Spawn**: 20%
-- **Recompensa**: 8 ouro
-- **Habilidade**: Cura aliados próximos
-- **Cura**:
-  - 5 HP a cada 2 segundos
-  - Raio de 150 pixels
-  - Efeito visual de cura
-- **Tamanho**: Menor que normal
+### Feitiços
 
-### Distribuição de Inimigos
+#### Tipos
+1. **Gelo**
+   - 10s cooldown
+   - Congela 1.5s
+   - Raio: 150px
+   - Tanques imunes
 
-#### Ondas Múltiplas de 5
-- Normal: 72%
-- Tanque: 10%
-- Veloz: 5%
-- Blindado: 8%
-- Curador: 5%
+2. **Fogo**
+   - 12s cooldown
+   - 20 dano/tick por 5s
+   - Raio: 200px
+   - Velozes imunes
 
-#### Ondas Pares
-- Normal: 82%
-- Tanque: 2.5%
-- Veloz: 8%
-- Blindado: 2.5%
-- Curador: 5%
+3. **Explosão**
+   - 15s cooldown
+   - 200 dano (-30% em blindados)
+   - Raio: 100px
 
-#### Ondas Normais
-- Normal: 85%
-- Tanque: 3%
-- Veloz: 3%
-- Blindado: 4%
-- Curador: 5%
+### Sistema de Ondas
+- 60 ondas máximo
+- 5 inimigos + 1/onda base
+- +1 inimigo/5 ondas
+- +2 inimigos/10 ondas
+- Vida: +8%/onda
+- Ouro: +5%/onda
+- Spawn mais rápido por onda
 
-### Efeitos de Status
+### Recursos
+- 200 ouro inicial
+- Venda: 100% mesmo turno
+- Venda: 50% + 5/melhoria outros turnos
+
+### Missões
+1. **Eliminação**
+   - 100 inimigos
+   - 2 orbes
+
+2. **Sobrevivência**
+   - 10 ondas
+   - 3 orbes
+
+### Projéteis
+- Raio: 5px
+- Velocidade: 7
+- Perseguem alvo
+- Dano baseado no defensor
+
+### Status
 1. **Congelamento**
-   - Paralisa o inimigo
-   - Duração: 90 frames
-   - Efeito visual azul
+   - 1.5s duração
+   - Paralisia total
+   - Visual azul
 
-2. **Queimadura (DoT)**
-   - Dano a cada 30 frames
-   - Duração: 120 frames
-   - Efeito visual laranja
-
-## Sistema de Ondas
-
-### Características
-- **Máximo de Ondas**: 60
-- **Inimigos Base**: 5 + 1 por onda
-- **Bônus de Inimigos**:
-  - +1 a cada 5 ondas
-  - +2 a cada 10 ondas
-
-### Tempos de Preparação
-- **Primeira Onda**: 60 segundos
-- **Demais Ondas**: 10 segundos
-- Opção de pular preparação
-
-### Escalamento
-- **Vida dos Inimigos**: +8% por onda
-- **Ouro por Inimigo**: +5% por onda
-- **Intervalo de Spawn**: Reduz 1.5 frames por onda (mínimo 45)
-
-## Sistema de Recursos
-
-### Ouro
-- **Inicial**: 300
-- **Recompensas Base**:
-  - Inimigo Normal: 3
-  - Inimigo Veloz: 5
-  - Inimigo Tanque: 12
-  - Inimigo Blindado: 10
-  - Inimigo Curador: 8
-
-### Sistema de Venda
-- **Mesma Onda**: 100% do valor investido
-- **Ondas Diferentes**:
-  - 50% do custo base
-  - +5 por melhoria realizada
-
-## Sistema de Projéteis
-
-### Características
-- **Raio**: 5px
-- **Velocidade**: 7
-- **Dano**: Definido pelo defensor
-- **Seguimento**: Persegue alvo até atingir
-
-## Condições de Vitória/Derrota
-- **Vitória**: Completar 60 ondas
-- **Derrota**: Base chegar a 0 de vida
+2. **Queimadura**
+   - 5s duração
+   - 20 dano/0.5s
+   - Visual laranja
