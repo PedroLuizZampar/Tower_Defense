@@ -161,7 +161,7 @@ def main():
 
     # Sistema de ondas e recursos
     wave_manager = WaveManager()
-    gold = 200  # Ouro inicial
+    gold = 110000  # Ouro inicial
     
     # Sistema de missões
     mission_manager = MissionManager()

@@ -35,7 +35,7 @@ class Enemy:
         self.health -= damage
         return self.health <= 0
         
-    def apply_freeze(self, duration_frames=90):
+    def apply_freeze(self, duration_frames=30):
         """Aplica efeito de congelamento"""
         if not self.is_frozen:  # Só aplica se não estiver já sob efeito
             self.freeze_timer = duration_frames
