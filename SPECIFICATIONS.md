@@ -6,30 +6,35 @@ Um jogo de Tower Defense em Pygame onde o jogador defende uma base contra ondas 
 ## Interface do Jogo
 
 ### Layout
-- Tela total: 1300x850px
-- Área de jogo: 1000x600px
-- Menu lateral: 300px largura (status dos inimigos)
+- Tela total: 1000x650px
+- Área de jogo: 1000x550px
 - Menu superior: 100px altura (informações da onda)
-- Menu inferior: 100px altura (loja de defensores)
+- Menus laterais retráteis à direita (inimigos e defensores)
 
 ### Menus
 1. **Menu Superior**
    - Status da onda atual e próxima
    - Tempo de preparação
    - Botão de pular preparação
-   - Missões retráteis
 
-2. **Menu Lateral**
+2. **Menu de Inimigos (Retrátil)**
    - Status detalhado dos inimigos
-   - Scroll vertical com roda do mouse
    - Estatísticas por tipo de inimigo
    - Informações da onda atual
+   - Aba lateral para expandir/recolher
 
-3. **Loja**
+3. **Menu de Defensores (Retrátil)**
    - Defensores disponíveis para compra
-   - Custo e status de desbloqueio
-   - Ouro atual do jogador
-   - Preview de alcance ao selecionar
+   - Custo em ouro e orbes
+   - Status de desbloqueio
+   - Ouro e orbes disponíveis
+   - Aba lateral para expandir/recolher
+
+4. **Menu de Missões (Retrátil)**
+   - Lista de missões ativas
+   - Progresso de cada missão
+   - Recompensas em orbes
+   - Botão de resgate de recompensa
 
 ## Mecânicas Principais
 
@@ -43,39 +48,39 @@ Um jogo de Tower Defense em Pygame onde o jogador defende uma base contra ondas 
 #### Tipos e Custos
 1. **Básico**
    - 50 ouro
-   - Dano: 8
-   - Ataque: 35 frames
-   - Disponível inicialmente
-
-2. **Congelante (Azul)**  
-   - 75 ouro + 2 orbes
    - Dano: 10
    - Ataque: 30 frames
+   - Disponível inicialmente
+   - Alcance: 120px
+
+2. **Congelante (Azul)**  
+   - 75 ouro + 2 orbes para desbloquear
+   - Dano: 10
+   - Ataque: 35 frames
    - Congela a cada 8 ataques
+   - Alcance: 150px
 
 3. **Flamejante (Vermelho)**
-   - 100 ouro + 3 orbes
+   - 100 ouro + 3 orbes para desbloquear
    - Dano: 12
-   - Ataque: 25 frames
+   - Ataque: 22 frames
    - DoT a cada 5 ataques
+   - Alcance: 135px
 
 4. **Luminoso (Amarelo)**
-   - 125 ouro + 5 orbes
-   - Dano: 15
-   - Ataque: 35 frames
+   - 125 ouro + 4 orbes para desbloquear
+   - Dano: 18
+   - Ataque: 40 frames
    - Buff de dano em área a cada 10 ataques
+   - Alcance: 200px
 
 #### Melhorias
-- Custo: 15 ouro × nível
+- Custo: 10 ouro × nível
 - +10% dano por nível
 - -1% tempo de ataque por nível
-- Valor de venda aumenta com melhorias
-
-#### Posicionamento
-- 40px mínimo entre torres
-- Fora do caminho dos inimigos
-- Preview de alcance e validade
-- Não pode ser nos menus
+- Valor de venda:
+  - 100% do investimento no mesmo turno
+  - 50% + 5 ouro por melhoria em outros turnos
 
 ### Inimigos
 
@@ -138,15 +143,19 @@ Um jogo de Tower Defense em Pygame onde o jogador defende uma base contra ondas 
 - Vida: +8%/onda
 - Ouro: +5%/onda
 - Spawn mais rápido por onda
+- Tempo de preparação:
+  - 60s primeira onda
+  - 10s demais ondas
 
 ### Recursos
 - 200 ouro inicial
+- 100 orbes iniciais
 - Venda: 100% mesmo turno
 - Venda: 50% + 5/melhoria outros turnos
 
 ### Missões
 1. **Eliminação**
-   - 100 inimigos
+   - 50 inimigos
    - 2 orbes
 
 2. **Sobrevivência**
@@ -169,3 +178,8 @@ Um jogo de Tower Defense em Pygame onde o jogador defende uma base contra ondas 
    - 5s duração
    - 20 dano/0.5s
    - Visual laranja
+
+3. **Buff de Dano**
+   - +50% dano
+   - Visual amarelo
+   - Duração: até próximo ataque

@@ -8,20 +8,17 @@ from defender import Defender, BlueDefender, RedDefender, YellowDefender, Defend
 from wave_manager import WaveManager
 from base import Base, SkipButton
 from upgrade_menu import UpgradeMenu
-from enemy_status import EnemyStatusMenu
 from spell import DamageSpell, FreezeSpell, DotSpell, SpellButton
-from mission_manager import MissionManager  # Importa o gerenciador de missões
+from mission_manager import MissionManager
 
 # Inicialização do Pygame
 pygame.init()
 
 # Configurações da tela
-ENEMY_MENU_WIDTH = 300  # Largura do menu lateral
-SCREEN_WIDTH = 1000 + ENEMY_MENU_WIDTH  # 1000 para o jogo + menu lateral
+SCREEN_WIDTH = 1000  # Removido menu lateral
 WAVE_MENU_HEIGHT = 100  # Altura do menu superior
-SCREEN_HEIGHT = 850  # Diminuído para reduzir altura da loja
-GAME_HEIGHT = 600
-SHOP_HEIGHT = 100  # Altura da loja reduzida
+SCREEN_HEIGHT = 650  # Altura total reduzida em 100px
+GAME_HEIGHT = SCREEN_HEIGHT - WAVE_MENU_HEIGHT  # Altura do jogo ajustada
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Tower Defense")
 
@@ -33,18 +30,18 @@ MENU_LIGHT_GRAY = (60, 60, 60)
 
 # Carrega o background
 background = pygame.image.load(os.path.join('assets', 'background.png'))
-background = pygame.transform.scale(background, (SCREEN_WIDTH - ENEMY_MENU_WIDTH, GAME_HEIGHT))
+background = pygame.transform.scale(background, (SCREEN_WIDTH, GAME_HEIGHT))
 
 # Definição do caminho (waypoints)
 PATH = [
-    (ENEMY_MENU_WIDTH, 430),      # Início (ajustado para começar após o menu)
-    (ENEMY_MENU_WIDTH + 160, 430),    # Primeiro ponto
-    (ENEMY_MENU_WIDTH + 160, 250),    # Subida 1
-    (ENEMY_MENU_WIDTH + 365, 250),    # Caminho reto superior
-    (ENEMY_MENU_WIDTH + 365, 480),    # Descida
-    (ENEMY_MENU_WIDTH + 630, 480),    # Caminho reto inferior
-    (ENEMY_MENU_WIDTH + 630, 365),    # Subida 2
-    (SCREEN_WIDTH, 365)  # Final
+    (0, 400),      # Início
+    (165, 400),    # Primeiro ponto
+    (165, 235),    # Subida 1
+    (365, 235),    # Caminho reto superior
+    (365, 460),    # Descida
+    (630, 460),    # Caminho reto inferior
+    (630, 350),    # Subida 2
+    (SCREEN_WIDTH, 350)  # Final (ajustado para o novo menu lateral)
 ]
 
 def is_point_on_path(x, y, path, margin=30):
@@ -70,28 +67,6 @@ def is_point_on_path(x, y, path, margin=30):
             
     return False
 
-def draw_shop_menu(screen, gold):
-    # Desenha o fundo do menu da loja
-    menu_rect = pygame.Rect(ENEMY_MENU_WIDTH, GAME_HEIGHT, SCREEN_WIDTH - ENEMY_MENU_WIDTH, SHOP_HEIGHT)
-    pygame.draw.rect(screen, MENU_GRAY, menu_rect)
-    
-    # Desenha uma linha separadora horizontal entre o jogo e a loja
-    pygame.draw.line(screen, WHITE, (ENEMY_MENU_WIDTH, GAME_HEIGHT), (SCREEN_WIDTH, GAME_HEIGHT), 2)
-    
-    # Desenha uma linha separadora vertical entre o menu de inimigos e a loja
-    pygame.draw.line(screen, WHITE, (ENEMY_MENU_WIDTH, GAME_HEIGHT), (ENEMY_MENU_WIDTH, SCREEN_HEIGHT), 2)
-    
-    # Desenha o título da loja
-    font = pygame.font.Font(None, 36)
-    title = font.render("LOJA DE DEFENSORES", True, WHITE)
-    title_rect = title.get_rect(midtop=(SCREEN_WIDTH // 2 - 180, GAME_HEIGHT + 50))
-    screen.blit(title, title_rect)
-    
-    # Desenha o ouro
-    gold_text = font.render(f"Ouro: {gold}", True, (255, 215, 0))
-    gold_rect = gold_text.get_rect(topright=(SCREEN_WIDTH - 20, GAME_HEIGHT + 10))
-    screen.blit(gold_text, gold_rect)
-
 def draw_wave_menu(screen, wave_manager, skip_button):
     """Desenha o menu superior com informações da onda"""
     # Desenha o fundo do menu
@@ -104,31 +79,27 @@ def draw_wave_menu(screen, wave_manager, skip_button):
     # Título "ONDAS"
     font = pygame.font.Font(None, 36)
     title = font.render("ONDAS", True, WHITE)
-    title_rect = title.get_rect(centerx=SCREEN_WIDTH//2 + 100, y=20)
+    title_rect = title.get_rect(centerx=SCREEN_WIDTH//2, y=20)
     screen.blit(title, title_rect)
     
     # Status da onda atual
     wave_text = font.render(wave_manager.get_wave_status(), True, WHITE)
-    wave_rect = wave_text.get_rect(centerx=SCREEN_WIDTH//2 + 100, y=60)
+    wave_rect = wave_text.get_rect(centerx=SCREEN_WIDTH//2, y=60)
     screen.blit(wave_text, wave_rect)
     
-    # Desenha o botão de pular
-    skip_button.rect.x = SCREEN_WIDTH - skip_button.width - 50
-    skip_button.rect.y = WAVE_MENU_HEIGHT//2 - skip_button.height//2
+    # Desenha o botão de pular no canto superior direito
+    skip_button.rect.x = SCREEN_WIDTH - skip_button.width - 10
+    skip_button.rect.y = 10
     skip_button.draw(screen, wave_manager.wave_active)
 
 def is_valid_placement(x, y, path, game_height, defenders, is_spell=False):
     """Verifica se é uma posição válida para colocar um defensor ou feitiço"""
     # Não pode colocar no menu lateral
-    if x <= ENEMY_MENU_WIDTH:
+    if x <= 0:
         return False
     
     # Não pode colocar no menu superior
     if y <= WAVE_MENU_HEIGHT:
-        return False
-    
-    # Não pode colocar na área da loja
-    if y >= GAME_HEIGHT:
         return False
     
     # Se for um defensor, verifica regras específicas
@@ -148,11 +119,221 @@ def is_valid_placement(x, y, path, game_height, defenders, is_spell=False):
             return False
     
     return True
-
 def draw_enemy_path(screen, path):
     """Desenha o caminho dos inimigos com uma cor semi-transparente"""
     pass  # Removida a visualização do caminho
 
+class EnemyShopMenu:
+    def __init__(self):
+        self.width = 250
+        self.height = SCREEN_HEIGHT - WAVE_MENU_HEIGHT
+        self.is_expanded = False
+        self.header_rect = None
+        
+    def draw(self, screen, wave_manager):
+        # Desenha o cabeçalho (sempre visível)
+        header_width = 40
+        header_height = 100
+        header_x = SCREEN_WIDTH - header_width
+        self.header_rect = pygame.Rect(header_x, WAVE_MENU_HEIGHT, header_width, header_height)
+        
+        # Se expandido, desenha o resto do menu
+        if self.is_expanded:
+            panel_rect = pygame.Rect(SCREEN_WIDTH - self.width - header_width, WAVE_MENU_HEIGHT, 
+                                   self.width, self.height)
+            pygame.draw.rect(screen, MENU_GRAY, panel_rect)
+            pygame.draw.rect(screen, WHITE, panel_rect, 2)
+            
+            # Desenha o cabeçalho
+            font = pygame.font.Font(None, 32)
+            text = font.render("INIMIGOS", True, WHITE)
+            text_rect = text.get_rect(center=(panel_rect.centerx, WAVE_MENU_HEIGHT + 25))
+            screen.blit(text, text_rect)
+            
+            # Desenha informações dos inimigos
+            y_offset = WAVE_MENU_HEIGHT + 45
+            font = pygame.font.Font(None, 18)
+            font_title = pygame.font.Font(None, 24)
+            
+            # Lista de inimigos para mostrar
+            enemies = [Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, HealerEnemy]
+            
+            for enemy_class in enemies:
+                # Fundo do card do inimigo
+                card_height = 90
+                card_rect = pygame.Rect(panel_rect.x + 10, y_offset, self.width - 20, card_height)
+                pygame.draw.rect(screen, (60, 60, 60), card_rect)
+                pygame.draw.rect(screen, WHITE, card_rect, 1)
+                
+                # Nome do inimigo
+                name_text = font_title.render(enemy_class.NAME, True, WHITE)
+                name_rect = name_text.get_rect(x=card_rect.x + 10, y=y_offset + 10)
+                screen.blit(name_text, name_rect)
+                
+                # Ícone do inimigo
+                pygame.draw.circle(screen, enemy_class.COLOR,
+                                 (card_rect.x + 30, y_offset + 50),
+                                 12)
+                
+                # Estatísticas
+                base_health = round(enemy_class.BASE_HEALTH * wave_manager.get_health_increase(), 1)
+                health_text = font.render(f"Vida: {int(base_health)}", True, WHITE)
+                screen.blit(health_text, (card_rect.x + 60, y_offset + 35))
+                
+                speed_text = font.render(f"Velocidade: {enemy_class.BASE_SPEED}", True, WHITE)
+                screen.blit(speed_text, (card_rect.x + 60, y_offset + 50))
+                
+                # Características especiais
+                special_text = None
+                if enemy_class == TankEnemy:
+                    special_text = "Resistente a Congelamento"
+                elif enemy_class == SpeedEnemy:
+                    special_text = "Resistente a Queimaduras"
+                elif enemy_class == ArmoredEnemy:
+                    special_text = "-30% Dano Recebido"
+                elif enemy_class == HealerEnemy:
+                    special_text = "Cura Aliados Próximos"
+                    
+                if special_text:
+                    spec_text = font.render(special_text, True, (50, 255, 50))
+                    screen.blit(spec_text, (card_rect.x + 60, y_offset + 65))
+                
+                y_offset += card_height + 5
+
+        # Sempre desenha o botão da aba
+        pygame.draw.rect(screen, MENU_GRAY, self.header_rect)
+        pygame.draw.rect(screen, WHITE, self.header_rect, 2)
+
+        # Desenha o ícone na vertical
+        font = pygame.font.Font(None, 18)
+        text = font.render("Inimigos", True, WHITE)
+
+        # Rotaciona o texto em 90 graus
+        text_vertical = pygame.transform.rotate(text, 270)
+
+        # Obtém a nova posição central para manter alinhado
+        text_rect = text_vertical.get_rect(center=self.header_rect.center)
+
+        # Desenha na tela
+        screen.blit(text_vertical, text_rect)
+
+    def handle_click(self, pos):
+        if self.header_rect and self.header_rect.collidepoint(pos):
+            self.is_expanded = not self.is_expanded
+            return True
+        return False
+
+class DefenderShopMenu:
+    def __init__(self, mission_manager):
+        self.width = 250
+        self.height = SCREEN_HEIGHT - WAVE_MENU_HEIGHT
+        self.is_expanded = False
+        self.header_rect = None
+        self.defender_buttons = []
+        self.mission_manager = mission_manager
+        self.setup_buttons()
+        self.selected_button = None
+        
+    def setup_buttons(self):
+        button_spacing = 90
+        start_y = WAVE_MENU_HEIGHT + 120
+        x_pos = SCREEN_WIDTH - self.width - 30
+        
+        self.defender_buttons = [
+            DefenderButton(BasicDefender, x_pos, self.mission_manager),
+            DefenderButton(BlueDefender, x_pos, self.mission_manager),
+            DefenderButton(RedDefender, x_pos, self.mission_manager),
+            DefenderButton(YellowDefender, x_pos, self.mission_manager)
+        ]
+        
+        for i, button in enumerate(self.defender_buttons):
+            button.rect.y = start_y + (i * button_spacing)
+    
+    def draw(self, screen, gold, selected_button=None):
+        header_width = 40
+        header_height = 100
+        header_x = SCREEN_WIDTH - header_width
+        self.header_rect = pygame.Rect(header_x, WAVE_MENU_HEIGHT + 98, header_width, header_height)
+        
+        if self.is_expanded:
+            panel_rect = pygame.Rect(SCREEN_WIDTH - self.width - header_width, WAVE_MENU_HEIGHT, 
+                                   self.width, self.height)
+            pygame.draw.rect(screen, MENU_GRAY, panel_rect)
+            pygame.draw.rect(screen, WHITE, panel_rect, 2)
+            
+            font = pygame.font.Font(None, 28)
+            text = font.render("DEFENSORES", True, WHITE)
+            text_rect = text.get_rect(center=(panel_rect.centerx, WAVE_MENU_HEIGHT + 25))
+            screen.blit(text, text_rect)
+            
+            gold_text = font.render(f"Ouro: {gold}", True, (255, 215, 0))
+            gold_rect = gold_text.get_rect(centerx=panel_rect.centerx, top=WAVE_MENU_HEIGHT + 50)
+            screen.blit(gold_text, gold_rect)
+            
+            orb_text = font.render(f"Orbes: {self.mission_manager.orbes}", True, (50, 255, 50))
+            orb_rect = orb_text.get_rect(centerx=panel_rect.centerx, top=WAVE_MENU_HEIGHT + 80)
+            screen.blit(orb_text, orb_rect)
+            
+            y_offset = WAVE_MENU_HEIGHT + 120
+            font = pygame.font.Font(None, 20)
+            font_title = pygame.font.Font(None, 24)
+            defenders = [BasicDefender, BlueDefender, RedDefender, YellowDefender]
+            
+            for defender_class in defenders:
+                card_height = 90
+                card_rect = pygame.Rect(panel_rect.x + 10, y_offset, self.width - 20, card_height)
+                pygame.draw.rect(screen, (60, 60, 60), card_rect)
+                pygame.draw.rect(screen, WHITE, card_rect, 1)
+                
+                name_text = font_title.render(defender_class.NAME, True, WHITE)
+                name_rect = name_text.get_rect(x=card_rect.x + 10, y=y_offset + 10)
+                screen.blit(name_text, name_rect)
+                
+                pygame.draw.circle(screen, defender_class.COLOR, (card_rect.x + 30, y_offset + 50), 12)
+                
+                damage_text = font.render(f"Dano: {defender_class.BASE_DAMAGE}", True, WHITE)
+                screen.blit(damage_text, (card_rect.x + 60, y_offset + 35))
+                
+                special_text = None
+                if defender_class == BlueDefender:
+                    special_text = "Congela inimigos"
+                elif defender_class == RedDefender:
+                    special_text = "Aplica queimaduras"
+                elif defender_class == YellowDefender:
+                    special_text = "Aumenta dano aliado"
+                
+                if special_text:
+                    spec_text = font.render(special_text, True, (50, 255, 50))
+                    screen.blit(spec_text, (card_rect.x + 60, y_offset + 65))
+                
+                y_offset += card_height + 5
+
+            ajust = 15
+            for button in self.defender_buttons:
+                button.draw(screen, gold, ajust)
+                ajust += 5
+        
+        pygame.draw.rect(screen, MENU_GRAY, self.header_rect)
+        pygame.draw.rect(screen, WHITE, self.header_rect, 2)
+        
+        font = pygame.font.Font(None, 18)
+        text = font.render("Defensores", True, WHITE)
+        text_vertical = pygame.transform.rotate(text, 270)
+        text_rect = text_vertical.get_rect(center=self.header_rect.center)
+        screen.blit(text_vertical, text_rect)
+    
+    def handle_click(self, pos, gold):
+        if self.header_rect and self.header_rect.collidepoint(pos):
+            self.is_expanded = not self.is_expanded
+            return None, True
+            
+        if self.is_expanded:
+            for button in self.defender_buttons:
+                if button.handle_click(pos, gold):
+                    self.is_expanded = False  # Fecha o menu ao selecionar um defensor
+                    return button, False
+        return None, False
+    
 def main():
     # Lista de inimigos, defensores e feitiços
     enemies = []
@@ -161,32 +342,22 @@ def main():
 
     # Sistema de ondas e recursos
     wave_manager = WaveManager()
-    gold = 110000  # Ouro inicial
+    gold = 200  # Ouro inicial
     
     # Sistema de missões
     mission_manager = MissionManager()
 
-    # Calcula as posições dos botões para centralizá-los
-    button_spacing = 120
-    total_width = button_spacing * 2
-    start_x = ENEMY_MENU_WIDTH + 30  # Ajustado para começar após o menu lateral
-
     # Interface
-    defender_buttons = [
-        DefenderButton(BasicDefender, start_x, mission_manager),
-        DefenderButton(BlueDefender, start_x + button_spacing, mission_manager),
-        DefenderButton(RedDefender, start_x + button_spacing * 2, mission_manager),
-        DefenderButton(YellowDefender, start_x + button_spacing * 3, mission_manager)
-    ]
+    enemy_shop = EnemyShopMenu()  # Menu lateral de inimigos
+    defender_shop = DefenderShopMenu(mission_manager)  # Menu lateral de defensores
     selected_button = None
     skip_button = SkipButton()
     base = Base()
     upgrade_menu = UpgradeMenu()
-    enemy_menu = EnemyStatusMenu(ENEMY_MENU_WIDTH)
 
     # Calcula as posições dos botões de feitiço
-    spell_spacing = 50
-    spell_start_x = ENEMY_MENU_WIDTH + 400  # Posição inicial dos botões de feitiço
+    spell_spacing = 60
+    spell_start_x = 400  # Posição inicial dos botões de feitiço
     
     # Interface
     spell_buttons = [
@@ -214,7 +385,6 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            enemy_menu.handle_scroll(event)  # Adiciona tratamento do scroll do menu de inimigos
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Verifica clique no botão de pular
                 if skip_button.handle_click(mouse_pos, wave_manager.wave_active):
@@ -223,6 +393,29 @@ def main():
                     
                 # Verifica clique nas missões
                 if mission_manager.handle_click(mouse_pos):
+                    continue
+                    
+                # Verifica clique no menu de inimigos
+                if enemy_shop.handle_click(mouse_pos):
+                    if enemy_shop.is_expanded:
+                        defender_shop.is_expanded = False
+                    continue
+                    
+                # Verifica clique no menu de defensores
+                button, was_header_click = defender_shop.handle_click(mouse_pos, gold)
+                if was_header_click:
+                    if defender_shop.is_expanded:
+                        enemy_shop.is_expanded = False
+                    continue
+                if button:
+                    # Se já tinha um botão selecionado, desseleciona
+                    if selected_button and selected_button != button:
+                        selected_button.selected = False
+                    selected_button = button if button.selected else None
+                    # Desseleciona defensor atual
+                    if selected_defender:
+                        selected_defender.selected = False
+                        selected_defender = None
                     continue
                     
                 # Verifica clique nos botões de feitiço
@@ -245,25 +438,6 @@ def main():
                         break
                         
                 if clicked_spell:
-                    continue
-                    
-                # Verifica clique nos botões de defensor
-                clicked_button = False
-                for button in defender_buttons:
-                    if button.handle_click(mouse_pos, gold):
-                        # Desseleciona outros botões
-                        for other_button in defender_buttons:
-                            if other_button != button:
-                                other_button.selected = False
-                        selected_button = button if button.selected else None
-                        clicked_button = True
-                        # Desseleciona defensor atual
-                        if selected_defender:
-                            selected_defender.selected = False
-                            selected_defender = None
-                        break
-                        
-                if clicked_button:
                     continue
                     
                 # Verifica clique nos botões de upgrade/venda
@@ -299,6 +473,11 @@ def main():
                         selected_defender.selected = False
                         
                     selected_defender = clicked_defender
+                    
+                    # Se selecionou um defensor, fecha os menus
+                    if selected_defender:
+                        enemy_shop.is_expanded = False
+                        defender_shop.is_expanded = False
                 
                 # Se um feitiço estiver selecionado e tem ouro suficiente
                 if selected_spell and selected_spell.selected:
@@ -456,14 +635,8 @@ def main():
         # Desenha o menu superior de ondas
         draw_wave_menu(screen, wave_manager, skip_button)
         
-        # Desenha o menu lateral de inimigos
-        enemy_menu.draw(screen, wave_manager)
-        
-        # Desenha uma linha separadora vertical
-        pygame.draw.line(screen, WHITE, (ENEMY_MENU_WIDTH, WAVE_MENU_HEIGHT), (ENEMY_MENU_WIDTH, SCREEN_HEIGHT), 2)
-        
         # Desenha o background após o menu lateral e superior
-        screen.blit(background, (ENEMY_MENU_WIDTH, WAVE_MENU_HEIGHT))
+        screen.blit(background, (0, WAVE_MENU_HEIGHT))
         
         # Desenha todos os inimigos
         for enemy in enemies:
@@ -477,22 +650,13 @@ def main():
         for defender in defenders:
             defender.draw(screen)
             
-        # Desenha o menu da loja
-        draw_shop_menu(screen, gold)
-        
-        # Desenha os botões de feitiço primeiro (camada inferior)
+        # Desenha os botões de feitiço
         for button in spell_buttons:
             button.draw(screen, gold)
         
-        # Desenha a interface dos defensores por último (camada superior)
-        for button in defender_buttons:
-            button.draw(screen, gold)
-            # Se o mouse estiver sobre o botão, mostra as estatísticas
-            if button.rect.collidepoint(mouse_pos):
-                # Posiciona o menu de estatísticas acima do botão
-                stats_x = button.rect.x
-                stats_y = button.rect.y - 130  # Altura do menu de stats + margem
-                upgrade_menu.draw_preview(screen, button.defender_class, stats_x, stats_y)
+        # Desenha os menus laterais
+        enemy_shop.draw(screen, wave_manager)
+        defender_shop.draw(screen, gold, selected_button)
         
         # Se um feitiço estiver selecionado, mostra a prévia
         if selected_spell and selected_spell.selected:

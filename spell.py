@@ -149,8 +149,7 @@ class SpellButton:
         self.width = 50  # Botões menores que os de defensores
         self.height = 50
         self.color = spell_class.COLOR
-        # Posiciona os botões no canto direito da tela, acima do menu inferior
-        self.rect = pygame.Rect(x_pos, 605, self.width, self.height)
+        self.rect = pygame.Rect(x_pos, 600, self.width, self.height)  # Ajustado para a nova altura
         self.selected = False
         self.spell_class = spell_class
         self.radius = spell_class.RADIUS
@@ -162,7 +161,7 @@ class SpellButton:
         pygame.draw.rect(screen, (60, 60, 60), self.rect)
         
         # Desenha o círculo do feitiço
-        inner_size = 30
+        inner_size = 35
         pygame.draw.circle(screen, button_color,
                          (self.rect.centerx, self.rect.centery),
                          inner_size // 2)
@@ -173,16 +172,16 @@ class SpellButton:
             
         # Se estiver em cooldown, desenha o tempo restante
         if self.cooldown_timer > 0:
-            font = pygame.font.Font(None, 24)
+            font = pygame.font.Font(None, 28)
             seconds = self.cooldown_timer // 60  # Converte frames para segundos
             text = font.render(str(seconds), True, (255, 255, 255))
-            text_rect = text.get_rect(center=(self.rect.centerx, self.rect.bottom - 25))
+            text_rect = text.get_rect(center=(self.rect.centerx, self.rect.bottom - 40))
             screen.blit(text, text_rect)
             
         # Desenha o nome do feitiço
-        font = pygame.font.Font(None, 20)
+        font = pygame.font.Font(None, 22)
         text = font.render(self.spell_class.NAME, True, (255, 255, 255))
-        text_rect = text.get_rect(center=(self.rect.centerx, self.rect.bottom + 10))
+        text_rect = text.get_rect(center=(self.rect.centerx, self.rect.top - 18))
         screen.blit(text, text_rect)
         
     def update(self):

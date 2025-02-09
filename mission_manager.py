@@ -36,7 +36,7 @@ class Mission:
             return self.reward
         return 0
 
-class MissionManager:
+class MissionManager:    
     def __init__(self):
         self.missions = [
             Mission("Elimine 50 inimigos", 50, 2),  # 2 orbes de recompensa
@@ -66,9 +66,8 @@ class MissionManager:
         
     def draw(self, screen):
         # Configurações do quadro de missões
-        panel_width = 250
-        screen_width = pygame.display.get_surface().get_width()
-        x = screen_width - panel_width
+        panel_width = 180
+        x = 0  # Posiciona no lado esquerdo
         
         # Desenha o cabeçalho (sempre visível)
         header_height = 40
@@ -80,16 +79,16 @@ class MissionManager:
         pygame.draw.rect(screen, (255, 255, 255), header_rect, 2)
         
         # Título e orbes no cabeçalho
-        font_title = pygame.font.Font(None, 32)
-        title = font_title.render(f"MISSÕES - {self.orbes} Orbes", True, (255, 255, 255))
+        font_title = pygame.font.Font(None, 24)
+        title = font_title.render(f"MISSÕES", True, (255, 255, 255))
         title_rect = title.get_rect(center=header_rect.center)
         screen.blit(title, title_rect)
         
         # Desenha a notificação se houver missões completadas não resgatadas
         if self.has_notifications():
-            notification_radius = 8
+            notification_radius = 6
             pygame.draw.circle(screen, (50, 255, 50),  # Verde
-                             (header_rect.right - 10, header_rect.top + 10),
+                             (header_rect.right - 12, header_rect.top + 12),
                              notification_radius)
         
         # Se o menu estiver expandido, desenha o resto
@@ -102,7 +101,7 @@ class MissionManager:
             pygame.draw.rect(screen, (255, 255, 255), panel_rect, 2)
             
             # Desenha cada missão
-            font = pygame.font.Font(None, 24)
+            font = pygame.font.Font(None, 20)
             y_offset = panel_rect.top + 20
             
             for mission in self.missions:
@@ -117,8 +116,8 @@ class MissionManager:
                 screen.blit(progress_text, progress_rect)
                 
                 # Barra de progresso
-                progress_width = 230
-                progress_height = 10
+                progress_width = 160
+                progress_height = 12
                 progress_x = x + 10
                 progress_y = y_offset + 25
                 

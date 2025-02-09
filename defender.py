@@ -7,7 +7,7 @@ class Defender:
     RANGE = 150  # Alcance do defensor
     MIN_DISTANCE = 40  # Distância mínima entre defensores
     COST = 100  # Custo do defensor
-    BASE_UPGRADE_COST = 15  # Custo base da melhoria
+    BASE_UPGRADE_COST = 10  # Custo base da melhoria
     UPGRADE_SELL_BONUS = 5  # Bônus de venda por melhoria
     COLOR = (0, 0, 255)  # Cor padrão (azul)
     PROJECTILE_COLOR = (255, 255, 0)  # Cor padrão do projétil
@@ -33,7 +33,6 @@ class Defender:
         self.placed_wave = current_wave
         self.upgrades_count = 0
         self.has_damage_buff = False
-        self.damage_multiplier = 1.0
         self.has_yellow_buff = False  # Novo atributo para controlar buff amarelo
 
     @classmethod
@@ -204,12 +203,12 @@ class BasicDefender(Defender):
     PROJECTILE_COLOR = (66, 86, 110)  # Cinza azulado escuro mais claro
     COST = 50  # Defensor mais barato
     NAME = "Básico"
-    BASE_DAMAGE = 8
-    BASE_ATTACK_COOLDOWN = 35  # Ataque mais lento
+    BASE_DAMAGE = 10
+    BASE_ATTACK_COOLDOWN = 30
+    RANGE = 120
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
-        self.damage_multiplier = 1.0
 
 class BlueDefender(Defender):
     COLOR = (0, 0, 255)  # Azul
@@ -217,8 +216,8 @@ class BlueDefender(Defender):
     COST = 75
     NAME = "Congelante"
     BASE_DAMAGE = 10
-    BASE_ATTACK_COOLDOWN = 30
-    UNLOCK_COST = 2  # Custo em orbes para desbloquear
+    BASE_ATTACK_COOLDOWN = 35
+    UNLOCK_COST = 2  # 2 orbes para desbloquear
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
@@ -257,12 +256,12 @@ class RedDefender(Defender):
     COST = 100
     NAME = "Flamejante"
     BASE_DAMAGE = 12  # Mais dano base
-    BASE_ATTACK_COOLDOWN = 25  # Ataca mais rápido
-    UNLOCK_COST = 3  # Custo em orbes para desbloquear
+    BASE_ATTACK_COOLDOWN = 22  # Ataca mais rápido
+    UNLOCK_COST = 3  # 3 orbes para desbloquear
+    RANGE = 135
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
-        self.damage_multiplier = 1.2  # 20% mais dano
         self.attacks_until_burn = 5  # Contador para a habilidade especial
         self.attack_counter = 0  # Contador atual de ataques
         
@@ -298,14 +297,13 @@ class YellowDefender(Defender):
     PROJECTILE_COLOR = (255, 255, 150)  # Amarelo claro
     COST = 125
     NAME = "Luminoso"
-    BASE_DAMAGE = 15  # Ainda mais dano base
-    BASE_ATTACK_COOLDOWN = 35  # Mais lento
-    UNLOCK_COST = 5  # Custo em orbes para desbloquear
+    BASE_DAMAGE = 18  # Ainda mais dano base
+    BASE_ATTACK_COOLDOWN = 40  # Mais lento
+    UNLOCK_COST = 4  # 4 orbes para desbloquear (ajustado de 5 para 4)
     RANGE = 200  # Maior alcance
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
-        self.damage_multiplier = 1.5  # 50% mais dano
         self.attacks_until_buff = 10  # Contador para a habilidade especial
         self.attack_counter = 0  # Contador atual de ataques
         
@@ -337,68 +335,45 @@ class YellowDefender(Defender):
 
 class DefenderButton:
     def __init__(self, defender_class, x_pos, mission_manager=None):
-        self.width = 100
-        self.height = 100
-        self.color = defender_class.get_preview_color()
-        self.rect = pygame.Rect(x_pos, 700, self.width, self.height)
-        self.selected = False
-        self.cost = defender_class.COST
+        self.width = 230
+        self.height = 90
         self.defender_class = defender_class
-        self.range = defender_class.RANGE
+        self.cost = defender_class.COST
+        self.selected = False
+        self.rect = pygame.Rect(x_pos, 0, self.width, self.height)
         self.mission_manager = mission_manager
-        self.unlocked = not hasattr(defender_class, 'UNLOCK_COST')  # Básico já vem desbloqueado
+        self.unlocked = not hasattr(defender_class, 'UNLOCK_COST')
         
-    def is_available(self, gold):
-        if not self.unlocked:
-            return False
-        return gold >= self.cost
-        
-    def draw(self, screen, gold):
-        # Desenha o fundo do botão
-        button_color = (100, 100, 100)  # Cor base para botão bloqueado/indisponível
-        
-        if self.unlocked:
-            button_color = self.color if gold >= self.cost else (100, 100, 100)
-        
-        pygame.draw.rect(screen, (60, 60, 60), self.rect)
-        
-        # Desenha o defensor
-        inner_size = 70
-        inner_rect = pygame.Rect(
-            self.rect.centerx - inner_size//2,
-            self.rect.centery - inner_size//2,
-            inner_size,
-            inner_size
-        )
-        pygame.draw.rect(screen, button_color, inner_rect)
-        
-        # Desenha borda quando selecionado
+    def draw(self, screen, gold, ajust):        
         if self.selected:
-            pygame.draw.rect(screen, (255, 255, 255), self.rect, 3)
-            
-        # Desenha o custo ou requisito de desbloqueio
-        font = pygame.font.Font(None, 24)
-        if not self.unlocked and hasattr(self.defender_class, 'UNLOCK_COST'):
-            text = font.render(f"{self.defender_class.UNLOCK_COST} Orbes", True, (50, 255, 50))
-        else:
-            text_color = (255, 215, 0) if gold >= self.cost else (255, 0, 0)
-            text = font.render(str(self.cost), True, text_color)
+            rect_copy = self.rect.copy()
+            pygame.draw.rect(screen, (255, 255, 255), rect_copy, 3)
         
-        text_rect = text.get_rect(center=(self.rect.centerx, self.rect.bottom + 10))
-        screen.blit(text, text_rect)
-        
-        # Se estiver bloqueado, desenha um cadeado
         if not self.unlocked:
-            lock_text = font.render("Bloqueado", True, (255, 15, 15))
-            lock_rect = lock_text.get_rect(center=inner_rect.center)
-            screen.blit(lock_text, lock_rect)
+            lock_surface = pygame.Surface((self.rect.width, self.rect.height))  
+            lock_surface.set_alpha(240)
+            lock_surface.fill((99, 99, 99))
+            screen.blit(lock_surface, (self.rect.x, self.rect.y - 15 + ajust))
+
+            font_block = pygame.font.Font(None, 24)
+            orb_text = font_block.render(f"{self.defender_class.UNLOCK_COST} Orbes", True, (50, 255, 50))
+            orb_rect = orb_text.get_rect(center=(self.rect.centerx, self.rect.centery + ajust))
+            screen.blit(orb_text, orb_rect)
             
+            lock_text = font_block.render("Bloqueado", True, (252, 25, 25))
+            lock_rect = lock_text.get_rect(center=(self.rect.centerx, self.rect.centery + ajust - 27))
+            screen.blit(lock_text, lock_rect)
+        else:
+            font = pygame.font.Font(None, 16)
+            cost_text = font.render(f"Custo: {self.cost}", True, 
+                                    (255, 215, 0) if gold >= self.cost else (255, 0, 0))
+            cost_rect = cost_text.get_rect(x=self.rect.x + 60, centery=self.rect.centery + ajust - 3)
+            screen.blit(cost_text, cost_rect)
+
     def handle_click(self, pos, gold):
         if self.rect.collidepoint(pos):
             if not self.unlocked and hasattr(self.defender_class, 'UNLOCK_COST'):
-                # Tenta desbloquear com orbes
-                if (self.mission_manager and 
-                    self.mission_manager.orbes >= self.defender_class.UNLOCK_COST):
+                if self.mission_manager and self.mission_manager.orbes >= self.defender_class.UNLOCK_COST:
                     self.mission_manager.orbes -= self.defender_class.UNLOCK_COST
                     self.unlocked = True
                 return False
