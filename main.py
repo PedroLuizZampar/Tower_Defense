@@ -4,7 +4,7 @@ import os
 import sys
 import random
 from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy
-from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender
+from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender, GreenDefender, OrangeDefender
 from wave_manager import WaveManager
 from base import Base, SkipButton
 from upgrade_menu import UpgradeMenu
@@ -100,6 +100,9 @@ def is_valid_placement(x, y, path, game_height, defenders, is_spell=False):
     
     # Não pode colocar no menu superior
     if y <= WAVE_MENU_HEIGHT:
+        return False
+    
+    if x < 200 and y > SCREEN_HEIGHT - 80:
         return False
     
     # Se for um defensor, verifica regras específicas
@@ -236,18 +239,20 @@ class DefenderShopMenu:
         
     def setup_buttons(self):
         button_spacing = 90
-        start_y = WAVE_MENU_HEIGHT + 120
+        start_y = WAVE_MENU_HEIGHT + 30
         x_pos = SCREEN_WIDTH - self.width - 30
         
         self.defender_buttons = [
             DefenderButton(BasicDefender, x_pos, self.mission_manager),
             DefenderButton(BlueDefender, x_pos, self.mission_manager),
             DefenderButton(RedDefender, x_pos, self.mission_manager),
-            DefenderButton(YellowDefender, x_pos, self.mission_manager)
+            DefenderButton(YellowDefender, x_pos, self.mission_manager),
+            DefenderButton(GreenDefender, x_pos, self.mission_manager),
+            DefenderButton(OrangeDefender, x_pos, self.mission_manager)
         ]
         
         for i, button in enumerate(self.defender_buttons):
-            button.rect.y = start_y + (i * button_spacing)
+            button.rect.y = start_y + (i * button_spacing) + 15  # Added +15 to match visual position
     
     def draw(self, screen, gold, selected_button=None):
         header_width = 40
@@ -266,18 +271,10 @@ class DefenderShopMenu:
             text_rect = text.get_rect(center=(panel_rect.centerx, WAVE_MENU_HEIGHT + 25))
             screen.blit(text, text_rect)
             
-            gold_text = font.render(f"Ouro: {gold}", True, (255, 215, 0))
-            gold_rect = gold_text.get_rect(centerx=panel_rect.centerx, top=WAVE_MENU_HEIGHT + 50)
-            screen.blit(gold_text, gold_rect)
-            
-            orb_text = font.render(f"Orbes: {self.mission_manager.orbes}", True, (50, 255, 50))
-            orb_rect = orb_text.get_rect(centerx=panel_rect.centerx, top=WAVE_MENU_HEIGHT + 80)
-            screen.blit(orb_text, orb_rect)
-            
-            y_offset = WAVE_MENU_HEIGHT + 120
+            y_offset = WAVE_MENU_HEIGHT + 45
             font = pygame.font.Font(None, 20)
             font_title = pygame.font.Font(None, 24)
-            defenders = [BasicDefender, BlueDefender, RedDefender, YellowDefender]
+            defenders = [BasicDefender, BlueDefender, RedDefender, YellowDefender, GreenDefender, OrangeDefender]
             
             for defender_class in defenders:
                 card_height = 90
@@ -301,6 +298,10 @@ class DefenderShopMenu:
                     special_text = "Aplica queimaduras"
                 elif defender_class == YellowDefender:
                     special_text = "Aumenta dano aliado"
+                elif defender_class == GreenDefender:
+                    special_text = "Reduz velocidade"
+                elif defender_class == OrangeDefender:
+                    special_text = "Atira em 2 alvos"
                 
                 if special_text:
                     spec_text = font.render(special_text, True, (50, 255, 50))
@@ -308,10 +309,8 @@ class DefenderShopMenu:
                 
                 y_offset += card_height + 5
 
-            ajust = 15
             for button in self.defender_buttons:
-                button.draw(screen, gold, ajust)
-                ajust += 5
+                button.draw(screen, gold, 0)  # Removed ajust parameter since we handle it in setup_buttons
         
         pygame.draw.rect(screen, MENU_GRAY, self.header_rect)
         pygame.draw.rect(screen, WHITE, self.header_rect, 2)
@@ -385,7 +384,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 # Verifica clique no botão de pular
                 if skip_button.handle_click(mouse_pos, wave_manager.wave_active):
                     wave_manager.skip_preparation()
@@ -697,6 +696,18 @@ def main():
         
         # Desenha o menu de missões por último para ficar sempre visível
         mission_manager.draw(screen)
+        
+        # Desenha o texto de ouro e orbes no canto inferior esquerdo
+        font = pygame.font.Font(None, 28)
+        info_menu_rect = pygame.Rect(0, SCREEN_HEIGHT - 70, 200, 70)
+        pygame.draw.rect(screen, MENU_GRAY, info_menu_rect)
+        pygame.draw.rect(screen, WHITE, info_menu_rect, 2)
+        
+        gold_text = font.render(f"Ouro: {gold}", True, (255, 215, 0))
+        screen.blit(gold_text, (20, SCREEN_HEIGHT - 60))
+        
+        orb_text = font.render(f"Orbes: {mission_manager.orbes}", True, (50, 255, 50))
+        screen.blit(orb_text, (20, SCREEN_HEIGHT - 30))
         
         pygame.display.flip()
         clock.tick(60)

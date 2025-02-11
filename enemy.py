@@ -25,6 +25,8 @@ class Enemy:
         self.dot_damage = 0
         self.is_burning = False
         self.reward_given = False  # Nova flag para controlar se já deu recompensa
+        self.slow_timer = 0  # Timer para o efeito de slow
+        self.is_slowed = False  # Flag para indicar se está sob efeito de slow
         
     @classmethod
     def should_spawn(cls):
@@ -51,14 +53,28 @@ class Enemy:
             self.dot_damage = damage
             self.is_burning = True
         
+    def apply_slow(self, duration_frames=180):  # 3 segundos de duração
+        """Aplica efeito de lentidão"""
+        if not self.is_slowed and not self.is_frozen:  # Só aplica se não estiver já sob efeito de slow ou freeze
+            self.slow_timer = duration_frames
+            self.speed = self.base_speed * 0.5  # Reduz a velocidade pela metade
+            self.is_slowed = True
+        
     def update(self):
         """Atualiza os efeitos de status"""
         # Atualiza efeito de congelamento
         if self.freeze_timer > 0:
             self.freeze_timer -= 1
             if self.freeze_timer <= 0:
-                self.speed = self.base_speed
+                self.speed = self.base_speed if not self.is_slowed else self.base_speed * 0.5
                 self.is_frozen = False
+                
+        # Atualiza efeito de slow
+        if self.slow_timer > 0:
+            self.slow_timer -= 1
+            if self.slow_timer <= 0:
+                self.speed = self.base_speed
+                self.is_slowed = False
                 
         # Atualiza dano ao longo do tempo
         if self.dot_timer > 0:
@@ -125,6 +141,9 @@ class Enemy:
         if self.is_burning:
             pygame.draw.circle(screen, (255, 165, 0), (int(self.x), int(self.y)), 
                              self.radius + 3, 3)  # Círculo laranja para DoT
+        if self.is_slowed:
+            pygame.draw.circle(screen, (0, 100, 0), (int(self.x), int(self.y)), 
+                             self.radius + 4, 3)  # Círculo verde escuro para slow
 
 class TankEnemy(Enemy):
     COLOR = (150, 75, 0)  # Marrom
@@ -139,6 +158,10 @@ class TankEnemy(Enemy):
         
     def apply_freeze(self, duration_frames=120):
         # Imune a freeze
+        pass
+        
+    def apply_slow(self, duration_frames=180):
+        # Imune a slow
         pass
 
 class SpeedEnemy(Enemy):

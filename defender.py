@@ -333,6 +333,102 @@ class YellowDefender(Defender):
                     for defender in self.get_defenders_in_range(defenders):
                         defender.apply_damage_buff()
 
+class GreenDefender(Defender):
+    COLOR = (0, 100, 0)  # Verde escuro
+    PROJECTILE_COLOR = (0, 150, 0)  # Verde escuro mais claro
+    COST = 85
+    NAME = "Retardante"
+    BASE_DAMAGE = 15
+    BASE_ATTACK_COOLDOWN = 25
+    RANGE = 140
+    UNLOCK_COST = 3  # 3 orbes para desbloquear
+    
+    def __init__(self, x, y, current_wave):
+        super().__init__(x, y, current_wave)
+        self.attacks_until_slow = 5  # Contador para a habilidade especial
+        self.attack_counter = 0  # Contador atual de ataques
+        
+    def update(self, enemies):
+        # Atualiza o cooldown
+        if self.cooldown_timer > 0:
+            self.cooldown_timer -= 1
+            
+        # Procura alvo e atira
+        if self.cooldown_timer <= 0:
+            target = self.find_target(enemies)
+            if target:
+                projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                projectile.damage = self.get_total_damage()
+                self.projectiles.append(projectile)
+                self.cooldown_timer = self.attack_cooldown
+                self.has_damage_buff = False  # Remove o buff após o ataque
+                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                
+                # Incrementa o contador de ataques
+                self.attack_counter += 1
+                
+                # Se atingiu o número necessário de ataques, ativa a habilidade especial
+                if self.attack_counter >= self.attacks_until_slow:
+                    self.attack_counter = 0  # Reseta o contador
+                    # Aplica slow em todos os inimigos no alcance
+                    for enemy in self.get_enemies_in_range(enemies):
+                        enemy.apply_slow(180)  # 3 segundos de slow
+
+class OrangeDefender(Defender):
+    COLOR = (255, 140, 0)  # Laranja
+    PROJECTILE_COLOR = (255, 165, 0)  # Laranja mais claro
+    COST = 150
+    NAME = "Duplo"
+    BASE_DAMAGE = 14
+    BASE_ATTACK_COOLDOWN = 35
+    RANGE = 180
+    UNLOCK_COST = 4  # 4 orbes para desbloquear
+    
+    def __init__(self, x, y, current_wave):
+        super().__init__(x, y, current_wave)
+        
+    def find_targets(self, enemies):
+        """Encontra os dois alvos mais próximos"""
+        targets = []
+        distances = []
+        
+        for enemy in enemies:
+            dx = enemy.x - self.x
+            dy = enemy.y - self.y
+            distance = math.sqrt(dx ** 2 + dy ** 2)
+            
+            if distance <= self.RANGE:
+                # Insere ordenado por distância
+                insert_index = 0
+                for i, d in enumerate(distances):
+                    if distance > d:
+                        insert_index = i + 1
+                distances.insert(insert_index, distance)
+                targets.insert(insert_index, enemy)
+                
+                if len(targets) > 2:  # Mantém apenas os 2 mais próximos
+                    targets.pop()
+                    distances.pop()
+                    
+        return targets
+        
+    def update(self, enemies):
+        # Atualiza o cooldown
+        if self.cooldown_timer > 0:
+            self.cooldown_timer -= 1
+            
+        # Procura alvos e atira
+        if self.cooldown_timer <= 0:
+            targets = self.find_targets(enemies)
+            if targets:
+                for target in targets:
+                    projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                    projectile.damage = self.get_total_damage()
+                    self.projectiles.append(projectile)
+                self.cooldown_timer = self.attack_cooldown
+                self.has_damage_buff = False  # Remove o buff após o ataque
+                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+
 class DefenderButton:
     def __init__(self, defender_class, x_pos, mission_manager=None):
         self.width = 230
