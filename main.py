@@ -132,6 +132,11 @@ class EnemyShopMenu:
         self.height = SCREEN_HEIGHT - WAVE_MENU_HEIGHT
         self.is_expanded = False
         self.header_rect = None
+        self.current_page = 0  # Current page index
+        self.enemies_per_page = 5  # Number of enemies per page
+        self.prev_button_rect = None  # Rectangle for previous page button
+        self.next_button_rect = None  # Rectangle for next page button
+        self.enemies = [Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, HealerEnemy]
         
     def draw(self, screen, wave_manager):
         # Desenha o cabeçalho (sempre visível)
@@ -147,21 +152,20 @@ class EnemyShopMenu:
             pygame.draw.rect(screen, MENU_GRAY, panel_rect)
             pygame.draw.rect(screen, WHITE, panel_rect, 2)
             
-            # Desenha o cabeçalho
-            font = pygame.font.Font(None, 32)
+            font = pygame.font.Font(None, 28)
             text = font.render("INIMIGOS", True, WHITE)
             text_rect = text.get_rect(center=(panel_rect.centerx, WAVE_MENU_HEIGHT + 25))
             screen.blit(text, text_rect)
             
-            # Desenha informações dos inimigos
+            # Draw only the enemies for the current page
+            start_index = self.current_page * self.enemies_per_page
+            end_index = min(start_index + self.enemies_per_page, len(self.enemies))
+            
             y_offset = WAVE_MENU_HEIGHT + 45
-            font = pygame.font.Font(None, 18)
+            font = pygame.font.Font(None, 20)
             font_title = pygame.font.Font(None, 24)
             
-            # Lista de inimigos para mostrar
-            enemies = [Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, HealerEnemy]
-            
-            for enemy_class in enemies:
+            for enemy_class in self.enemies[start_index:end_index]:
                 # Fundo do card do inimigo
                 card_height = 90
                 card_rect = pygame.Rect(panel_rect.x + 10, y_offset, self.width - 20, card_height)
@@ -202,28 +206,76 @@ class EnemyShopMenu:
                     screen.blit(spec_text, (card_rect.x + 60, y_offset + 65))
                 
                 y_offset += card_height + 5
-
+            
+            # Draw pagination controls
+            button_width = 40
+            button_height = 30
+            spacing = 150
+            start_x = panel_rect.right - 240
+            button_y = panel_rect.top + 10
+            
+            font_back_next = pygame.font.Font(None, 35)
+            
+            # Previous page button
+            self.prev_button_rect = pygame.Rect(start_x, button_y, button_width, button_height)
+            prev_color = MENU_LIGHT_GRAY if self.current_page > 0 else (60, 60, 60)
+            pygame.draw.rect(screen, prev_color, self.prev_button_rect)
+            pygame.draw.rect(screen, WHITE, self.prev_button_rect, 1)
+            
+            prev_text = font_back_next.render("<", True, WHITE if self.current_page > 0 else (150, 150, 150))
+            prev_rect = prev_text.get_rect(center=self.prev_button_rect.center)
+            screen.blit(prev_text, prev_rect)
+            
+            # Next page button
+            self.next_button_rect = pygame.Rect(start_x + button_width + spacing, button_y, button_width, button_height)
+            next_color = MENU_LIGHT_GRAY if end_index < len(self.enemies) else (60, 60, 60)
+            pygame.draw.rect(screen, next_color, self.next_button_rect)
+            pygame.draw.rect(screen, WHITE, self.next_button_rect, 1)
+            
+            next_text = font_back_next.render(">", True, WHITE if end_index < len(self.enemies) else (150, 150, 150))
+            next_rect = next_text.get_rect(center=self.next_button_rect.center)
+            screen.blit(next_text, next_rect)
+            
+            # Page indicator
+            total_pages = (len(self.enemies) + self.enemies_per_page - 1) // self.enemies_per_page
+            page_text = font.render(f"{self.current_page + 1}/{total_pages}", True, WHITE)
+            page_rect = page_text.get_rect(centerx=panel_rect.centerx, bottom=panel_rect.bottom - 10)
+            screen.blit(page_text, page_rect)
+        
         # Sempre desenha o botão da aba
         pygame.draw.rect(screen, MENU_GRAY, self.header_rect)
         pygame.draw.rect(screen, WHITE, self.header_rect, 2)
-
+        
         # Desenha o ícone na vertical
         font = pygame.font.Font(None, 18)
         text = font.render("Inimigos", True, WHITE)
-
+        
         # Rotaciona o texto em 90 graus
         text_vertical = pygame.transform.rotate(text, 270)
-
+        
         # Obtém a nova posição central para manter alinhado
         text_rect = text_vertical.get_rect(center=self.header_rect.center)
-
+        
         # Desenha na tela
         screen.blit(text_vertical, text_rect)
-
+        
     def handle_click(self, pos):
         if self.header_rect and self.header_rect.collidepoint(pos):
             self.is_expanded = not self.is_expanded
             return True
+            
+        if self.is_expanded:
+            # Handle pagination button clicks
+            if self.prev_button_rect and self.prev_button_rect.collidepoint(pos) and self.current_page > 0:
+                self.current_page -= 1
+                return True
+                
+            if self.next_button_rect and self.next_button_rect.collidepoint(pos):
+                next_page_start = (self.current_page + 1) * self.enemies_per_page
+                if next_page_start < len(self.enemies):
+                    self.current_page += 1
+                    return True
+                    
         return False
 
 class DefenderShopMenu:
@@ -232,10 +284,14 @@ class DefenderShopMenu:
         self.height = SCREEN_HEIGHT - WAVE_MENU_HEIGHT
         self.is_expanded = False
         self.header_rect = None
-        self.defender_buttons = []
         self.mission_manager = mission_manager
-        self.setup_buttons()
         self.selected_button = None
+        self.current_page = 0  # Current page index
+        self.defenders_per_page = 5  # Number of defenders per page
+        self.prev_button_rect = None  # Rectangle for previous page button
+        self.next_button_rect = None  # Rectangle for next page button
+        self.defender_buttons = []  # Initialize empty list first
+        self.setup_buttons()  # Then call setup_buttons
         
     def setup_buttons(self):
         button_spacing = 90
@@ -251,8 +307,17 @@ class DefenderShopMenu:
             DefenderButton(OrangeDefender, x_pos, self.mission_manager)
         ]
         
-        for i, button in enumerate(self.defender_buttons):
-            button.rect.y = start_y + (i * button_spacing) + 15  # Added +15 to match visual position
+        # Update positions based on current page
+        self.update_button_positions()
+        
+    def update_button_positions(self):
+        button_spacing = 90
+        start_y = WAVE_MENU_HEIGHT + 30
+        start_index = self.current_page * self.defenders_per_page
+        end_index = min(start_index + self.defenders_per_page, len(self.defender_buttons))
+        
+        for i, button in enumerate(self.defender_buttons[start_index:end_index], 0):
+            button.rect.y = start_y + (i * button_spacing) + 15
     
     def draw(self, screen, gold, selected_button=None):
         header_width = 40
@@ -271,46 +336,92 @@ class DefenderShopMenu:
             text_rect = text.get_rect(center=(panel_rect.centerx, WAVE_MENU_HEIGHT + 25))
             screen.blit(text, text_rect)
             
+            # Draw only the defenders for the current page
+            start_index = self.current_page * self.defenders_per_page
+            end_index = min(start_index + self.defenders_per_page, len(self.defender_buttons))
+            
             y_offset = WAVE_MENU_HEIGHT + 45
             font = pygame.font.Font(None, 20)
             font_title = pygame.font.Font(None, 24)
-            defenders = [BasicDefender, BlueDefender, RedDefender, YellowDefender, GreenDefender, OrangeDefender]
             
-            for defender_class in defenders:
+            for i, button in enumerate(self.defender_buttons[start_index:end_index]):
+                # Fundo do card do defensor
                 card_height = 90
                 card_rect = pygame.Rect(panel_rect.x + 10, y_offset, self.width - 20, card_height)
                 pygame.draw.rect(screen, (60, 60, 60), card_rect)
                 pygame.draw.rect(screen, WHITE, card_rect, 1)
                 
-                name_text = font_title.render(defender_class.NAME, True, WHITE)
+                # Nome do defensor
+                name_text = font_title.render(button.defender_class.NAME, True, WHITE)
                 name_rect = name_text.get_rect(x=card_rect.x + 10, y=y_offset + 10)
                 screen.blit(name_text, name_rect)
                 
-                pygame.draw.circle(screen, defender_class.COLOR, (card_rect.x + 30, y_offset + 50), 12)
+                # Ícone do defensor
+                pygame.draw.circle(screen, button.defender_class.COLOR,
+                                 (card_rect.x + 30, y_offset + 50),
+                                 12)
                 
-                damage_text = font.render(f"Dano: {defender_class.BASE_DAMAGE}", True, WHITE)
+                # Dano
+                damage_text = font.render(f"Dano: {button.defender_class.BASE_DAMAGE}", True, WHITE)
                 screen.blit(damage_text, (card_rect.x + 60, y_offset + 35))
                 
+                # Habilidade especial
                 special_text = None
-                if defender_class == BlueDefender:
+                if button.defender_class == BlueDefender:
                     special_text = "Congela inimigos"
-                elif defender_class == RedDefender:
+                elif button.defender_class == RedDefender:
                     special_text = "Aplica queimaduras"
-                elif defender_class == YellowDefender:
+                elif button.defender_class == YellowDefender:
                     special_text = "Aumenta dano aliado"
-                elif defender_class == GreenDefender:
+                elif button.defender_class == GreenDefender:
                     special_text = "Reduz velocidade"
-                elif defender_class == OrangeDefender:
+                elif button.defender_class == OrangeDefender:
                     special_text = "Atira em 2 alvos"
                 
                 if special_text:
                     spec_text = font.render(special_text, True, (50, 255, 50))
                     screen.blit(spec_text, (card_rect.x + 60, y_offset + 65))
                 
+                # Desenha o botão
+                button.rect.y = y_offset
+                button.draw(screen, gold, 0)
+                
                 y_offset += card_height + 5
-
-            for button in self.defender_buttons:
-                button.draw(screen, gold, 0)  # Removed ajust parameter since we handle it in setup_buttons
+            
+            # Draw pagination controls
+            button_width = 40
+            button_height = 30
+            spacing = 150
+            start_x = panel_rect.right - 240
+            button_y = panel_rect.top + 10
+            
+            font_back_next = pygame.font.Font(None, 35)
+            
+            # Previous page button
+            self.prev_button_rect = pygame.Rect(start_x, button_y, button_width, button_height)
+            prev_color = MENU_LIGHT_GRAY if self.current_page > 0 else (60, 60, 60)
+            pygame.draw.rect(screen, prev_color, self.prev_button_rect)
+            pygame.draw.rect(screen, WHITE, self.prev_button_rect, 1)
+            
+            prev_text = font_back_next.render("<", True, WHITE if self.current_page > 0 else (150, 150, 150))
+            prev_rect = prev_text.get_rect(center=self.prev_button_rect.center)
+            screen.blit(prev_text, prev_rect)
+            
+            # Next page button
+            self.next_button_rect = pygame.Rect(start_x + button_width + spacing, button_y, button_width, button_height)
+            next_color = MENU_LIGHT_GRAY if end_index < len(self.defender_buttons) else (60, 60, 60)
+            pygame.draw.rect(screen, next_color, self.next_button_rect)
+            pygame.draw.rect(screen, WHITE, self.next_button_rect, 1)
+            
+            next_text = font_back_next.render(">", True, WHITE if end_index < len(self.defender_buttons) else (150, 150, 150))
+            next_rect = next_text.get_rect(center=self.next_button_rect.center)
+            screen.blit(next_text, next_rect)
+            
+            # Page indicator
+            total_pages = (len(self.defender_buttons) + self.defenders_per_page - 1) // self.defenders_per_page
+            page_text = font.render(f"{self.current_page + 1}/{total_pages}", True, WHITE)
+            page_rect = page_text.get_rect(centerx=panel_rect.centerx, bottom=panel_rect.bottom - 10)
+            screen.blit(page_text, page_rect)
         
         pygame.draw.rect(screen, MENU_GRAY, self.header_rect)
         pygame.draw.rect(screen, WHITE, self.header_rect, 2)
@@ -327,10 +438,28 @@ class DefenderShopMenu:
             return None, True
             
         if self.is_expanded:
-            for button in self.defender_buttons:
+            # Handle pagination button clicks
+            if self.prev_button_rect and self.prev_button_rect.collidepoint(pos) and self.current_page > 0:
+                self.current_page -= 1
+                self.update_button_positions()
+                return None, False
+                
+            if self.next_button_rect and self.next_button_rect.collidepoint(pos):
+                next_page_start = (self.current_page + 1) * self.defenders_per_page
+                if next_page_start < len(self.defender_buttons):
+                    self.current_page += 1
+                    self.update_button_positions()
+                    return None, False
+            
+            # Handle defender button clicks
+            start_index = self.current_page * self.defenders_per_page
+            end_index = min(start_index + self.defenders_per_page, len(self.defender_buttons))
+            
+            for button in self.defender_buttons[start_index:end_index]:
                 if button.handle_click(pos, gold):
                     self.is_expanded = False  # Fecha o menu ao selecionar um defensor
                     return button, False
+                    
         return None, False
     
 def main():

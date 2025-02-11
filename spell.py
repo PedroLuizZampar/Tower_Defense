@@ -175,7 +175,7 @@ class SpellButton:
             font = pygame.font.Font(None, 28)
             seconds = self.cooldown_timer // 60  # Converte frames para segundos
             text = font.render(str(seconds), True, (255, 255, 255))
-            text_rect = text.get_rect(center=(self.rect.centerx, self.rect.bottom - 40))
+            text_rect = text.get_rect(center=(self.rect.centerx, self.rect.bottom - 25))
             screen.blit(text, text_rect)
             
         # Desenha o nome do feitiço

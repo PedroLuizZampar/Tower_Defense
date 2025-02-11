@@ -91,7 +91,7 @@ class UpgradeMenu:
         
         # Dano atual
         damage = defender.get_total_damage()
-        damage_text = self.font.render(f"Dano: {damage}", True, self.text_color)
+        damage_text = self.font.render(f"Dano: {round(damage, 2)}", True, self.text_color)
         screen.blit(damage_text, (stats_x, stats_y))
         
         # Velocidade de ataque

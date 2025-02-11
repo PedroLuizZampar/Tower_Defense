@@ -449,21 +449,21 @@ class DefenderButton:
             lock_surface = pygame.Surface((self.rect.width, self.rect.height))  
             lock_surface.set_alpha(240)
             lock_surface.fill((99, 99, 99))
-            screen.blit(lock_surface, (self.rect.x, self.rect.y - 15 + ajust))
+            screen.blit(lock_surface, (self.rect.x, self.rect.y + ajust))
 
             font_block = pygame.font.Font(None, 24)
             orb_text = font_block.render(f"{self.defender_class.UNLOCK_COST} Orbes", True, (50, 255, 50))
-            orb_rect = orb_text.get_rect(center=(self.rect.centerx, self.rect.centery + ajust))
+            orb_rect = orb_text.get_rect(center=(self.rect.centerx, self.rect.centery + ajust + 15))
             screen.blit(orb_text, orb_rect)
             
             lock_text = font_block.render("Bloqueado", True, (252, 25, 25))
-            lock_rect = lock_text.get_rect(center=(self.rect.centerx, self.rect.centery + ajust - 27))
+            lock_rect = lock_text.get_rect(center=(self.rect.centerx, self.rect.centery + ajust - 15))
             screen.blit(lock_text, lock_rect)
         else:
             font = pygame.font.Font(None, 16)
             cost_text = font.render(f"Custo: {self.cost}", True, 
                                     (255, 215, 0) if gold >= self.cost else (255, 0, 0))
-            cost_rect = cost_text.get_rect(x=self.rect.x + 60, centery=self.rect.centery + ajust - 3)
+            cost_rect = cost_text.get_rect(x=self.rect.x + 60, centery=self.rect.centery + ajust + 12)
             screen.blit(cost_text, cost_rect)
 
     def handle_click(self, pos, gold):

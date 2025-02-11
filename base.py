@@ -11,12 +11,11 @@ class Base:
         
     def draw(self, screen):
         # Desenha a barra de vida da base no canto inferior direito
-        bar_width = 200
+        bar_width = 150
         bar_height = 20
         screen_width = pygame.display.get_surface().get_width()
-        screen_height = pygame.display.get_surface().get_height()
         x = screen_width - bar_width - 10
-        y = screen_height - bar_height - 10
+        y = 75
         
         # Fundo da barra (vermelho)
         pygame.draw.rect(screen, (255, 0, 0),
@@ -32,9 +31,9 @@ class Base:
                         (x, y, bar_width, bar_height), 2)
         
         # Texto da vida
-        font = pygame.font.Font(None, 24)
+        font = pygame.font.Font(None, 18)
         text = font.render(f"Base: {int(self.health)}/{self.max_health}", True, (255, 255, 255))
-        text_rect = text.get_rect(midright=(x - 10, y + bar_height//2))
+        text_rect = text.get_rect(midright=(x - 5, y + bar_height//2))
         screen.blit(text, text_rect)
 
 class SkipButton:
