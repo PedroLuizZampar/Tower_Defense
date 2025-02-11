@@ -27,6 +27,8 @@ class Enemy:
         self.reward_given = False  # Nova flag para controlar se já deu recompensa
         self.slow_timer = 0  # Timer para o efeito de slow
         self.is_slowed = False  # Flag para indicar se está sob efeito de slow
+        self.weakness_timer = 0  # Timer para o efeito de fraqueza
+        self.is_weakened = False  # Flag para indicar se está sob efeito de fraqueza
         
     @classmethod
     def should_spawn(cls):
@@ -34,6 +36,9 @@ class Enemy:
         
     def take_damage(self, damage):
         """Aplica dano ao inimigo e retorna True se ele morreu"""
+        # Se estiver sob efeito de fraqueza, aumenta o dano em 20%
+        if self.is_weakened:
+            damage *= 1.2
         self.health -= damage
         return self.health <= 0
         
@@ -60,8 +65,19 @@ class Enemy:
             self.speed = self.base_speed * 0.5  # Reduz a velocidade pela metade
             self.is_slowed = True
         
+    def apply_weakness(self, duration_frames=120):  # 2 segundos = 120 frames
+        """Aplica efeito de fraqueza"""
+        self.weakness_timer = duration_frames
+        self.is_weakened = True
+        
     def update(self):
         """Atualiza os efeitos de status"""
+        # Atualiza efeito de fraqueza
+        if self.weakness_timer > 0:
+            self.weakness_timer -= 1
+            if self.weakness_timer <= 0:
+                self.is_weakened = False
+                
         # Atualiza efeito de congelamento
         if self.freeze_timer > 0:
             self.freeze_timer -= 1
@@ -144,6 +160,11 @@ class Enemy:
         if self.is_slowed:
             pygame.draw.circle(screen, (0, 100, 0), (int(self.x), int(self.y)), 
                              self.radius + 4, 3)  # Círculo verde escuro para slow
+        if self.is_weakened:
+            # Cria uma superfície com transparência para o efeito de fraqueza
+            weakness_surface = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
+            pygame.draw.circle(weakness_surface, (0, 0, 0, 128), (self.radius, self.radius), self.radius)
+            screen.blit(weakness_surface, (int(self.x - self.radius), int(self.y - self.radius)))
 
 class TankEnemy(Enemy):
     COLOR = (150, 75, 0)  # Marrom
@@ -239,6 +260,167 @@ class HealerEnemy(Enemy):
         pygame.draw.circle(heal_surface, (*self.COLOR, 50), (self.heal_radius, self.heal_radius), self.heal_radius)
         screen.blit(heal_surface, (int(self.x - self.heal_radius), int(self.y - self.heal_radius)))
 
+class FreezeAuraEnemy(Enemy):
+    COLOR = (135, 206, 235)  # Azul claro
+    BASE_HEALTH = 120  # 20% mais vida
+    BASE_SPEED = 1.8  # 10% mais lento
+    SPAWN_CHANCE = 20  # 20% de chance de spawn
+    NAME = "Congelante"
+    
+    def __init__(self, path):
+        super().__init__(path)
+        self.radius = 11
+        self.freeze_radius = 200  # Raio do efeito de congelamento ao morrer
+        
+    def take_damage(self, damage):
+        """Aplica dano e retorna True se morreu, aplicando congelamento em todas as torres próximas"""
+        self.health -= damage
+        if self.health <= 0:
+            return "freeze_aura"  # Retorna indicador especial para aplicar o efeito
+        return False
+        
+    def get_defenders_in_range(self, defenders):
+        """Retorna todos os defensores dentro do raio de congelamento"""
+        in_range = []
+        for defender in defenders:
+            dx = defender.x - self.x
+            dy = defender.y - self.y
+            distance = math.sqrt(dx ** 2 + dy ** 2)
+            if distance <= self.freeze_radius:
+                in_range.append(defender)
+        return in_range
+        
+    def apply_freeze_aura(self, defenders):
+        """Aplica o efeito de congelamento em todos os defensores no alcance"""
+        affected_defenders = self.get_defenders_in_range(defenders)
+        for defender in affected_defenders:
+            defender.apply_freeze(90)  # 1.5 segundos de congelamento
+        
+    def draw(self, screen):
+        super().draw(screen)
+        # Desenha uma aura indicando o raio de efeito
+        aura_surface = pygame.Surface((self.freeze_radius * 2, self.freeze_radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(aura_surface, (*self.COLOR, 30), (self.freeze_radius, self.freeze_radius), self.freeze_radius)
+        screen.blit(aura_surface, (int(self.x - self.freeze_radius), int(self.y - self.freeze_radius)))
+
+class RageEnemy(Enemy):
+    COLOR = (139, 0, 0)  # Vermelho escuro
+    BASE_HEALTH = 150  # 50% mais vida
+    BASE_SPEED = 1.5  # 25% mais lento inicialmente
+    SPAWN_CHANCE = 25  # 25% de chance de spawn
+    NAME = "Furioso"
+    
+    def __init__(self, path):
+        super().__init__(path)
+        self.radius = 13
+        self.original_speed = self.speed
+        self.max_speed_multiplier = 3.0  # Velocidade máxima é 3x a velocidade base
+        
+    def update(self):
+        result = super().update()
+        # Aumenta a velocidade baseado na vida perdida
+        health_percent = self.health / self.max_health
+        speed_multiplier = 1 + ((1 - health_percent) * (self.max_speed_multiplier - 1))
+        self.speed = self.original_speed * speed_multiplier
+        return result
+        
+    def draw(self, screen):
+        super().draw(screen)
+        # Efeito visual de rage (partículas vermelhas) quando estiver rápido
+        if self.speed > self.original_speed * 1.5:
+            for _ in range(3):
+                offset_x = random.randint(-self.radius, self.radius)
+                offset_y = random.randint(-self.radius, self.radius)
+                pygame.draw.circle(screen, (255, 0, 0), 
+                                 (int(self.x + offset_x), int(self.y + offset_y)), 2)
+
+class StealthEnemy(Enemy):
+    COLOR = (128, 0, 128)  # Roxo
+    BASE_HEALTH = 80  # 20% menos vida
+    BASE_SPEED = 2.2  # 10% mais rápido
+    SPAWN_CHANCE = 20  # 20% de chance de spawn
+    NAME = "Furtivo"
+    
+    def __init__(self, path):
+        super().__init__(path)
+        self.radius = 10
+        self.stealth_timer = 0
+        self.stealth_interval = 60  # 5 segundos (240 frames)
+        self.stealth_duration = 45  # 1 segundo (60 frames)
+        self.is_stealthed = False
+        self.fade_start = 20  # Frames para começar a aparecer/desaparecer
+        
+    def update(self):
+        result = super().update()
+        
+        # Atualiza o timer de stealth
+        self.stealth_timer += 1
+        if self.stealth_timer >= self.stealth_interval:
+            self.is_stealthed = True
+            if self.stealth_timer >= self.stealth_interval + self.stealth_duration:
+                self.stealth_timer = 0
+                self.is_stealthed = False
+                
+        return result
+        
+    def draw(self, screen):
+        # Calcula a opacidade baseada no estado de stealth
+        if self.is_stealthed:
+            # Começando a ficar invisível
+            if self.stealth_timer - self.stealth_interval < self.fade_start:
+                opacity = 255 * (1 - (self.stealth_timer - self.stealth_interval) / self.fade_start)
+            # Começando a reaparecer
+            elif self.stealth_timer >= self.stealth_interval + self.stealth_duration - self.fade_start:
+                opacity = 255 * ((self.stealth_timer - (self.stealth_interval + self.stealth_duration - self.fade_start)) / self.fade_start)
+            # Totalmente invisível
+            else:
+                opacity = 0
+        else:
+            opacity = 255
+            
+        # Cria uma superfície com transparência
+        enemy_surface = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
+        
+        # Desenha o círculo do inimigo com a opacidade calculada
+        pygame.draw.circle(enemy_surface, (*self.COLOR, int(opacity)), 
+                         (self.radius, self.radius), self.radius)
+        screen.blit(enemy_surface, (int(self.x - self.radius), int(self.y - self.radius)))
+        
+        # Desenha a barra de vida apenas se não estiver totalmente invisível
+        if opacity > 0:
+            health_percentage = self.health / self.max_health
+            bar_width = self.radius * 2
+            bar_height = 4
+            bar_x = self.x - self.radius
+            bar_y = self.y - self.radius - 8
+            
+            # Fundo da barra (vermelho)
+            bar_surface = pygame.Surface((bar_width, bar_height), pygame.SRCALPHA)
+            pygame.draw.rect(bar_surface, (255, 0, 0, int(opacity)),
+                           (0, 0, bar_width, bar_height))
+            screen.blit(bar_surface, (bar_x, bar_y))
+            
+            # Frente da barra (verde)
+            pygame.draw.rect(bar_surface, (0, 255, 0, int(opacity)),
+                           (0, 0, bar_width * health_percentage, bar_height))
+            screen.blit(bar_surface, (bar_x, bar_y))
+            
+        # Desenha efeitos de status com a mesma opacidade
+        if self.is_frozen and opacity > 0:
+            pygame.draw.circle(screen, (*[50, 150, 255], int(opacity)), 
+                             (int(self.x), int(self.y)), self.radius, 3)
+        if self.is_burning and opacity > 0:
+            pygame.draw.circle(screen, (*[255, 165, 0], int(opacity)), 
+                             (int(self.x), int(self.y)), self.radius + 3, 3)
+        if self.is_slowed and opacity > 0:
+            pygame.draw.circle(screen, (*[0, 100, 0], int(opacity)), 
+                             (int(self.x), int(self.y)), self.radius + 4, 3)
+        if self.is_weakened and opacity > 0:
+            weakness_surface = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
+            pygame.draw.circle(weakness_surface, (0, 0, 0, int(opacity * 0.5)), 
+                             (self.radius, self.radius), self.radius)
+            screen.blit(weakness_surface, (int(self.x - self.radius), int(self.y - self.radius)))
+
 def spawn_random_enemy(path, wave_manager):
     """Spawna um inimigo aleatório baseado nas chances da onda atual"""
     chances = wave_manager.get_spawn_chances()
@@ -258,6 +440,12 @@ def spawn_random_enemy(path, wave_manager):
                 return ArmoredEnemy(path), True
             elif enemy_type == 'healer':
                 return HealerEnemy(path), True
+            elif enemy_type == 'freeze_aura':
+                return FreezeAuraEnemy(path), True
+            elif enemy_type == 'rage':
+                return RageEnemy(path), True
+            elif enemy_type == 'stealth':
+                return StealthEnemy(path), True
             break
             
     # Se algo der errado, retorna um inimigo normal

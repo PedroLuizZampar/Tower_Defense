@@ -34,6 +34,8 @@ class Defender:
         self.upgrades_count = 0
         self.has_damage_buff = False
         self.has_yellow_buff = False  # Novo atributo para controlar buff amarelo
+        self.is_frozen = False  # Novo atributo para controlar efeito de congelamento
+        self.freeze_timer = 0  # Timer para duração do efeito de congelamento
 
     @classmethod
     def get_preview_color(cls):
@@ -71,13 +73,17 @@ class Defender:
         return total
         
     def find_target(self, enemies):
-        # Se já tem um alvo e ele ainda está vivo e no alcance, mantém o mesmo alvo
+        # Se já tem um alvo e ele ainda está vivo, no alcance e não está invisível
         if self.current_target in enemies:
-            dx = self.current_target.x - self.x
-            dy = self.current_target.y - self.y
-            distance = math.sqrt(dx ** 2 + dy ** 2)
-            if distance <= self.RANGE:
-                return self.current_target
+            # Verifica se o alvo está invisível
+            if hasattr(self.current_target, 'is_stealthed') and self.current_target.is_stealthed:
+                self.current_target = None
+            else:
+                dx = self.current_target.x - self.x
+                dy = self.current_target.y - self.y
+                distance = math.sqrt(dx ** 2 + dy ** 2)
+                if distance <= self.RANGE:
+                    return self.current_target
                 
         # Se não tem alvo ou o alvo morreu/saiu do alcance, procura o mais próximo
         self.current_target = None
@@ -85,6 +91,10 @@ class Defender:
         min_distance = float('inf')
         
         for enemy in enemies:
+            # Ignora inimigos invisíveis
+            if hasattr(enemy, 'is_stealthed') and enemy.is_stealthed:
+                continue
+                
             dx = enemy.x - self.x
             dy = enemy.y - self.y
             distance = math.sqrt(dx ** 2 + dy ** 2)
@@ -100,6 +110,10 @@ class Defender:
         """Retorna todos os inimigos dentro do alcance"""
         in_range = []
         for enemy in enemies:
+            # Ignora inimigos invisíveis
+            if hasattr(enemy, 'is_stealthed') and enemy.is_stealthed:
+                continue
+                
             dx = enemy.x - self.x
             dy = enemy.y - self.y
             distance = math.sqrt(dx ** 2 + dy ** 2)
@@ -123,10 +137,22 @@ class Defender:
         """Aplica o buff de dano do defensor amarelo"""
         self.has_yellow_buff = True
         
+    def apply_freeze(self, duration_frames=90):  # 1.5 segundos = 90 frames
+        """Aplica efeito de congelamento na torre"""
+        self.is_frozen = True
+        self.freeze_timer = duration_frames
+
     def update(self, enemies):
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
             self.cooldown_timer -= 1
+            
+        # Atualiza o efeito de congelamento
+        if self.is_frozen:
+            self.freeze_timer -= 1
+            if self.freeze_timer <= 0:
+                self.is_frozen = False
+            return  # Se estiver congelado, não faz mais nada
             
         # Procura alvo e atira
         if self.cooldown_timer <= 0:
@@ -138,12 +164,20 @@ class Defender:
                 self.cooldown_timer = self.attack_cooldown
                 self.has_damage_buff = False  # Remove o buff após o ataque
                 self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
-                
+
     def draw(self, screen, show_range=False):
         # Desenha o range se solicitado ou se selecionado
         if show_range or self.selected:
             pygame.draw.circle(screen, (200, 200, 200), (int(self.x), int(self.y)), 
                              self.RANGE, 1)
+        
+        # Desenha o efeito de congelamento (quadrado translúcido azul-claro)
+        if self.is_frozen:
+            freeze_surface = pygame.Surface((self.SIZE + 20, self.SIZE + 20), pygame.SRCALPHA)
+            pygame.draw.rect(freeze_surface, (135, 206, 235, 128),  # Azul claro semi-transparente
+                           (0, 0, self.SIZE + 20, self.SIZE + 20))
+            screen.blit(freeze_surface, (self.x - (self.SIZE + 20)//2, 
+                                     self.y - (self.SIZE + 20)//2))
         
         # Desenha o defensor
         base_color = (min(255, self.color[0] + 50), min(255, self.color[1] + 50), min(255, self.color[2] + 50)) if self.selected else self.color
@@ -225,6 +259,13 @@ class BlueDefender(Defender):
         self.attack_counter = 0  # Contador atual de ataques
         
     def update(self, enemies):
+        # Atualiza o efeito de congelamento primeiro
+        if self.is_frozen:
+            self.freeze_timer -= 1
+            if self.freeze_timer <= 0:
+                self.is_frozen = False
+            return  # Se estiver congelado, não faz mais nada
+
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
             self.cooldown_timer -= 1
@@ -266,6 +307,13 @@ class RedDefender(Defender):
         self.attack_counter = 0  # Contador atual de ataques
         
     def update(self, enemies):
+        # Atualiza o efeito de congelamento primeiro
+        if self.is_frozen:
+            self.freeze_timer -= 1
+            if self.freeze_timer <= 0:
+                self.is_frozen = False
+            return  # Se estiver congelado, não faz mais nada
+
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
             self.cooldown_timer -= 1
@@ -308,6 +356,13 @@ class YellowDefender(Defender):
         self.attack_counter = 0  # Contador atual de ataques
         
     def update(self, enemies, defenders=None):
+        # Atualiza o efeito de congelamento primeiro
+        if self.is_frozen:
+            self.freeze_timer -= 1
+            if self.freeze_timer <= 0:
+                self.is_frozen = False
+            return  # Se estiver congelado, não faz mais nada
+
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
             self.cooldown_timer -= 1
@@ -349,6 +404,13 @@ class GreenDefender(Defender):
         self.attack_counter = 0  # Contador atual de ataques
         
     def update(self, enemies):
+        # Atualiza o efeito de congelamento primeiro
+        if self.is_frozen:
+            self.freeze_timer -= 1
+            if self.freeze_timer <= 0:
+                self.is_frozen = False
+            return  # Se estiver congelado, não faz mais nada
+
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
             self.cooldown_timer -= 1
@@ -372,7 +434,7 @@ class GreenDefender(Defender):
                     self.attack_counter = 0  # Reseta o contador
                     # Aplica slow em todos os inimigos no alcance
                     for enemy in self.get_enemies_in_range(enemies):
-                        enemy.apply_slow(180)  # 3 segundos de slow
+                        enemy.apply_freeze(180)  # 3 segundos de congelamento
 
 class OrangeDefender(Defender):
     COLOR = (255, 140, 0)  # Laranja
@@ -413,6 +475,13 @@ class OrangeDefender(Defender):
         return targets
         
     def update(self, enemies):
+        # Atualiza o efeito de congelamento primeiro
+        if self.is_frozen:
+            self.freeze_timer -= 1
+            if self.freeze_timer <= 0:
+                self.is_frozen = False
+            return  # Se estiver congelado, não faz mais nada
+
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
             self.cooldown_timer -= 1
@@ -428,6 +497,57 @@ class OrangeDefender(Defender):
                 self.cooldown_timer = self.attack_cooldown
                 self.has_damage_buff = False  # Remove o buff após o ataque
                 self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+
+class PurpleDefender(Defender):
+    COLOR = (75, 0, 130)  # Roxo escuro
+    PROJECTILE_COLOR = (128, 0, 128)  # Roxo mais claro para projéteis
+    BASE_DAMAGE = 15
+    COST = 250
+    RANGE = 150
+    NAME = "Enfraquecedor"
+    UNLOCK_COST = 15  # Custo em orbes para desbloquear
+    
+    def __init__(self, x, y, current_wave):
+        super().__init__(x, y, current_wave)
+        self.hits_counter = 0  # Contador de hits
+        self.hits_for_weakness = 10  # Número de hits necessários para aplicar fraqueza
+        
+    def update(self, enemies):
+        # Atualiza o efeito de congelamento primeiro
+        if self.is_frozen:
+            self.freeze_timer -= 1
+            if self.freeze_timer <= 0:
+                self.is_frozen = False
+            return  # Se estiver congelado, não faz mais nada
+
+        # Atualiza o cooldown
+        if self.cooldown_timer > 0:
+            self.cooldown_timer -= 1
+            
+        # Procura alvo e atira
+        if self.cooldown_timer <= 0:
+            target = self.find_target(enemies)
+            if target:
+                projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                projectile.damage = self.get_total_damage()
+                self.projectiles.append(projectile)
+                self.cooldown_timer = self.attack_cooldown
+                self.has_damage_buff = False  # Remove o buff após o ataque
+                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                
+                # Incrementa o contador de hits
+                self.hits_counter += 1
+                
+                # Se atingiu o número necessário de hits, aplica fraqueza em todos os inimigos no alcance
+                if self.hits_counter >= self.hits_for_weakness:
+                    self.hits_counter = 0  # Reseta o contador
+                    # Aplica fraqueza em todos os inimigos no alcance
+                    for enemy in self.get_enemies_in_range(enemies):
+                        enemy.apply_weakness()  # Aplica o efeito de fraqueza
+                
+                self.attack_cooldown = 30  # Reseta o cooldown de ataque
+                return projectile
+        return None
 
 class DefenderButton:
     def __init__(self, defender_class, x_pos, mission_manager=None):

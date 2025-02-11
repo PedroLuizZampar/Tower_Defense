@@ -3,8 +3,8 @@ import math
 import os
 import sys
 import random
-from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy
-from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender, GreenDefender, OrangeDefender
+from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy
+from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender, GreenDefender, OrangeDefender, PurpleDefender
 from wave_manager import WaveManager
 from base import Base, SkipButton
 from upgrade_menu import UpgradeMenu
@@ -136,7 +136,7 @@ class EnemyShopMenu:
         self.enemies_per_page = 5  # Number of enemies per page
         self.prev_button_rect = None  # Rectangle for previous page button
         self.next_button_rect = None  # Rectangle for next page button
-        self.enemies = [Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, HealerEnemy]
+        self.enemies = [Enemy, TankEnemy, SpeedEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy]
         
     def draw(self, screen, wave_manager):
         # Desenha o cabeçalho (sempre visível)
@@ -200,6 +200,12 @@ class EnemyShopMenu:
                     special_text = "-30% Dano Recebido"
                 elif enemy_class == HealerEnemy:
                     special_text = "Cura Aliados Próximos"
+                elif enemy_class == FreezeAuraEnemy:
+                    special_text = "Congela Torres ao Morrer"
+                elif enemy_class == RageEnemy:
+                    special_text = "Acelera ao Perder Vida"
+                elif enemy_class == StealthEnemy:
+                    special_text = "Fica Invisível Periodicamente"
                     
                 if special_text:
                     spec_text = font.render(special_text, True, (50, 255, 50))
@@ -304,7 +310,8 @@ class DefenderShopMenu:
             DefenderButton(RedDefender, x_pos, self.mission_manager),
             DefenderButton(YellowDefender, x_pos, self.mission_manager),
             DefenderButton(GreenDefender, x_pos, self.mission_manager),
-            DefenderButton(OrangeDefender, x_pos, self.mission_manager)
+            DefenderButton(OrangeDefender, x_pos, self.mission_manager),
+            DefenderButton(PurpleDefender, x_pos, self.mission_manager)
         ]
         
         # Update positions based on current page
@@ -356,10 +363,11 @@ class DefenderShopMenu:
                 name_rect = name_text.get_rect(x=card_rect.x + 10, y=y_offset + 10)
                 screen.blit(name_text, name_rect)
                 
-                # Ícone do defensor
-                pygame.draw.circle(screen, button.defender_class.COLOR,
-                                 (card_rect.x + 30, y_offset + 50),
-                                 12)
+                # Ícone do defensor (agora como retângulo)
+                icon_size = 24  # Tamanho do retângulo
+                icon_rect = pygame.Rect(card_rect.x + 18, y_offset + 38, icon_size, icon_size)
+                pygame.draw.rect(screen, button.defender_class.COLOR, icon_rect)
+                pygame.draw.rect(screen, WHITE, icon_rect, 1)  # Borda branca
                 
                 # Dano
                 damage_text = font.render(f"Dano: {button.defender_class.BASE_DAMAGE}", True, WHITE)
@@ -377,6 +385,8 @@ class DefenderShopMenu:
                     special_text = "Reduz velocidade"
                 elif button.defender_class == OrangeDefender:
                     special_text = "Atira em 2 alvos"
+                elif button.defender_class == PurpleDefender:
+                    special_text = "Aplica fraqueza (10 hits)"
                 
                 if special_text:
                     spec_text = font.render(special_text, True, (50, 255, 50))
@@ -588,6 +598,8 @@ def main():
                         gold -= selected_button.cost
                         selected_button.selected = False
                         selected_button = None
+                        # Mantém o menu de defensores aberto
+                        defender_shop.is_expanded = True
                 else:
                     # Verifica clique em defensores existentes
                     clicked_defender = None
@@ -631,6 +643,10 @@ def main():
                 # Identifica o tipo do inimigo e adiciona o ouro
                 for enemy in enemies[:]:  # Verifica todos os inimigos
                     if enemy.health <= 0 and not enemy.reward_given:  # Se morreu e não deu recompensa
+                        # Se for um FreezeAuraEnemy, aplica o efeito de congelamento
+                        if isinstance(enemy, FreezeAuraEnemy):
+                            enemy.apply_freeze_aura(defenders)
+                        
                         # Identifica o tipo do inimigo
                         if isinstance(enemy, SpeedEnemy):
                             enemy_type = 'speed'
@@ -723,6 +739,10 @@ def main():
                         # Se o inimigo morreu com este projétil
                         damage_result = projectile.target.take_damage(projectile.damage)
                         
+                        # Se o inimigo é um FreezeAuraEnemy e morreu, aplica congelamento em área
+                        if isinstance(projectile.target, FreezeAuraEnemy) and damage_result == "freeze_aura":
+                            projectile.target.apply_freeze_aura(defenders)
+                            
                         if damage_result:  # Se morreu normalmente
                             # Identifica o tipo do inimigo
                             if isinstance(projectile.target, SpeedEnemy):
@@ -808,10 +828,11 @@ def main():
             pygame.draw.circle(range_surface, color, (selected_button.defender_class.RANGE, selected_button.defender_class.RANGE), selected_button.defender_class.RANGE)
             screen.blit(range_surface, (mouse_pos[0] - selected_button.defender_class.RANGE, mouse_pos[1] - selected_button.defender_class.RANGE))
             
-            # Desenha o círculo menor com a mesma cor do range
-            small_surface = pygame.Surface((50, 50), pygame.SRCALPHA)
-            pygame.draw.circle(small_surface, color, (25, 25), 25)
-            screen.blit(small_surface, (mouse_pos[0] - 25, mouse_pos[1] - 25))
+            # Desenha o retângulo menor com a mesma cor do range
+            preview_size = 30  # Tamanho do retângulo de preview
+            preview_surface = pygame.Surface((preview_size, preview_size), pygame.SRCALPHA)
+            pygame.draw.rect(preview_surface, color, (0, 0, preview_size, preview_size))
+            screen.blit(preview_surface, (mouse_pos[0] - preview_size//2, mouse_pos[1] - preview_size//2))
             
             # Desenha a prévia do defensor
             selected_button.defender_class.draw_preview(screen, mouse_pos[0], mouse_pos[1], is_valid)
