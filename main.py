@@ -306,10 +306,10 @@ class DefenderShopMenu:
         
         self.defender_buttons = [
             DefenderButton(BasicDefender, x_pos, self.mission_manager),
-            DefenderButton(BlueDefender, x_pos, self.mission_manager),
             DefenderButton(RedDefender, x_pos, self.mission_manager),
             DefenderButton(YellowDefender, x_pos, self.mission_manager),
             DefenderButton(GreenDefender, x_pos, self.mission_manager),
+            DefenderButton(BlueDefender, x_pos, self.mission_manager),
             DefenderButton(OrangeDefender, x_pos, self.mission_manager),
             DefenderButton(PurpleDefender, x_pos, self.mission_manager)
         ]
@@ -487,7 +487,7 @@ def main():
 
     # Sistema de ondas e recursos
     wave_manager = WaveManager()
-    gold = 250  # Ouro inicial
+    gold = 300  # Ouro inicial
     
     # Sistema de missões
     mission_manager = MissionManager()

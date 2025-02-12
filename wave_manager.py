@@ -44,13 +44,12 @@ class WaveManager:
         
     def get_spawn_interval(self):
         # Diminui o intervalo entre spawns conforme as ondas avançam
-        # Mínimo de 45 frames entre spawns
-        return self.BASE_SPAWN_INTERVAL - (self.current_wave * 0.35)
+        return min(45, self.BASE_SPAWN_INTERVAL - self.current_wave * 0.4)
         
     def get_health_increase(self):
         """Retorna o multiplicador de vida baseado na onda atual"""
-        # Retorna o multiplicador de vida (8% de aumento por onda)
-        return 1 + ((self.current_wave - 1) * 0.08)
+        # Retorna o multiplicador de vida (12% de aumento por onda)
+        return 1 + ((self.current_wave - 1) * 0.12)
         
     def get_spawn_chances(self):
         # Retorna as chances de spawn para cada tipo de inimigo baseado na onda atual
@@ -106,11 +105,14 @@ class WaveManager:
     def enemy_defeated(self, enemy_type):
         # Recompensas base ajustadas por tipo de inimigo
         base_rewards = {
-            'normal': 3,    # 3 de ouro
-            'speed': 5,     # 5 de ouro
-            'tank': 12,     # 12 de ouro
-            'armored': 10,  # 10 de ouro
-            'healer': 8     # 8 de ouro
+            'normal': 2,    # 2 de ouro
+            'speed': 3,     # 3 de ouro
+            'tank': 6,     # 6 de ouro
+            'armored': 6,  # 6 de ouro
+            'healer': 4,     # 4 de ouro
+            'freeze_aura': 4, # 4 de ouro
+            'rage': 5, # 5 de ouro
+            'stealth': 3 # 3 de ouro
         }
         
         # Aplica multiplicador de onda e retorna o valor final
