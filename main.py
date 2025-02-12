@@ -193,9 +193,9 @@ class EnemyShopMenu:
                 # Características especiais
                 special_text = None
                 if enemy_class == TankEnemy:
-                    special_text = "Resistente a Congelamento"
+                    special_text = "Imune a Freeze e Slow"
                 elif enemy_class == SpeedEnemy:
-                    special_text = "Resistente a Queimaduras"
+                    special_text = "Imune a Queimaduras"
                 elif enemy_class == ArmoredEnemy:
                     special_text = "-30% Dano Recebido"
                 elif enemy_class == HealerEnemy:
@@ -205,7 +205,7 @@ class EnemyShopMenu:
                 elif enemy_class == RageEnemy:
                     special_text = "Acelera ao Perder Vida"
                 elif enemy_class == StealthEnemy:
-                    special_text = "Fica Invisível Periodicamente"
+                    special_text = "Fica Invisível"
                     
                 if special_text:
                     spec_text = font.render(special_text, True, (50, 255, 50))
@@ -369,24 +369,31 @@ class DefenderShopMenu:
                 pygame.draw.rect(screen, button.defender_class.COLOR, icon_rect)
                 pygame.draw.rect(screen, WHITE, icon_rect, 1)  # Borda branca
                 
-                # Dano
-                damage_text = font.render(f"Dano: {button.defender_class.BASE_DAMAGE}", True, WHITE)
+                # Dano e DPS
+                damage_text = font.render(f"Dano: {button.defender_class.BASE_DAMAGE}         DPS: {round(button.defender_class.BASE_DAMAGE * (60 / button.defender_class.BASE_ATTACK_COOLDOWN), 1)}", True, WHITE)
                 screen.blit(damage_text, (card_rect.x + 60, y_offset + 35))
+
+                # Range e Hits para Ativação
+                if button.defender_class.HITS_TO_ACTIVATE != 0:
+                    range_text = font.render(f"Range: {button.defender_class.RANGE}     Ativar: {button.defender_class.HITS_TO_ACTIVATE}", True, WHITE)
+                else:
+                    range_text = font.render(f"Range: {button.defender_class.RANGE}", True, WHITE)
+                screen.blit(range_text, (card_rect.x + 60, y_offset + 50))
                 
                 # Habilidade especial
                 special_text = None
                 if button.defender_class == BlueDefender:
-                    special_text = "Congela inimigos"
+                    special_text = "Congela Inimigos"
                 elif button.defender_class == RedDefender:
-                    special_text = "Aplica queimaduras"
+                    special_text = "Aplica Queimaduras"
                 elif button.defender_class == YellowDefender:
-                    special_text = "Aumenta dano aliado"
+                    special_text = "Aumenta Dano Aliado"
                 elif button.defender_class == GreenDefender:
-                    special_text = "Reduz velocidade"
+                    special_text = "Desacelera Inimigos"
                 elif button.defender_class == OrangeDefender:
-                    special_text = "Atira em 2 alvos"
+                    special_text = "Atira em 2 Alvos"
                 elif button.defender_class == PurpleDefender:
-                    special_text = "Aplica fraqueza (10 hits)"
+                    special_text = "Aplica Fraqueza"
                 
                 if special_text:
                     spec_text = font.render(special_text, True, (50, 255, 50))
@@ -480,7 +487,7 @@ def main():
 
     # Sistema de ondas e recursos
     wave_manager = WaveManager()
-    gold = 200  # Ouro inicial
+    gold = 250  # Ouro inicial
     
     # Sistema de missões
     mission_manager = MissionManager()

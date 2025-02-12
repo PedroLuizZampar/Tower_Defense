@@ -56,36 +56,36 @@ class WaveManager:
         # Retorna as chances de spawn para cada tipo de inimigo baseado na onda atual
         if self.current_wave % 5 == 0:  # Ondas múltiplas de 5
             return {
-                'normal': 52,
+                'normal': 25,
                 'tank': 10,
-                'speed': 5,
-                'armored': 8,
-                'healer': 5,
-                'freeze_aura': 7,
-                'rage': 8,
-                'stealth': 5
+                'speed': 10,
+                'armored': 10,
+                'healer': 10,
+                'freeze_aura': 10,
+                'rage': 15,
+                'stealth': 10
             }
         elif self.current_wave % 2 == 0:  # Ondas pares
             return {
-                'normal': 62,
-                'tank': 2.5,
+                'normal': 40,
+                'tank': 10,
                 'speed': 8,
-                'armored': 2.5,
-                'healer': 5,
-                'freeze_aura': 5,
-                'rage': 7,
-                'stealth': 8
+                'armored': 10,
+                'healer': 10,
+                'freeze_aura': 8,
+                'rage': 8,
+                'stealth': 6
             }
         else:  # Ondas normais
             return {
-                'normal': 50,
-                'tank': 6,
-                'speed': 10,
-                'armored': 6,
-                'healer': 8,
-                'freeze_aura': 7,
-                'rage': 8,
-                'stealth': 5
+                'normal': 60,
+                'tank': 7,
+                'speed': 8,
+                'armored': 7,
+                'healer': 4,
+                'freeze_aura': 6,
+                'rage': 6,
+                'stealth': 2
             }
         
     def get_gold_multiplier(self):

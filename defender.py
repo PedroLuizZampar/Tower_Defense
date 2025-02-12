@@ -7,13 +7,13 @@ class Defender:
     RANGE = 150  # Alcance do defensor
     MIN_DISTANCE = 40  # Distância mínima entre defensores
     COST = 100  # Custo do defensor
-    BASE_UPGRADE_COST = 10  # Custo base da melhoria
-    UPGRADE_SELL_BONUS = 5  # Bônus de venda por melhoria
+    BASE_UPGRADE_COST = 15  # Custo base da melhoria
+    UPGRADE_SELL_BONUS = 8  # Bônus de venda por melhoria
     COLOR = (0, 0, 255)  # Cor padrão (azul)
     PROJECTILE_COLOR = (255, 255, 0)  # Cor padrão do projétil
-    DAMAGE_BUFF = 10  # Buff fixo de dano
+    DAMAGE_BUFF = 15  # Buff fixo de dano
     NAME = "Defensor"  # Nome padrão
-    BASE_DAMAGE = 10  # Dano base
+    BASE_DAMAGE = 8  # Dano base
     BASE_ATTACK_COOLDOWN = 30  # Frames base entre ataques
     
     def __init__(self, x, y, current_wave):
@@ -237,9 +237,10 @@ class BasicDefender(Defender):
     PROJECTILE_COLOR = (66, 86, 110)  # Cinza azulado escuro mais claro
     COST = 50  # Defensor mais barato
     NAME = "Básico"
-    BASE_DAMAGE = 10
+    BASE_DAMAGE = 8
     BASE_ATTACK_COOLDOWN = 30
-    RANGE = 120
+    RANGE = 130
+    HITS_TO_ACTIVATE = 0
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
@@ -251,12 +252,13 @@ class BlueDefender(Defender):
     NAME = "Congelante"
     BASE_DAMAGE = 10
     BASE_ATTACK_COOLDOWN = 35
-    UNLOCK_COST = 2  # 2 orbes para desbloquear
+    UNLOCK_COST = 2
+    RANGE = 140
+    HITS_TO_ACTIVATE = 5
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
-        self.attacks_until_slow = 8  # Contador para a habilidade especial
-        self.attack_counter = 0  # Contador atual de ataques
+        self.attack_counter = 0
         
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
@@ -285,26 +287,27 @@ class BlueDefender(Defender):
                 self.attack_counter += 1
                 
                 # Se atingiu o número necessário de ataques, ativa a habilidade especial
-                if self.attack_counter >= self.attacks_until_slow:
+                if self.attack_counter >= self.HITS_TO_ACTIVATE:
                     self.attack_counter = 0  # Reseta o contador
-                    # Aplica congelamento em todos os inimigos no alcance
+                    # Aplica slow em todos os inimigos no alcance
                     for enemy in self.get_enemies_in_range(enemies):
-                        enemy.apply_freeze()
+                        enemy.apply_freeze(90)  # 1.5 segundos de slow
 
 class RedDefender(Defender):
     COLOR = (255, 0, 0)  # Vermelho
     PROJECTILE_COLOR = (255, 100, 100)  # Vermelho claro
     COST = 100
     NAME = "Flamejante"
-    BASE_DAMAGE = 12  # Mais dano base
-    BASE_ATTACK_COOLDOWN = 22  # Ataca mais rápido
-    UNLOCK_COST = 3  # 3 orbes para desbloquear
-    RANGE = 135
+    BASE_DAMAGE = 10
+    BASE_ATTACK_COOLDOWN = 28
+    UNLOCK_COST = 3
+    RANGE = 140
+    HITS_TO_ACTIVATE = 6
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
-        self.attacks_until_burn = 5  # Contador para a habilidade especial
-        self.attack_counter = 0  # Contador atual de ataques
+        self.HITS_TO_ACTIVATE = 6
+        self.attack_counter = 0
         
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
@@ -333,27 +336,27 @@ class RedDefender(Defender):
                 self.attack_counter += 1
                 
                 # Se atingiu o número necessário de ataques, ativa a habilidade especial
-                if self.attack_counter >= self.attacks_until_burn:
+                if self.attack_counter >= self.HITS_TO_ACTIVATE:
                     self.attack_counter = 0  # Reseta o contador
                     # Aplica dano ao longo do tempo em todos os inimigos no alcance
                     dot_damage = projectile.damage * 0.5  # 50% do dano normal
                     for enemy in self.get_enemies_in_range(enemies):
-                        enemy.apply_dot(dot_damage)
+                        enemy.apply_dot(dot_damage, duration_frames=180)
 
 class YellowDefender(Defender):
     COLOR = (194, 187, 0)  # Amarelo
     PROJECTILE_COLOR = (255, 255, 150)  # Amarelo claro
     COST = 125
     NAME = "Luminoso"
-    BASE_DAMAGE = 18  # Ainda mais dano base
-    BASE_ATTACK_COOLDOWN = 40  # Mais lento
-    UNLOCK_COST = 4  # 4 orbes para desbloquear (ajustado de 5 para 4)
-    RANGE = 200  # Maior alcance
+    BASE_DAMAGE = 18
+    BASE_ATTACK_COOLDOWN = 45
+    UNLOCK_COST = 3
+    RANGE = 200
+    HITS_TO_ACTIVATE = 8
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
-        self.attacks_until_buff = 10  # Contador para a habilidade especial
-        self.attack_counter = 0  # Contador atual de ataques
+        self.attack_counter = 0
         
     def update(self, enemies, defenders=None):
         # Atualiza o efeito de congelamento primeiro
@@ -382,7 +385,7 @@ class YellowDefender(Defender):
                 self.attack_counter += 1
                 
                 # Se atingiu o número necessário de ataques, ativa a habilidade especial
-                if self.attack_counter >= self.attacks_until_buff and defenders:
+                if self.attack_counter >= self.HITS_TO_ACTIVATE and defenders:
                     self.attack_counter = 0  # Reseta o contador
                     # Aplica buff de dano em todos os defensores no alcance
                     for defender in self.get_defenders_in_range(defenders):
@@ -391,17 +394,17 @@ class YellowDefender(Defender):
 class GreenDefender(Defender):
     COLOR = (0, 100, 0)  # Verde escuro
     PROJECTILE_COLOR = (0, 150, 0)  # Verde escuro mais claro
-    COST = 85
+    COST = 150
     NAME = "Retardante"
-    BASE_DAMAGE = 15
-    BASE_ATTACK_COOLDOWN = 25
-    RANGE = 140
-    UNLOCK_COST = 3  # 3 orbes para desbloquear
+    BASE_DAMAGE = 13
+    BASE_ATTACK_COOLDOWN = 45
+    RANGE = 130
+    UNLOCK_COST = 4
+    HITS_TO_ACTIVATE = 4
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
-        self.attacks_until_slow = 5  # Contador para a habilidade especial
-        self.attack_counter = 0  # Contador atual de ataques
+        self.attack_counter = 0
         
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
@@ -430,21 +433,22 @@ class GreenDefender(Defender):
                 self.attack_counter += 1
                 
                 # Se atingiu o número necessário de ataques, ativa a habilidade especial
-                if self.attack_counter >= self.attacks_until_slow:
+                if self.attack_counter >= self.HITS_TO_ACTIVATE:
                     self.attack_counter = 0  # Reseta o contador
                     # Aplica slow em todos os inimigos no alcance
                     for enemy in self.get_enemies_in_range(enemies):
-                        enemy.apply_freeze(180)  # 3 segundos de congelamento
+                        enemy.apply_slow(180)  # 3 segundos de slow
 
 class OrangeDefender(Defender):
     COLOR = (255, 140, 0)  # Laranja
     PROJECTILE_COLOR = (255, 165, 0)  # Laranja mais claro
-    COST = 150
+    COST = 175
     NAME = "Duplo"
-    BASE_DAMAGE = 14
+    BASE_DAMAGE = 12
     BASE_ATTACK_COOLDOWN = 35
-    RANGE = 180
-    UNLOCK_COST = 4  # 4 orbes para desbloquear
+    RANGE = 160
+    UNLOCK_COST = 5
+    HITS_TO_ACTIVATE = 0
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
@@ -501,16 +505,17 @@ class OrangeDefender(Defender):
 class PurpleDefender(Defender):
     COLOR = (75, 0, 130)  # Roxo escuro
     PROJECTILE_COLOR = (128, 0, 128)  # Roxo mais claro para projéteis
-    BASE_DAMAGE = 15
-    COST = 250
-    RANGE = 150
+    BASE_DAMAGE = 20
+    COST = 200
+    RANGE = 135
     NAME = "Enfraquecedor"
-    UNLOCK_COST = 15  # Custo em orbes para desbloquear
+    UNLOCK_COST = 5
+    BASE_ATTACK_COOLDOWN = 45
+    HITS_TO_ACTIVATE = 8
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
-        self.hits_counter = 0  # Contador de hits
-        self.hits_for_weakness = 10  # Número de hits necessários para aplicar fraqueza
+        self.hits_counter = 0
         
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
@@ -539,13 +544,11 @@ class PurpleDefender(Defender):
                 self.hits_counter += 1
                 
                 # Se atingiu o número necessário de hits, aplica fraqueza em todos os inimigos no alcance
-                if self.hits_counter >= self.hits_for_weakness:
+                if self.hits_counter >= self.HITS_TO_ACTIVATE:
                     self.hits_counter = 0  # Reseta o contador
                     # Aplica fraqueza em todos os inimigos no alcance
                     for enemy in self.get_enemies_in_range(enemies):
                         enemy.apply_weakness()  # Aplica o efeito de fraqueza
-                
-                self.attack_cooldown = 30  # Reseta o cooldown de ataque
                 return projectile
         return None
 
@@ -580,10 +583,10 @@ class DefenderButton:
             lock_rect = lock_text.get_rect(center=(self.rect.centerx, self.rect.centery + ajust - 15))
             screen.blit(lock_text, lock_rect)
         else:
-            font = pygame.font.Font(None, 16)
+            font = pygame.font.Font(None, 20)
             cost_text = font.render(f"Custo: {self.cost}", True, 
                                     (255, 215, 0) if gold >= self.cost else (255, 0, 0))
-            cost_rect = cost_text.get_rect(x=self.rect.x + 60, centery=self.rect.centery + ajust + 12)
+            cost_rect = cost_text.get_rect(x=self.rect.x + 150, centery=self.rect.top + ajust + 15)
             screen.blit(cost_text, cost_rect)
 
     def handle_click(self, pos, gold):

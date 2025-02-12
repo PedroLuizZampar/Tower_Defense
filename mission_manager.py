@@ -39,8 +39,10 @@ class Mission:
 class MissionManager:    
     def __init__(self):
         self.missions = [
-            Mission("Elimine 50 inimigos", 50, 2),  # 2 orbes de recompensa
-            Mission("Sobreviva 10 ondas", 10, 3)      # 3 orbes de recompensa
+            Mission("Elimine 25 inimigos", 25, 1),  # 1 orbes de recompensa
+            Mission("Elimine 100 inimigos", 100, 3),  # 3 orbes de recompensa
+            Mission("Sobreviva 5 ondas", 5, 1),      # 1 orbes de recompensa
+            Mission("Sobreviva 10 ondas", 10, 2)      # 2 orbes de recompensa
         ]
         self.total_kills = 0
         self.current_wave = 1
@@ -57,13 +59,23 @@ class MissionManager:
         if not self.missions[0].completed:
             self.total_kills += 1
             self.missions[0].update(self.total_kills)
+            if not self.missions[1].completed:
+                self.missions[1].update(self.total_kills)
+        elif not self.missions[1].completed:
+            self.total_kills += 1
+            self.missions[1].update(self.total_kills)
         
     def update_wave(self, wave):
         # Só atualiza se a missão de ondas não estiver completa
-        if not self.missions[1].completed:
+        if not self.missions[2].completed:
             self.current_wave = wave
-            self.missions[1].update(wave)
-        
+            self.missions[2].update(wave)
+            if not self.missions[3].completed:
+                self.missions[3].update(wave)
+        elif not self.missions[3].completed:
+            self.current_wave = wave
+            self.missions[3].update(wave)
+
     def draw(self, screen):
         # Configurações do quadro de missões
         panel_width = 180
@@ -93,7 +105,7 @@ class MissionManager:
         
         # Se o menu estiver expandido, desenha o resto
         if self.is_expanded:
-            panel_height = 200
+            panel_height = 350
             panel_rect = pygame.Rect(x, header_rect.bottom, panel_width, panel_height)
             
             # Desenha o fundo do painel
@@ -101,7 +113,7 @@ class MissionManager:
             pygame.draw.rect(screen, (255, 255, 255), panel_rect, 2)
             
             # Desenha cada missão
-            font = pygame.font.Font(None, 20)
+            font = pygame.font.Font(None, 18)
             y_offset = panel_rect.top + 20
             
             for mission in self.missions:
@@ -137,7 +149,7 @@ class MissionManager:
                     pygame.draw.rect(screen, (50, 200, 50), button_rect)
                     pygame.draw.rect(screen, (255, 255, 255), button_rect, 1)
                     
-                    claim_text = font.render("Resgatar", True, (255, 255, 255))
+                    claim_text = font.render(f"{mission.reward} Orbe" if mission.reward == 1 else f"{mission.reward} Orbes", True, (255, 255, 255))
                     text_rect = claim_text.get_rect(center=button_rect.center)
                     screen.blit(claim_text, text_rect)
                     

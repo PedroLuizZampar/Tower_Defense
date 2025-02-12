@@ -55,7 +55,7 @@ class DamageSpell(Spell):
     COLOR = (255, 50, 50)  # Vermelho
     NAME = "Explosão"
     DAMAGE = 200
-    COOLDOWN = 900  # 15 segundos de cooldown
+    COOLDOWN = 2700  # 45 segundos de cooldown
     
     def __init__(self, x, y):
         super().__init__(x, y)
@@ -105,7 +105,7 @@ class FreezeSpell(Spell):
     COLOR = (50, 150, 255)  # Azul claro
     NAME = "Gelo"
     FREEZE_DURATION = 90  # 1.5 segundos
-    COOLDOWN = 600  # 10 segundos de cooldown
+    COOLDOWN = 1200  # 20 segundos de cooldown
     
     def __init__(self, x, y):
         super().__init__(x, y)
@@ -124,9 +124,9 @@ class DotSpell(Spell):
     RADIUS = 200
     COLOR = (255, 165, 0)  # Laranja
     NAME = "Fogo"
-    DOT_DAMAGE = 20
+    DOT_DAMAGE = 15
     DOT_DURATION = 300  # 5 segundos
-    COOLDOWN = 720  # 12 segundos de cooldown
+    COOLDOWN = 1800  # 30 segundos de cooldown
     
     def __init__(self, x, y):
         super().__init__(x, y)

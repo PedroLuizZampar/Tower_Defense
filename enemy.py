@@ -4,9 +4,9 @@ import random
 
 class Enemy:
     COLOR = (225, 148, 255)  # Cor padrão roxa
-    BASE_HEALTH = 100
-    BASE_SPEED = 2
-    SPAWN_CHANCE = 60  # Chance base de spawn (%)
+    BASE_HEALTH = 80  # Reduzido para 80
+    BASE_SPEED = 1.8  # Reduzido para 1.8
+    SPAWN_CHANCE = 65  # Aumentado para 65%
     NAME = "Básico"  # Nome do inimigo padrão
     
     def __init__(self, path):
@@ -36,9 +36,9 @@ class Enemy:
         
     def take_damage(self, damage):
         """Aplica dano ao inimigo e retorna True se ele morreu"""
-        # Se estiver sob efeito de fraqueza, aumenta o dano em 20%
+        # Se estiver sob efeito de fraqueza, aumenta o dano em 30%
         if self.is_weakened:
-            damage *= 1.2
+            damage *= 1.3
         self.health -= damage
         return self.health <= 0
         
@@ -65,7 +65,7 @@ class Enemy:
             self.speed = self.base_speed * 0.5  # Reduz a velocidade pela metade
             self.is_slowed = True
         
-    def apply_weakness(self, duration_frames=120):  # 2 segundos = 120 frames
+    def apply_weakness(self, duration_frames=240):  # 4 segundos = 240 frames
         """Aplica efeito de fraqueza"""
         self.weakness_timer = duration_frames
         self.is_weakened = True
@@ -168,14 +168,14 @@ class Enemy:
 
 class TankEnemy(Enemy):
     COLOR = (150, 75, 0)  # Marrom
-    BASE_HEALTH = 200  # Dobro de vida
-    BASE_SPEED = 1.2  # 40% mais lento
-    SPAWN_CHANCE = 20  # 20% de chance de spawn
+    BASE_HEALTH = 250  # Aumentado para 250
+    BASE_SPEED = 1.0  # Reduzido para 1.0
+    SPAWN_CHANCE = 15  # Reduzido para 15%
     NAME = "Tanque"  # Nome do inimigo tanque
     
     def __init__(self, path):
         super().__init__(path)
-        self.radius = 15  # Maior tamanho
+        self.radius = 16  # Aumentado para 16
         
     def apply_freeze(self, duration_frames=120):
         # Imune a freeze
@@ -187,14 +187,14 @@ class TankEnemy(Enemy):
 
 class SpeedEnemy(Enemy):
     COLOR = (50, 255, 50)  # Verde
-    BASE_HEALTH = 60  # 40% menos vida
-    BASE_SPEED = 3  # 50% mais rápido
-    SPAWN_CHANCE = 30  # 30% de chance de spawn
+    BASE_HEALTH = 50  # Reduzido para 50
+    BASE_SPEED = 3.2  # Aumentado para 3.2
+    SPAWN_CHANCE = 25  # Reduzido para 25%
     NAME = "Célere"  # Nome do inimigo veloz
     
     def __init__(self, path):
         super().__init__(path)
-        self.radius = 8  # Menor tamanho
+        self.radius = 8  # Reduzido para 8
         
     def apply_dot(self, damage, duration_frames=120):
         # Imune a DoT
@@ -202,14 +202,14 @@ class SpeedEnemy(Enemy):
 
 class ArmoredEnemy(Enemy):
     COLOR = (128, 128, 128)  # Cinza
-    BASE_HEALTH = 150  # 50% mais vida
-    BASE_SPEED = 1.5  # 25% mais lento
-    SPAWN_CHANCE = 25  # 25% de chance de spawn
+    BASE_HEALTH = 180  # Aumentado para 180
+    BASE_SPEED = 1.4  # Reduzido para 1.4
+    SPAWN_CHANCE = 20  # Reduzido para 20%
     NAME = "Blindado"  # Nome do inimigo blindado
     
     def __init__(self, path):
         super().__init__(path)
-        self.damage_reduction = 0.3  # 30% de redução de dano
+        self.damage_reduction = 0.35  # Aumentado para 35%
         
     def take_damage(self, damage):
         # Reduz o dano recebido
@@ -219,24 +219,24 @@ class ArmoredEnemy(Enemy):
 
 class HealerEnemy(Enemy):
     COLOR = (144, 238, 144)  # Verde claro
-    BASE_HEALTH = 180  # 80% mais vida
-    BASE_SPEED = 1.4  # 60% mais lento
-    SPAWN_CHANCE = 20  # 20% de chance de spawn
+    BASE_HEALTH = 120  # Reduzido para 120
+    BASE_SPEED = 1.6  # Ajustado para 1.6
+    SPAWN_CHANCE = 15  # Reduzido para 15%
     NAME = "Curador"  # Nome do inimigo curador
     
     def __init__(self, path):
         super().__init__(path)
-        self.radius = 10  # Tamanho menor
-        self.heal_timer = 120  # 2 segundos (120 frames)
-        self.heal_amount = 5  # Quantidade de cura
-        self.heal_radius = 150  # Raio de cura
+        self.radius = 10
+        self.heal_timer = 60  # Reduzido para 1 segundo
+        self.heal_amount = 8  # Aumentado para 8
+        self.heal_radius = 150  # Reduzido para 150
         
     def move(self):
         # Primeiro verifica se deve curar
         should_heal = False
         self.heal_timer -= 1
         if self.heal_timer <= 0:
-            self.heal_timer = 120  # Reseta o timer
+            self.heal_timer = 90  # Reseta o timer
             should_heal = True
             
         # Depois move normalmente
@@ -262,15 +262,15 @@ class HealerEnemy(Enemy):
 
 class FreezeAuraEnemy(Enemy):
     COLOR = (135, 206, 235)  # Azul claro
-    BASE_HEALTH = 120  # 20% mais vida
-    BASE_SPEED = 1.8  # 10% mais lento
-    SPAWN_CHANCE = 20  # 20% de chance de spawn
-    NAME = "Congelante"
+    BASE_HEALTH = 100  # Reduzido para 100
+    BASE_SPEED = 2.0  # Aumentado para 2.0
+    SPAWN_CHANCE = 15  # Reduzido para 15%
+    NAME = "Gelado"
     
     def __init__(self, path):
         super().__init__(path)
         self.radius = 11
-        self.freeze_radius = 200  # Raio do efeito de congelamento ao morrer
+        self.freeze_radius = 100  # Reduzido para 100
         
     def take_damage(self, damage):
         """Aplica dano e retorna True se morreu, aplicando congelamento em todas as torres próximas"""
@@ -305,23 +305,32 @@ class FreezeAuraEnemy(Enemy):
 
 class RageEnemy(Enemy):
     COLOR = (139, 0, 0)  # Vermelho escuro
-    BASE_HEALTH = 150  # 50% mais vida
-    BASE_SPEED = 1.5  # 25% mais lento inicialmente
-    SPAWN_CHANCE = 25  # 25% de chance de spawn
+    BASE_HEALTH = 140  # Reduzido para 140
+    BASE_SPEED = 1.6  # Ajustado para 1.6
+    SPAWN_CHANCE = 20  # Reduzido para 20%
     NAME = "Furioso"
     
     def __init__(self, path):
         super().__init__(path)
         self.radius = 13
         self.original_speed = self.speed
-        self.max_speed_multiplier = 3.0  # Velocidade máxima é 3x a velocidade base
+        self.max_speed_multiplier = 2.5  # Reduzido para 2.5x
         
     def update(self):
         result = super().update()
-        # Aumenta a velocidade baseado na vida perdida
+        
+        # Calcula a velocidade base considerando a raiva
         health_percent = self.health / self.max_health
-        speed_multiplier = 1 + ((1 - health_percent) * (self.max_speed_multiplier - 1))
-        self.speed = self.original_speed * speed_multiplier
+        rage_multiplier = 1 + ((1 - health_percent) * (self.max_speed_multiplier - 1))
+        
+        # Aplica a velocidade considerando os efeitos de status
+        if self.is_frozen:
+            self.speed = 0
+        elif self.is_slowed:
+            self.speed = (self.original_speed * rage_multiplier) * 0.5
+        else:
+            self.speed = self.original_speed * rage_multiplier
+            
         return result
         
     def draw(self, screen):
@@ -336,17 +345,17 @@ class RageEnemy(Enemy):
 
 class StealthEnemy(Enemy):
     COLOR = (128, 0, 128)  # Roxo
-    BASE_HEALTH = 80  # 20% menos vida
-    BASE_SPEED = 2.2  # 10% mais rápido
-    SPAWN_CHANCE = 20  # 20% de chance de spawn
+    BASE_HEALTH = 40  # Reduzido para 40
+    BASE_SPEED = 2.0  # Ajustado para 2.0
+    SPAWN_CHANCE = 15  # Reduzido para 15%
     NAME = "Furtivo"
     
     def __init__(self, path):
         super().__init__(path)
         self.radius = 10
         self.stealth_timer = 0
-        self.stealth_interval = 60  # 5 segundos (240 frames)
-        self.stealth_duration = 45  # 1 segundo (60 frames)
+        self.stealth_interval = 120  # Aumentado para 2 segundos
+        self.stealth_duration = 60  # Ajustado para 1 segundo
         self.is_stealthed = False
         self.fade_start = 20  # Frames para começar a aparecer/desaparecer
         
