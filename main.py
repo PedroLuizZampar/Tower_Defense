@@ -663,6 +663,12 @@ def main():
                             enemy_type = 'armored'
                         elif isinstance(enemy, HealerEnemy):
                             enemy_type = 'healer'
+                        elif isinstance(enemy, FreezeAuraEnemy):
+                            enemy_type = 'freeze_aura'
+                        elif isinstance(enemy, RageEnemy):
+                            enemy_type = 'rage'
+                        elif isinstance(enemy, StealthEnemy):
+                            enemy_type = 'stealth'
                         else:
                             enemy_type = 'normal'
                         
@@ -723,6 +729,12 @@ def main():
                     enemy_type = 'armored'
                 elif isinstance(enemy, HealerEnemy):
                     enemy_type = 'healer'
+                elif isinstance(enemy, FreezeAuraEnemy):
+                    enemy_type = 'freeze_aura'
+                elif isinstance(enemy, RageEnemy):
+                    enemy_type = 'rage'
+                elif isinstance(enemy, StealthEnemy):
+                    enemy_type = 'stealth'
                 else:
                     enemy_type = 'normal'
                 

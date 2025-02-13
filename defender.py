@@ -7,7 +7,7 @@ class Defender:
     RANGE = 150  # Alcance do defensor
     MIN_DISTANCE = 40  # Distância mínima entre defensores
     COST = 100  # Custo do defensor
-    BASE_UPGRADE_COST = 15  # Custo base da melhoria
+    BASE_UPGRADE_COST = 12  # Custo base da melhoria
     UPGRADE_SELL_BONUS = 8  # Bônus de venda por melhoria
     COLOR = (0, 0, 255)  # Cor padrão (azul)
     PROJECTILE_COLOR = (255, 255, 0)  # Cor padrão do projétil
@@ -58,7 +58,7 @@ class Defender:
         cost = self.get_upgrade_cost()
         self.level += 1
         self.total_invested += cost
-        self.bonus_damage += round(self.base_damage * 0.1, 1) # Aumenta o dano em 2 por upgrade
+        self.bonus_damage += round(self.get_total_damage() * 0.1, 1)
         self.attack_cooldown = self.base_attack_cooldown * (0.99 ** (self.level - 1))
         self.upgrades_count += 1
         return cost
