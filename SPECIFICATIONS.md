@@ -9,10 +9,11 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 - Tela total: 1000x650px
 - Área de jogo: 1000x550px
 - Menu superior: 100px altura (informações da onda)
-- Três menus laterais retráteis:
+- Quatro menus laterais retráteis:
   1. Menu de Inimigos
   2. Menu de Missões
   3. Menu de Defensores
+  4. Menu de Chefões
 
 ### Menus
 1. **Menu Superior**
@@ -38,6 +39,33 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
      - Alcance
      - Habilidade especial
      - Status de desbloqueio (custo em orbes)
+
+4. **Menu de Chefões (Retrátil)**
+   - Lista de chefões disponíveis
+   - Para cada chefão:
+     - Nome e ícone
+     - Vida e velocidade
+     - Descrição da habilidade especial
+     - Condições de aparecimento
+
+### Chefões
+
+#### 1. Boss de Imunidade (Protetor)
+- **Estatísticas**:
+  - Vida: 1250 + bônus/onda
+  - Velocidade: 0.8
+  - Recompensa: 50 ouro
+  - Aparece: Onda 10
+- **Habilidade: Aura de Imunidade**
+  - Raio: 150px
+  - Duração: 2 segundos
+  - Intervalo: 3 segundos
+  - Efeito: Protege aliados próximos de todo dano
+- **Características**:
+  - Primeiro inimigo da onda 10
+  - Intervalo especial antes dos próximos inimigos
+  - Aura visual branca quando ativa
+  - Imunidade cíclica (2s ativo, 3s inativo)
 
 4. **Menu de Missões (Retrátil)**
    - Lista de missões ativas

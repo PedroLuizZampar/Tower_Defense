@@ -42,7 +42,17 @@ class Spell:
             dy = enemy.y - self.y
             distance = math.sqrt(dx ** 2 + dy ** 2)
             if distance <= self.RADIUS:
-                affected.append(enemy)
+                # Verifica se o inimigo está protegido por uma aura de imunidade
+                is_immune = False
+                for potential_boss in enemies:
+                    if hasattr(potential_boss, 'get_enemies_in_immunity_range') and potential_boss.is_immunized:
+                        immune_enemies = potential_boss.get_enemies_in_immunity_range(enemies)
+                        if enemy in immune_enemies:
+                            is_immune = True
+                            break
+                
+                if not is_immune:
+                    affected.append(enemy)
         return affected
         
     def apply_effect(self, enemies):
@@ -61,6 +71,7 @@ class DamageSpell(Spell):
         super().__init__(x, y)
         self.duration = 30  # 0.5 segundos
         self.current_duration = self.duration
+        self.killed_enemies = []  # Lista para controlar inimigos mortos
         
     def update(self, enemies):
         """Atualiza o feitiço e retorna True se ainda está ativo"""
@@ -70,15 +81,17 @@ class DamageSpell(Spell):
                 damage = self.DAMAGE * 0.7 if isinstance(enemy, ArmoredEnemy) else self.DAMAGE
                 damage_result = enemy.take_damage(damage)
                 
-                if damage_result == "split":
-                    return "split"  # Retorna split para o inimigo que se divide
-                elif damage_result:  # Se o inimigo morreu
-                    return "died"  # Retorna died para dar ouro
+                if damage_result:  # Se o inimigo morreu
+                    self.killed_enemies.append(enemy)  # Adiciona à lista de mortos
+            
             self.effect_applied = True
+            if self.killed_enemies:  # Se matou algum inimigo
+                return "died"  # Retorna died apenas uma vez
             
         self.current_duration -= 1
         if self.current_duration <= 0:
             self.active = False
+            return False
         return self.active
         
     def draw(self, screen):
@@ -95,9 +108,10 @@ class DamageSpell(Spell):
         for enemy in affected[:]:  # Usa uma cópia da lista para poder modificá-la
             damage = self.DAMAGE * 0.7 if isinstance(enemy, ArmoredEnemy) else self.DAMAGE
             if enemy.take_damage(damage):  # Se o inimigo morreu
-                if enemy in enemies:
-                    enemies.remove(enemy)
-                    return "died"  # Retorna "died" assim como o DoT faz
+                self.killed_enemies.append(enemy)  # Adiciona à lista de mortos
+                
+        if self.killed_enemies:  # Se matou algum inimigo
+            return "died"  # Retorna died apenas uma vez
 
 class FreezeSpell(Spell):
     COST = 0  # Removido custo em ouro

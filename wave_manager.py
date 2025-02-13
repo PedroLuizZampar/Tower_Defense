@@ -9,7 +9,7 @@ class WaveManager:
     HEALTH_INCREASE_PER_WAVE = 1.05  # Aumento de vida por onda
     
     def __init__(self):
-        self.current_wave = 1
+        self.current_wave = 1  # Começando da onda 1
         self.enemies_in_wave = self.calculate_wave_size()
         self.enemies_spawned = 0
         self.spawn_timer = 0
@@ -17,6 +17,8 @@ class WaveManager:
         self.game_completed = False
         self.preparation_timer = self.INITIAL_PREPARATION_TIME
         self.wave_active = False
+        self.boss_spawned = False  # Nova flag para controlar spawn do boss
+        self.boss_spawn_cooldown = 0  # Timer para controlar intervalo após spawn do boss
         
     def update(self):
         if not self.wave_active:
@@ -44,7 +46,7 @@ class WaveManager:
         
     def get_spawn_interval(self):
         # Diminui o intervalo entre spawns conforme as ondas avançam
-        return min(45, self.BASE_SPAWN_INTERVAL - self.current_wave * 0.4)
+        return max(45, self.BASE_SPAWN_INTERVAL - 1)
         
     def get_health_increase(self):
         """Retorna o multiplicador de vida baseado na onda atual"""
@@ -95,6 +97,18 @@ class WaveManager:
         if not self.wave_active or self.enemies_spawned >= self.enemies_in_wave:
             return False
             
+        # Verifica se é a onda 10 e o boss ainda não foi spawnado
+        if self.current_wave == 10 and not self.boss_spawned and self.enemies_spawned == 0:
+            self.boss_spawned = True
+            self.enemies_spawned += 1
+            self.boss_spawn_cooldown = self.get_spawn_interval()  # Define o intervalo após o boss
+            return "boss"
+            
+        # Se o boss acabou de ser spawnado, espera o cooldown
+        if self.boss_spawn_cooldown > 0:
+            self.boss_spawn_cooldown -= 1
+            return False
+            
         self.spawn_timer -= 1
         if self.spawn_timer <= 0:
             self.spawn_timer = self.get_spawn_interval()
@@ -112,7 +126,8 @@ class WaveManager:
             'healer': 4,     # 4 de ouro
             'freeze_aura': 4, # 4 de ouro
             'rage': 5, # 5 de ouro
-            'stealth': 3 # 3 de ouro
+            'stealth': 3, # 3 de ouro
+            'boss': 50  # Recompensa especial para o boss
         }
         
         # Aplica multiplicador de onda e retorna o valor final
@@ -137,6 +152,7 @@ class WaveManager:
         self.enemies_spawned = 0
         self.spawn_timer = self.get_spawn_interval()
         self.wave_completed = False
+        self.boss_spawned = False  # Reseta a flag do boss para a próxima onda
         return True
         
     def get_wave_status(self):

@@ -29,10 +29,33 @@ class Enemy:
         self.is_slowed = False  # Flag para indicar se está sob efeito de slow
         self.weakness_timer = 0  # Timer para o efeito de fraqueza
         self.is_weakened = False  # Flag para indicar se está sob efeito de fraqueza
+        self.immunity_timer = 0  # Timer para o efeito de imunidade
+        self.is_immunized = False  # Flag para indicar se está sob efeito de imunidade
+        self._all_enemies = []  # Referência para a lista de todos os inimigos
         
     @classmethod
     def should_spawn(cls):
         return random.randint(1, 100) <= cls.SPAWN_CHANCE
+        
+    def set_enemies_list(self, enemies):
+        """Define a lista de inimigos para referência"""
+        self._all_enemies = enemies
+        
+    def get_nearby_enemies(self):
+        """Retorna a lista completa de inimigos"""
+        return self._all_enemies
+        
+    def is_under_immunity_aura(self):
+        """Verifica se o inimigo está sob efeito de alguma aura de imunidade"""
+        for enemy in self._all_enemies:
+            if isinstance(enemy, ImmunityBoss) and enemy.is_immunized:
+                if enemy.get_enemies_in_immunity_range(self._all_enemies):
+                    dx = self.x - enemy.x
+                    dy = self.y - enemy.y
+                    distance = math.sqrt(dx ** 2 + dy ** 2)
+                    if distance <= enemy.immunity_radius:
+                        return True
+        return False
         
     def take_damage(self, damage):
         """Aplica dano ao inimigo e retorna True se ele morreu"""
@@ -101,8 +124,10 @@ class Enemy:
             else:
                 self.dot_tick_timer -= 1
                 if self.dot_tick_timer <= 0:
-                    if self.take_damage(self.dot_damage):
-                        return "died"  # Retorna indicador de morte por DoT
+                    # Só aplica o dano se não estiver sob efeito de imunidade
+                    if not self.is_under_immunity_aura():
+                        if self.take_damage(self.dot_damage):
+                            return "died"  # Retorna indicador de morte por DoT
                     self.dot_tick_timer = 30  # Reseta o timer do tick
         return False
         
@@ -429,6 +454,69 @@ class StealthEnemy(Enemy):
             pygame.draw.circle(weakness_surface, (0, 0, 0, int(opacity * 0.5)), 
                              (self.radius, self.radius), self.radius)
             screen.blit(weakness_surface, (int(self.x - self.radius), int(self.y - self.radius)))
+
+class ImmunityBoss(Enemy):
+    COLOR = (255, 255, 255)  # Branco
+    BASE_HEALTH = 1250  # Aumentado para 1250
+    BASE_SPEED = 0.8  # Velocidade reduzida
+    NAME = "Protetor"
+    SPAWN_CHANCE = 0  # Não spawna aleatoriamente
+    
+    def __init__(self, path):
+        super().__init__(path)
+        self.radius = 20  # Raio maior que inimigos normais
+        self.immunity_radius = 150  # Raio da aura de imunidade
+        self.immunity_interval = 180  # 3 segundos entre ativações
+        self.immunity_duration = 120  # 2 segundos de duração
+        self.immunity_timer = self.immunity_duration  # Começa com o timer cheio
+        self.is_immunized = True  # Começa imunizado
+        self.in_immunity_phase = True  # Controla se está na fase de imunidade ou intervalo
+        
+    def update(self):
+        result = super().update()
+        
+        # Atualiza o timer da imunidade
+        if self.immunity_timer > 0:
+            self.immunity_timer -= 1
+            if self.immunity_timer <= 0:
+                if self.in_immunity_phase:
+                    # Terminou fase de imunidade, começa intervalo
+                    self.immunity_timer = self.immunity_interval
+                    self.is_immunized = False
+                    self.in_immunity_phase = False
+                else:
+                    # Terminou intervalo, começa imunidade
+                    self.immunity_timer = self.immunity_duration
+                    self.is_immunized = True
+                    self.in_immunity_phase = True
+            
+        return result
+        
+    def draw(self, screen):
+        # Desenha a aura de imunidade se estiver ativa
+        if self.is_immunized:
+            immunity_surface = pygame.Surface((self.immunity_radius * 2, self.immunity_radius * 2), pygame.SRCALPHA)
+            pygame.draw.circle(immunity_surface, (255, 255, 255, 50), 
+                             (self.immunity_radius, self.immunity_radius), 
+                             self.immunity_radius)
+            screen.blit(immunity_surface, (int(self.x - self.immunity_radius), 
+                                         int(self.y - self.immunity_radius)))
+        
+        # Desenha o inimigo normalmente
+        super().draw(screen)
+        
+    def get_enemies_in_immunity_range(self, enemies):
+        """Retorna todos os inimigos dentro do raio de imunidade"""
+        in_range = []
+        if self.is_immunized:
+            for enemy in enemies:
+                if enemy != self:  # Não inclui a si mesmo
+                    dx = enemy.x - self.x
+                    dy = enemy.y - self.y
+                    distance = math.sqrt(dx ** 2 + dy ** 2)
+                    if distance <= self.immunity_radius:
+                        in_range.append(enemy)
+        return in_range
 
 def spawn_random_enemy(path, wave_manager):
     """Spawna um inimigo aleatório baseado nas chances da onda atual"""

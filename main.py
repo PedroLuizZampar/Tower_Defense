@@ -3,7 +3,7 @@ import math
 import os
 import sys
 import random
-from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy
+from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy, ImmunityBoss
 from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender, GreenDefender, OrangeDefender, PurpleDefender
 from wave_manager import WaveManager
 from base import Base, SkipButton
@@ -143,7 +143,7 @@ class EnemyShopMenu:
         header_width = 40
         header_height = 100
         header_x = SCREEN_WIDTH - header_width
-        self.header_rect = pygame.Rect(header_x, WAVE_MENU_HEIGHT, header_width, header_height)
+        self.header_rect = pygame.Rect(header_x, WAVE_MENU_HEIGHT + 98, header_width, header_height)
         
         # Se expandido, desenha o resto do menu
         if self.is_expanded:
@@ -330,7 +330,7 @@ class DefenderShopMenu:
         header_width = 40
         header_height = 100
         header_x = SCREEN_WIDTH - header_width
-        self.header_rect = pygame.Rect(header_x, WAVE_MENU_HEIGHT + 98, header_width, header_height)
+        self.header_rect = pygame.Rect(header_x, WAVE_MENU_HEIGHT, header_width, header_height)
         
         if self.is_expanded:
             panel_rect = pygame.Rect(SCREEN_WIDTH - self.width - header_width, WAVE_MENU_HEIGHT, 
@@ -479,6 +479,89 @@ class DefenderShopMenu:
                     
         return None, False
     
+class BossShopMenu:
+    def __init__(self):
+        self.width = 250
+        self.height = SCREEN_HEIGHT - WAVE_MENU_HEIGHT
+        self.is_expanded = False
+        self.header_rect = None
+        self.bosses = [ImmunityBoss]  # Lista de chefões disponíveis
+        
+    def draw(self, screen, wave_manager):
+        # Desenha o cabeçalho (sempre visível)
+        header_width = 40
+        header_height = 100
+        header_x = SCREEN_WIDTH - header_width
+        self.header_rect = pygame.Rect(header_x, WAVE_MENU_HEIGHT + 196, header_width, header_height)
+        
+        # Se expandido, desenha o resto do menu
+        if self.is_expanded:
+            panel_rect = pygame.Rect(SCREEN_WIDTH - self.width - header_width, WAVE_MENU_HEIGHT, 
+                                   self.width, self.height)
+            pygame.draw.rect(screen, MENU_GRAY, panel_rect)
+            pygame.draw.rect(screen, WHITE, panel_rect, 2)
+            
+            font = pygame.font.Font(None, 28)
+            text = font.render("CHEFÕES", True, WHITE)
+            text_rect = text.get_rect(center=(panel_rect.centerx, WAVE_MENU_HEIGHT + 25))
+            screen.blit(text, text_rect)
+            
+            y_offset = WAVE_MENU_HEIGHT + 45
+            font = pygame.font.Font(None, 20)
+            font_title = pygame.font.Font(None, 24)
+            
+            for boss_class in self.bosses:
+                # Fundo do card do chefão
+                card_height = 120
+                card_rect = pygame.Rect(panel_rect.x + 10, y_offset, self.width - 20, card_height)
+                pygame.draw.rect(screen, (60, 60, 60), card_rect)
+                pygame.draw.rect(screen, WHITE, card_rect, 1)
+                
+                # Nome do chefão
+                name_text = font_title.render(boss_class.NAME, True, WHITE)
+                name_rect = name_text.get_rect(x=card_rect.x + 10, y=y_offset + 10)
+                screen.blit(name_text, name_rect)
+                
+                # Ícone do chefão
+                pygame.draw.circle(screen, boss_class.COLOR,
+                                 (card_rect.x + 30, y_offset + 50),
+                                 15)  # Raio maior para chefões
+                
+                # Estatísticas
+                base_health = round(boss_class.BASE_HEALTH * wave_manager.get_health_increase(), 1)
+                health_text = font.render(f"Vida: {int(base_health)}", True, WHITE)
+                screen.blit(health_text, (card_rect.x + 60, y_offset + 35))
+                
+                speed_text = font.render(f"Velocidade: {boss_class.BASE_SPEED}", True, WHITE)
+                screen.blit(speed_text, (card_rect.x + 60, y_offset + 50))
+                
+                # Habilidade especial
+                if boss_class == ImmunityBoss:
+                    special_text = font.render("Aplica imunidade em", True, (50, 255, 50))
+                    screen.blit(special_text, (card_rect.x + 60, y_offset + 65))
+                    
+                    desc_text = font.render("inimigos próximos", True, (50, 255, 50))
+                    screen.blit(desc_text, (card_rect.x + 60, y_offset + 85))
+                
+                y_offset += card_height + 10
+        
+        # Sempre desenha o botão da aba
+        pygame.draw.rect(screen, MENU_GRAY, self.header_rect)
+        pygame.draw.rect(screen, WHITE, self.header_rect, 2)
+        
+        # Desenha o texto "CHEFÕES" na vertical
+        font = pygame.font.Font(None, 18)
+        text = font.render("Chefões", True, WHITE)
+        text_vertical = pygame.transform.rotate(text, 270)
+        text_rect = text_vertical.get_rect(center=self.header_rect.center)
+        screen.blit(text_vertical, text_rect)
+        
+    def handle_click(self, pos):
+        if self.header_rect and self.header_rect.collidepoint(pos):
+            self.is_expanded = not self.is_expanded
+            return True
+        return False
+
 def main():
     # Lista de inimigos, defensores e feitiços
     enemies = []
@@ -495,6 +578,7 @@ def main():
     # Interface
     enemy_shop = EnemyShopMenu()  # Menu lateral de inimigos
     defender_shop = DefenderShopMenu(mission_manager)  # Menu lateral de defensores
+    boss_shop = BossShopMenu()  # Menu lateral de chefões
     selected_button = None
     skip_button = SkipButton()
     base = Base()
@@ -521,6 +605,7 @@ def main():
     # Game loop
     running = True
     clock = pygame.time.Clock()
+    immunity_boss = None  # Referência para o boss de imunidade
 
     while running:
         mouse_pos = pygame.mouse.get_pos()
@@ -544,6 +629,7 @@ def main():
                 if enemy_shop.handle_click(mouse_pos):
                     if enemy_shop.is_expanded:
                         defender_shop.is_expanded = False
+                        boss_shop.is_expanded = False
                     continue
                     
                 # Verifica clique no menu de defensores
@@ -551,6 +637,7 @@ def main():
                 if was_header_click:
                     if defender_shop.is_expanded:
                         enemy_shop.is_expanded = False
+                        boss_shop.is_expanded = False
                     continue
                 if button:
                     # Se já tinha um botão selecionado, desseleciona
@@ -561,6 +648,13 @@ def main():
                     if selected_defender:
                         selected_defender.selected = False
                         selected_defender = None
+                    continue
+                    
+                # Verifica clique no menu de chefões
+                if boss_shop.handle_click(mouse_pos):
+                    if boss_shop.is_expanded:
+                        enemy_shop.is_expanded = False
+                        defender_shop.is_expanded = False
                     continue
                     
                 # Verifica clique nos botões de feitiço
@@ -647,36 +741,35 @@ def main():
             
             # Se o feitiço matou um inimigo
             if spell_result == "died":
-                # Identifica o tipo do inimigo e adiciona o ouro
-                for enemy in enemies[:]:  # Verifica todos os inimigos
-                    if enemy.health <= 0 and not enemy.reward_given:  # Se morreu e não deu recompensa
-                        # Se for um FreezeAuraEnemy, aplica o efeito de congelamento
-                        if isinstance(enemy, FreezeAuraEnemy):
-                            enemy.apply_freeze_aura(defenders)
-                        
-                        # Identifica o tipo do inimigo
-                        if isinstance(enemy, SpeedEnemy):
-                            enemy_type = 'speed'
-                        elif isinstance(enemy, TankEnemy):
-                            enemy_type = 'tank'
-                        elif isinstance(enemy, ArmoredEnemy):
-                            enemy_type = 'armored'
-                        elif isinstance(enemy, HealerEnemy):
-                            enemy_type = 'healer'
-                        elif isinstance(enemy, FreezeAuraEnemy):
-                            enemy_type = 'freeze_aura'
-                        elif isinstance(enemy, RageEnemy):
-                            enemy_type = 'rage'
-                        elif isinstance(enemy, StealthEnemy):
-                            enemy_type = 'stealth'
-                        else:
-                            enemy_type = 'normal'
-                        
-                        # Adiciona o ouro
-                        gold += wave_manager.enemy_defeated(enemy_type)
-                        enemy.reward_given = True
-                        enemies.remove(enemy)
-                        mission_manager.update_kills()  # Atualiza contagem de kills
+                # Processa todos os inimigos mortos pelo feitiço
+                if hasattr(spell, 'killed_enemies'):
+                    for dead_enemy in spell.killed_enemies:
+                        if dead_enemy in enemies and not dead_enemy.reward_given:
+                            # Identifica o tipo do inimigo
+                            if isinstance(dead_enemy, SpeedEnemy):
+                                enemy_type = 'speed'
+                            elif isinstance(dead_enemy, TankEnemy):
+                                enemy_type = 'tank'
+                            elif isinstance(dead_enemy, ArmoredEnemy):
+                                enemy_type = 'armored'
+                            elif isinstance(dead_enemy, HealerEnemy):
+                                enemy_type = 'healer'
+                            elif isinstance(dead_enemy, FreezeAuraEnemy):
+                                enemy_type = 'freeze_aura'
+                            elif isinstance(dead_enemy, RageEnemy):
+                                enemy_type = 'rage'
+                            elif isinstance(dead_enemy, StealthEnemy):
+                                enemy_type = 'stealth'
+                            elif isinstance(dead_enemy, ImmunityBoss):
+                                enemy_type = 'boss'
+                            else:
+                                enemy_type = 'normal'
+                            
+                            # Adiciona o ouro
+                            gold += wave_manager.enemy_defeated(enemy_type)
+                            dead_enemy.reward_given = True
+                            enemies.remove(dead_enemy)
+                            mission_manager.update_kills()  # Atualiza contagem de kills
             elif not spell_result:  # Se o feitiço terminou
                 spells.remove(spell)
         
@@ -685,12 +778,21 @@ def main():
             button.update()
         
         # Spawn de inimigos
-        if wave_manager.should_spawn_enemy():
-            enemy, is_special = spawn_random_enemy(PATH, wave_manager)
-            enemies.append(enemy)
+        spawn_result = wave_manager.should_spawn_enemy()
+        if spawn_result:
+            if spawn_result == "boss":
+                # Spawna o boss de imunidade
+                immunity_boss = ImmunityBoss(PATH)
+                immunity_boss.set_enemies_list(enemies)
+                enemies.append(immunity_boss)
+            else:
+                enemy, is_special = spawn_random_enemy(PATH, wave_manager)
+                enemy.set_enemies_list(enemies)
+                enemies.append(enemy)
             
         # Atualização dos inimigos
         for enemy in enemies[:]:
+            enemy.set_enemies_list(enemies)  # Atualiza a lista de inimigos
             move_result = enemy.move()  # Agora pode retornar True, False, "died" ou "heal"
             
             # Primeiro verifica se chegou ao final do caminho
@@ -735,6 +837,8 @@ def main():
                     enemy_type = 'rage'
                 elif isinstance(enemy, StealthEnemy):
                     enemy_type = 'stealth'
+                elif isinstance(enemy, ImmunityBoss):
+                    enemy_type = 'boss'
                 else:
                     enemy_type = 'normal'
                 
@@ -755,35 +859,53 @@ def main():
             for projectile in defender.projectiles[:]:
                 if projectile.move():
                     if projectile.target and hasattr(projectile.target, 'take_damage'):
-                        # Se o inimigo morreu com este projétil
-                        damage_result = projectile.target.take_damage(projectile.damage)
+                        # Verifica se o alvo está protegido pela aura de imunidade
+                        is_immune = False
+                        for enemy in enemies:
+                            if isinstance(enemy, ImmunityBoss) and enemy.is_immunized:
+                                immune_enemies = enemy.get_enemies_in_immunity_range(enemies)
+                                if projectile.target in immune_enemies:
+                                    is_immune = True
+                                    break
                         
-                        # Se o inimigo é um FreezeAuraEnemy e morreu, aplica congelamento em área
-                        if isinstance(projectile.target, FreezeAuraEnemy) and damage_result == "freeze_aura":
-                            projectile.target.apply_freeze_aura(defenders)
+                        if not is_immune:
+                            # Se o inimigo morreu com este projétil
+                            damage_result = projectile.target.take_damage(projectile.damage)
                             
-                        if damage_result:  # Se morreu normalmente
-                            # Identifica o tipo do inimigo
-                            if isinstance(projectile.target, SpeedEnemy):
-                                enemy_type = 'speed'
-                            elif isinstance(projectile.target, TankEnemy):
-                                enemy_type = 'tank'
-                            elif isinstance(projectile.target, ArmoredEnemy):
-                                enemy_type = 'armored'
-                            elif isinstance(projectile.target, HealerEnemy):
-                                enemy_type = 'healer'
-                            else:
-                                enemy_type = 'normal'
-                            
-                            # Adiciona o ouro e remove o inimigo
-                            if not projectile.target.reward_given:  # Verifica se já deu recompensa
-                                gold += wave_manager.enemy_defeated(enemy_type)
-                                projectile.target.reward_given = True  # Marca que já deu recompensa
-                                mission_manager.update_kills()  # Atualiza contagem de kills quando inimigo morre por projétil
-                            if projectile.target in enemies:  # Verifica se o inimigo ainda está na lista
-                                enemies.remove(projectile.target)
-                            if projectile.target == defender.current_target:
-                                defender.current_target = None
+                            # Se o inimigo é um FreezeAuraEnemy e morreu, aplica congelamento em área
+                            if isinstance(projectile.target, FreezeAuraEnemy) and damage_result == "freeze_aura":
+                                projectile.target.apply_freeze_aura(defenders)
+                                
+                            if damage_result:  # Se morreu normalmente
+                                # Identifica o tipo do inimigo
+                                if isinstance(projectile.target, SpeedEnemy):
+                                    enemy_type = 'speed'
+                                elif isinstance(projectile.target, TankEnemy):
+                                    enemy_type = 'tank'
+                                elif isinstance(projectile.target, ArmoredEnemy):
+                                    enemy_type = 'armored'
+                                elif isinstance(projectile.target, HealerEnemy):
+                                    enemy_type = 'healer'
+                                elif isinstance(projectile.target, FreezeAuraEnemy):
+                                    enemy_type = 'freeze_aura'
+                                elif isinstance(projectile.target, RageEnemy):
+                                    enemy_type = 'rage'
+                                elif isinstance(projectile.target, StealthEnemy):
+                                    enemy_type = 'stealth'
+                                elif isinstance(projectile.target, ImmunityBoss):
+                                    enemy_type = 'boss'
+                                else:
+                                    enemy_type = 'normal'
+                                
+                                # Adiciona o ouro e remove o inimigo
+                                if not projectile.target.reward_given:  # Verifica se já deu recompensa
+                                    gold += wave_manager.enemy_defeated(enemy_type)
+                                    projectile.target.reward_given = True  # Marca que já deu recompensa
+                                    mission_manager.update_kills()  # Atualiza contagem de kills quando inimigo morre por projétil
+                                if projectile.target in enemies:  # Verifica se o inimigo ainda está na lista
+                                    enemies.remove(projectile.target)
+                                if projectile.target == defender.current_target:
+                                    defender.current_target = None
                     
                     defender.projectiles.remove(projectile)
             
@@ -824,6 +946,7 @@ def main():
         # Desenha os menus laterais
         enemy_shop.draw(screen, wave_manager)
         defender_shop.draw(screen, gold, selected_button)
+        boss_shop.draw(screen, wave_manager)
         
         # Se um feitiço estiver selecionado, mostra a prévia
         if selected_spell and selected_spell.selected:
