@@ -31,7 +31,10 @@ class Enemy:
         self.is_weakened = False  # Flag para indicar se está sob efeito de fraqueza
         self.immunity_timer = 0  # Timer para o efeito de imunidade
         self.is_immunized = False  # Flag para indicar se está sob efeito de imunidade
+        self.speed_timer = 0  # Timer para o efeito de aceleração
+        self.is_accelerated = False  # Flag para indicar se está sob efeito de aceleração
         self._all_enemies = []  # Referência para a lista de todos os inimigos
+        self.original_color = self.COLOR  # Guarda a cor original
         
     @classmethod
     def should_spawn(cls):
@@ -93,6 +96,14 @@ class Enemy:
         self.weakness_timer = duration_frames
         self.is_weakened = True
         
+    def apply_speed(self, duration_frames=150):  # 2.5 segundos de duração
+        """Aplica efeito de velocidade aumentada"""
+        self.speed_timer = duration_frames
+        self.is_accelerated = True
+        self.COLOR = SpeedEnemy.COLOR  # Muda a cor para a cor do SpeedEnemy
+        if not self.is_frozen or not self.is_slowed:
+            self.speed = self.base_speed * 1.5  # Aumenta a velocidade em 50%
+        
     def update(self):
         """Atualiza os efeitos de status"""
         # Atualiza efeito de fraqueza
@@ -106,14 +117,27 @@ class Enemy:
             self.freeze_timer -= 1
             if self.freeze_timer <= 0:
                 self.speed = self.base_speed if not self.is_slowed else self.base_speed * 0.5
+                if self.is_accelerated:
+                    self.speed *= 1.5
                 self.is_frozen = False
                 
         # Atualiza efeito de slow
         if self.slow_timer > 0:
             self.slow_timer -= 1
             if self.slow_timer <= 0:
-                self.speed = self.base_speed
                 self.is_slowed = False
+                self.speed = self.base_speed
+                if self.is_accelerated:
+                    self.speed *= 1.5
+                
+        # Atualiza efeito de velocidade
+        if self.speed_timer > 0:
+            self.speed_timer -= 1
+            if self.speed_timer <= 0:
+                self.is_accelerated = False
+                self.COLOR = self.original_color
+                if not self.is_frozen:
+                    self.speed = self.base_speed if not self.is_slowed else self.base_speed * 0.5
                 
         # Atualiza dano ao longo do tempo
         if self.dot_timer > 0:
@@ -234,7 +258,7 @@ class ArmoredEnemy(Enemy):
     
     def __init__(self, path):
         super().__init__(path)
-        self.damage_reduction = 0.35  # Aumentado para 35%
+        self.damage_reduction = 0.30  # Aumentado para 30%
         
     def take_damage(self, damage):
         # Reduz o dano recebido
@@ -352,9 +376,15 @@ class RageEnemy(Enemy):
         if self.is_frozen:
             self.speed = 0
         elif self.is_slowed:
-            self.speed = (self.original_speed * rage_multiplier) * 0.5
+            base_speed = self.original_speed * rage_multiplier
+            if self.is_accelerated:
+                base_speed *= 1.5
+            self.speed = base_speed * 0.5
         else:
-            self.speed = self.original_speed * rage_multiplier
+            base_speed = self.original_speed * rage_multiplier
+            if self.is_accelerated:
+                base_speed *= 1.5
+            self.speed = base_speed
             
         return result
         
@@ -370,7 +400,7 @@ class RageEnemy(Enemy):
 
 class StealthEnemy(Enemy):
     COLOR = (128, 0, 128)  # Roxo
-    BASE_HEALTH = 40  # Reduzido para 40
+    BASE_HEALTH = 80  # Reduzido para 80
     BASE_SPEED = 2.0  # Ajustado para 2.0
     SPAWN_CHANCE = 15  # Reduzido para 15%
     NAME = "Furtivo"
@@ -379,7 +409,7 @@ class StealthEnemy(Enemy):
         super().__init__(path)
         self.radius = 10
         self.stealth_timer = 0
-        self.stealth_interval = 120  # Aumentado para 2 segundos
+        self.stealth_interval = 60  # Aumentado para 1 segundo
         self.stealth_duration = 60  # Ajustado para 1 segundo
         self.is_stealthed = False
         self.fade_start = 20  # Frames para começar a aparecer/desaparecer
@@ -469,7 +499,7 @@ class ImmunityBoss(Enemy):
         self.immunity_interval = 180  # 3 segundos entre ativações
         self.immunity_duration = 120  # 2 segundos de duração
         self.immunity_timer = self.immunity_duration  # Começa com o timer cheio
-        self.is_immunized = True  # Começa imunizado
+        self.is_immunized = False  # Não começa imunizado
         self.in_immunity_phase = True  # Controla se está na fase de imunidade ou intervalo
         
     def update(self):
@@ -517,6 +547,50 @@ class ImmunityBoss(Enemy):
                     if distance <= self.immunity_radius:
                         in_range.append(enemy)
         return in_range
+    
+class SpeedBoss(Enemy):
+    COLOR = (22, 102, 58)  # Verde escuro
+    BASE_HEALTH = 1250  # Aumentado para 1250
+    BASE_SPEED = 1.2  # Velocidade reduzida
+    NAME = "Veloz"
+    SPAWN_CHANCE = 0  # Não spawna aleatoriamente
+    
+    def __init__(self, path):
+        super().__init__(path)
+        self.radius = 20  # Raio maior que inimigos normais
+        self.speed_interval = 300  # 5 segundos entre ativações
+        self.speed_duration = 120  # 2 segundos de duração
+        self.speed_timer = self.speed_duration  # Começa com o timer cheio
+        self.is_accelerated = False  # Não começa acelerado
+        self.in_speed_phase = False  # Controla se está na fase de velocidade ou intervalo
+        
+    def update(self):
+        result = super().update()
+        
+        # Atualiza o timer da velocidade
+        if self.speed_timer > 0:
+            self.speed_timer -= 1
+            if self.speed_timer <= 0:
+                if self.in_speed_phase:
+                    # Terminou fase de velocidade, começa intervalo
+                    self.speed_timer = self.speed_interval
+                    self.is_accelerated = False
+                    self.in_speed_phase = False
+                else:
+                    # Terminou intervalo, começa velocidade
+                    self.speed_timer = self.speed_duration
+                    self.is_accelerated = True
+                    self.in_speed_phase = True
+                    # Aplica velocidade em todos os inimigos
+                    for enemy in self._all_enemies:
+                        if enemy != self:  # Não aplica em si mesmo
+                            enemy.apply_speed(self.speed_duration)
+                
+        return result
+        
+    def draw(self, screen):
+        # Desenha o inimigo normalmente
+        super().draw(screen)
 
 def spawn_random_enemy(path, wave_manager):
     """Spawna um inimigo aleatório baseado nas chances da onda atual"""

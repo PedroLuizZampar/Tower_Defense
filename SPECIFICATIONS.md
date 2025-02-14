@@ -7,7 +7,6 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 
 ### Layout
 - Tela total: 1000x650px
-- Área de jogo: 1000x550px
 - Menu superior: 100px altura (informações da onda)
 - Quatro menus laterais retráteis:
   1. Menu de Inimigos
@@ -28,7 +27,6 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
      - Nome e ícone
      - Vida e velocidade
      - Habilidades especiais
-     - Chances de aparecimento
 
 3. **Menu de Defensores (Retrátil)**
    - Lista paginada de defensores (5 por página)
@@ -46,7 +44,6 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
      - Nome e ícone
      - Vida e velocidade
      - Descrição da habilidade especial
-     - Condições de aparecimento
 
 ### Chefões
 
@@ -60,7 +57,7 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
   - Raio: 150px
   - Duração: 2 segundos
   - Intervalo: 3 segundos
-  - Efeito: Protege aliados próximos de todo dano
+  - Efeito: Protege aliados próximos de todo dano e feitiço
 - **Características**:
   - Primeiro inimigo da onda 10
   - Intervalo especial antes dos próximos inimigos
@@ -112,7 +109,7 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 #### 1. Defensor Básico
 - **Custo**: 50 ouro
 - **Estatísticas Base**:
-  - Dano: 8
+  - Dano: 9
   - Velocidade de Ataque: 2/s
   - Alcance: 130px
 - **Características**:
@@ -120,32 +117,21 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
   - Sem habilidades especiais
   - Melhor custo-benefício inicial
 
-#### 2. Defensor Congelante (Azul)
+#### 2. Defensor Flamejante (Vermelho)
 - **Custo**: 75 ouro + 2 orbes para desbloquear
 - **Estatísticas Base**:
-  - Dano: 10
-  - Velocidade de Ataque: 1.71/s
-  - Alcance: 140px
-- **Habilidade Especial**:
-  - A cada 5 ataques, congela todos os inimigos no alcance
-  - Congelamento dura 1.5 segundos
-  - Inimigos congelados ficam completamente imóveis
-
-#### 3. Defensor Flamejante (Vermelho)
-- **Custo**: 100 ouro + 3 orbes para desbloquear
-- **Estatísticas Base**:
-  - Dano: 10
-  - Velocidade de Ataque: 2.14/s
+  - Dano: 8
+  - Velocidade de Ataque: 2.4/s
   - Alcance: 140px
 - **Habilidade Especial**:
   - A cada 6 ataques, aplica queimadura em área
   - Queimadura causa 50% do dano normal por 3 segundos
   - Afeta todos os inimigos no alcance
 
-#### 4. Defensor Luminoso (Amarelo)
-- **Custo**: 125 ouro + 3 orbes para desbloquear
+#### 3. Defensor Luminoso (Amarelo)
+- **Custo**: 100 ouro + 3 orbes para desbloquear
 - **Estatísticas Base**:
-  - Dano: 18
+  - Dano: 15
   - Velocidade de Ataque: 1.33/s
   - Alcance: 200px
 - **Habilidade Especial**:
@@ -153,21 +139,32 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
   - Buff aumenta o dano em 50% por um ataque
   - Maior alcance entre os defensores
 
-#### 5. Defensor Retardante (Verde)
-- **Custo**: 150 ouro + 4 orbes para desbloquear
+#### 4. Defensor Retardante (Verde)
+- **Custo**: 125 ouro + 4 orbes para desbloquear
 - **Estatísticas Base**:
-  - Dano: 13
+  - Dano: 12
   - Velocidade de Ataque: 1.33/s
   - Alcance: 130px
 - **Habilidade Especial**:
-  - A cada 4 ataques, reduz a velocidade dos inimigos
+  - A cada 5 ataques, reduz a velocidade dos inimigos
   - Desaceleração dura 3 segundos
   - Reduz a velocidade em 50%
+
+#### 5. Defensor Congelante (Azul)
+- **Custo**: 150 ouro + 5 orbes para desbloquear
+- **Estatísticas Base**:
+  - Dano: 8
+  - Velocidade de Ataque: 1.87/s
+  - Alcance: 140px
+- **Habilidade Especial**:
+  - A cada 8 ataques, congela todos os inimigos no alcance
+  - Congelamento dura 1.5 segundos
+  - Inimigos congelados ficam completamente imóveis
 
 #### 6. Defensor Duplo (Laranja)
 - **Custo**: 175 ouro + 5 orbes para desbloquear
 - **Estatísticas Base**:
-  - Dano: 12
+  - Dano: 8
   - Velocidade de Ataque: 1.71/s
   - Alcance: 160px
 - **Habilidade Especial**:
@@ -178,8 +175,8 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 #### 7. Defensor Enfraquecedor (Roxo)
 - **Custo**: 200 ouro + 5 orbes para desbloquear
 - **Estatísticas Base**:
-  - Dano: 20
-  - Velocidade de Ataque: 1.33/s
+  - Dano: 18
+  - Velocidade de Ataque: 1.2/s
   - Alcance: 135px
 - **Habilidade Especial**:
   - A cada 8 ataques, aplica fraqueza nos inimigos
@@ -187,14 +184,14 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
   - Efeito dura 4 segundos
 
 ### Sistema de Melhorias
-- **Custo**: 15 ouro × nível atual
+- **Custo**: 12 ouro × nível atual
 - **Benefícios por Melhoria**:
   - +10% dano base
   - -1% tempo entre ataques
   - Aumenta valor de venda
 - **Sistema de Venda**:
   - 100% do valor investido se vender na mesma onda
-  - 50% do custo base + 8 ouro por melhoria em outras ondas
+  - 50% do custo base + 6 ouro por melhoria em outras ondas
 
 ### Inimigos
 
@@ -202,8 +199,7 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 - **Estatísticas**:
   - Vida: 80 + bônus/onda
   - Velocidade: 1.8
-  - Recompensa: 3 ouro
-  - Chance de Spawn: 65%
+  - Recompensa: 2 ouro
 - **Características**:
   - Sem resistências especiais
   - Vulnerável a todos os efeitos
@@ -213,8 +209,7 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 - **Estatísticas**:
   - Vida: 250 + bônus/onda
   - Velocidade: 1.0
-  - Recompensa: 12 ouro
-  - Chance de Spawn: 15%
+  - Recompensa: 6 ouro
 - **Características**:
   - Imune a congelamento e lentidão
   - Maior vida entre todos os inimigos
@@ -224,8 +219,7 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 - **Estatísticas**:
   - Vida: 50 + bônus/onda
   - Velocidade: 3.2
-  - Recompensa: 5 ouro
-  - Chance de Spawn: 25%
+  - Recompensa: 3 ouro
 - **Características**:
   - Imune a dano ao longo do tempo
   - Movimento muito rápido
@@ -235,19 +229,16 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 - **Estatísticas**:
   - Vida: 180 + bônus/onda
   - Velocidade: 1.4
-  - Recompensa: 10 ouro
-  - Chance de Spawn: 20%
+  - Recompensa: 6 ouro
 - **Características**:
-  - Reduz todo dano recebido em 35%
-  - Resistente a explosões
+  - Reduz todo dano recebido em 30%
   - Alta vida efetiva
 
 #### 5. Inimigo Curador
 - **Estatísticas**:
   - Vida: 120 + bônus/onda
   - Velocidade: 1.6
-  - Recompensa: 8 ouro
-  - Chance de Spawn: 15%
+  - Recompensa: 4 ouro
 - **Características**:
   - Cura 8 de vida a cada segundo
   - Afeta inimigos num raio de 150px
@@ -257,8 +248,7 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 - **Estatísticas**:
   - Vida: 100 + bônus/onda
   - Velocidade: 2.0
-  - Recompensa: Especial
-  - Chance de Spawn: 15%
+  - Recompensa: 4 ouro
 - **Características**:
   - Ao morrer, congela todas as torres próximas
   - Raio de congelamento de 100px
@@ -268,8 +258,7 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 - **Estatísticas**:
   - Vida: 140 + bônus/onda
   - Velocidade: 1.6
-  - Recompensa: Especial
-  - Chance de Spawn: 20%
+  - Recompensa: 5 ouro
 - **Características**:
   - Aumenta velocidade conforme perde vida
   - Velocidade máxima de 2.5x
@@ -279,11 +268,10 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 - **Estatísticas**:
   - Vida: 40 + bônus/onda
   - Velocidade: 2.0
-  - Recompensa: Especial
-  - Chance de Spawn: 15%
+  - Recompensa: 3 ouro
 - **Características**:
   - Alterna entre visível e invisível
-  - 2 segundos visível, 1 segundo invisível
+  - 1 segundos visível, 1 segundo invisível
   - Não pode ser alvo quando invisível
 
 ### Feitiços
@@ -326,7 +314,10 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
   - +2 inimigos a cada 10 ondas
 
 - **Escalamento**:
-  - Vida: +8% por onda
+  - Vida:
+    - até a onda 10 -> +(onda atual * 3)%
+    - até a onda 25 -> +(onda atual * 2,5)%
+    - até a onda 60 -> +(onda atual * 2)%
   - Ouro: +5% por onda
   - Spawn mais rápido progressivamente
 
@@ -338,7 +329,7 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 ### Como Jogar
 
 1. **Início do Jogo**
-   - Comece com 250 ouro
+   - Comece com 300 ouro
    - Posicione defensores básicos estrategicamente
    - Use o tempo de preparação para planejar
 

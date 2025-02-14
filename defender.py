@@ -51,7 +51,7 @@ class Defender:
             
         # Para ondas diferentes
         base_return = self.COST // 2  # 50% do custo base
-        upgrade_bonus = self.upgrades_count * self.UPGRADE_SELL_BONUS  # 5 de ouro por melhoria
+        upgrade_bonus = self.upgrades_count * self.UPGRADE_SELL_BONUS
         return base_return + upgrade_bonus
         
     def upgrade(self):
@@ -237,7 +237,7 @@ class BasicDefender(Defender):
     PROJECTILE_COLOR = (66, 86, 110)  # Cinza azulado escuro mais claro
     COST = 50  # Defensor mais barato
     NAME = "Básico"
-    BASE_DAMAGE = 8
+    BASE_DAMAGE = 9
     BASE_ATTACK_COOLDOWN = 30
     RANGE = 130
     HITS_TO_ACTIVATE = 0
@@ -250,8 +250,8 @@ class RedDefender(Defender):
     PROJECTILE_COLOR = (255, 100, 100)  # Vermelho claro
     COST = 75
     NAME = "Flamejante"
-    BASE_DAMAGE = 10
-    BASE_ATTACK_COOLDOWN = 28
+    BASE_DAMAGE = 8
+    BASE_ATTACK_COOLDOWN = 25
     UNLOCK_COST = 2
     RANGE = 140
     HITS_TO_ACTIVATE = 6
@@ -300,7 +300,7 @@ class YellowDefender(Defender):
     PROJECTILE_COLOR = (255, 255, 150)  # Amarelo claro
     COST = 100
     NAME = "Luminoso"
-    BASE_DAMAGE = 18
+    BASE_DAMAGE = 15
     BASE_ATTACK_COOLDOWN = 45
     UNLOCK_COST = 3
     RANGE = 200
@@ -348,11 +348,11 @@ class GreenDefender(Defender):
     PROJECTILE_COLOR = (0, 150, 0)  # Verde escuro mais claro
     COST = 125
     NAME = "Retardante"
-    BASE_DAMAGE = 13
+    BASE_DAMAGE = 12
     BASE_ATTACK_COOLDOWN = 45
     RANGE = 130
     UNLOCK_COST = 4
-    HITS_TO_ACTIVATE = 4
+    HITS_TO_ACTIVATE = 5
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
@@ -396,8 +396,8 @@ class BlueDefender(Defender):
     PROJECTILE_COLOR = (43, 181, 255)  # Azul claro
     COST = 150
     NAME = "Congelante"
-    BASE_DAMAGE = 10
-    BASE_ATTACK_COOLDOWN = 35
+    BASE_DAMAGE = 8
+    BASE_ATTACK_COOLDOWN = 32
     UNLOCK_COST = 5
     RANGE = 140
     HITS_TO_ACTIVATE = 8
@@ -444,7 +444,7 @@ class OrangeDefender(Defender):
     PROJECTILE_COLOR = (255, 165, 0)  # Laranja mais claro
     COST = 175
     NAME = "Duplo"
-    BASE_DAMAGE = 12
+    BASE_DAMAGE = 8
     BASE_ATTACK_COOLDOWN = 35
     RANGE = 160
     UNLOCK_COST = 6
@@ -505,12 +505,12 @@ class OrangeDefender(Defender):
 class PurpleDefender(Defender):
     COLOR = (75, 0, 130)  # Roxo escuro
     PROJECTILE_COLOR = (128, 0, 128)  # Roxo mais claro para projéteis
-    BASE_DAMAGE = 20
+    BASE_DAMAGE = 18
     COST = 200
     RANGE = 135
     NAME = "Enfraquecedor"
     UNLOCK_COST = 8
-    BASE_ATTACK_COOLDOWN = 45
+    BASE_ATTACK_COOLDOWN = 50
     HITS_TO_ACTIVATE = 8
     
     def __init__(self, x, y, current_wave):

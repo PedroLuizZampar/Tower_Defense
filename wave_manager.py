@@ -50,8 +50,19 @@ class WaveManager:
         
     def get_health_increase(self):
         """Retorna o multiplicador de vida baseado na onda atual"""
-        # Retorna o multiplicador de vida (12% de aumento por onda)
-        return 1 + ((self.current_wave - 1) * 0.12)
+        # Retorna o multiplicador de vida
+        # Até a onda 10
+        if self.current_wave <= 10:
+            # Aumento na vida = (onda atual * 3)%
+            return 1 + ((self.current_wave - 1) * (self.current_wave * 3/100))
+        # Até a onda 25
+        elif self.current_wave <= 25:
+            # Aumento na vida = (onda atual * 2)%
+            return 1 + ((self.current_wave - 1) * (self.current_wave * 2.5/100))
+        # Até a onda 60
+        else:
+            # Aumento na vida = (onda atual)%
+            return 1 + ((self.current_wave - 1) * (self.current_wave * 2/100))
         
     def get_spawn_chances(self):
         # Retorna as chances de spawn para cada tipo de inimigo baseado na onda atual
@@ -102,7 +113,14 @@ class WaveManager:
             self.boss_spawned = True
             self.enemies_spawned += 1
             self.boss_spawn_cooldown = self.get_spawn_interval()  # Define o intervalo após o boss
-            return "boss"
+            return "immunity_boss"
+            
+        # Verifica se é a onda 20 e o boss ainda não foi spawnado
+        if self.current_wave == 20 and not self.boss_spawned and self.enemies_spawned == 0:
+            self.boss_spawned = True
+            self.enemies_spawned += 1
+            self.boss_spawn_cooldown = self.get_spawn_interval()  # Define o intervalo após o boss
+            return "speed_boss"
             
         # Se o boss acabou de ser spawnado, espera o cooldown
         if self.boss_spawn_cooldown > 0:
