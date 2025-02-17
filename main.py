@@ -3,7 +3,7 @@ import math
 import os
 import sys
 import random
-from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy, ImmunityBoss, SpeedBoss, MagnetBoss
+from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy, ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss
 from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender, GreenDefender, OrangeDefender, PurpleDefender
 from wave_manager import WaveManager
 from base import Base, SkipButton
@@ -490,26 +490,38 @@ class BossShopMenu:
             {
                 'class': ImmunityBoss,
                 'wave': 10,
-                'description1': 'Aplica imunidade em',
-                'description2': 'inimigos próximos',
-                'ability_duration': '2s',
-                'ability_cooldown': '3s'
+                'description1': "Protege aliados próximos",
+                'description2': "de todo dano e feitiço",
+                'ability_name': "Aura de Imunidade",
+                'duration': "2s",
+                'cooldown': "3s"
             },
             {
                 'class': SpeedBoss,
                 'wave': 20,
-                'description1': 'Aumenta velocidade de',
-                'description2': 'todos os inimigos',
-                'ability_duration': '2s',
-                'ability_cooldown': '5s'
+                'description1': "Aumenta a velocidade de",
+                'description2': "todos os inimigos em 50%",
+                'ability_name': "Aura de Velocidade",
+                'duration': "2s",
+                'cooldown': "5s"
             },
             {
                 'class': MagnetBoss,
                 'wave': 30,
-                'description1': 'Atrai todos os projéteis',
-                'description2': 'para si',
-                'ability_duration': '3s',
-                'ability_cooldown': '5s'
+                'description1': "Atrai todos os projéteis",
+                'description2': "para si, protegendo aliados",
+                'ability_name': "Atração Magnética",
+                'duration': "3s",
+                'cooldown': "5s"
+            },
+            {
+                'class': VampiricBoss,
+                'wave': 40,
+                'description1': "Rouba 50% da vida dos inimigos",
+                'description2': "ao morrer +10% de vida por inimigo",
+                'ability_name': "Drenagem Vital",
+                'duration': "N/A",
+                'cooldown': "N/A"
             }
         ]
         
@@ -570,16 +582,14 @@ class BossShopMenu:
                 health_text = font.render(f"Vida: {int(base_health)} | Velocidade: {boss_class.BASE_SPEED}", True, WHITE)
                 screen.blit(health_text, (card_rect.x + 60, y_offset + 35))
                 
-                # Descrição da habilidade
-                desc_text = font.render(boss_info['description1'], True, (50, 255, 50))
-                screen.blit(desc_text, (card_rect.x + 60, y_offset + 50))
+                # Descrição da habilidade em duas linhas
+                desc_text1 = font.render(boss_info['description1'], True, (50, 255, 50))
+                desc_text2 = font.render(boss_info['description2'], True, (50, 255, 50))
+                screen.blit(desc_text1, (card_rect.x + 60, y_offset + 50))
+                screen.blit(desc_text2, (card_rect.x + 60, y_offset + 65))
 
-                # Descrição da habilidade
-                desc_text = font.render(boss_info['description2'], True, (50, 255, 50))
-                screen.blit(desc_text, (card_rect.x + 60, y_offset + 65))
-                
                 # Duração e cooldown
-                timing_text = font.render(f"Duração: {boss_info['ability_duration']} | Cooldown: {boss_info['ability_cooldown']}", 
+                timing_text = font.render(f"Duração: {boss_info['duration']} | Cooldown: {boss_info['cooldown']}", 
                                         True, WHITE)
                 screen.blit(timing_text, (card_rect.x + 60, y_offset + 80))
                 
@@ -848,8 +858,9 @@ def main():
                                 enemy_type = 'rage'
                             elif isinstance(dead_enemy, StealthEnemy):
                                 enemy_type = 'stealth'
-                            elif isinstance(dead_enemy, ImmunityBoss) or isinstance(dead_enemy, SpeedBoss):
+                            elif isinstance(dead_enemy, ImmunityBoss) or isinstance(dead_enemy, SpeedBoss) or isinstance(dead_enemy, MagnetBoss) or isinstance(dead_enemy, VampiricBoss):
                                 enemy_type = 'boss'
+                                mission_manager.orbes += 3  # Adiciona 3 orbes ao derrotar um chefe
                             else:
                                 enemy_type = 'normal'
                             
@@ -869,20 +880,21 @@ def main():
         spawn_result = wave_manager.should_spawn_enemy()
         if spawn_result:
             if spawn_result == "immunity_boss":
-                # Spawna o boss de imunidade
                 immunity_boss = ImmunityBoss(PATH)
                 immunity_boss.set_enemies_list(enemies)
                 enemies.append(immunity_boss)
             elif spawn_result == "speed_boss":
-                # Spawna o boss de velocidade
                 speed_boss = SpeedBoss(PATH)
                 speed_boss.set_enemies_list(enemies)
                 enemies.append(speed_boss)
             elif spawn_result == "magnet_boss":
-                # Spawna o boss magnético
                 magnet_boss = MagnetBoss(PATH)
                 magnet_boss.set_enemies_list(enemies)
                 enemies.append(magnet_boss)
+            elif spawn_result == "vampiric_boss":
+                vampiric_boss = VampiricBoss(PATH)
+                vampiric_boss.set_enemies_list(enemies)
+                enemies.append(vampiric_boss)
             else:
                 enemy, is_special = spawn_random_enemy(PATH, wave_manager)
                 enemy.set_enemies_list(enemies)
@@ -935,8 +947,9 @@ def main():
                     enemy_type = 'rage'
                 elif isinstance(enemy, StealthEnemy):
                     enemy_type = 'stealth'
-                elif isinstance(enemy, ImmunityBoss) or isinstance(enemy, SpeedBoss):
+                elif isinstance(enemy, ImmunityBoss) or isinstance(enemy, SpeedBoss) or isinstance(enemy, MagnetBoss) or isinstance(enemy, VampiricBoss):
                     enemy_type = 'boss'
+                    mission_manager.orbes += 3  # Adiciona 3 orbes ao derrotar um chefe
                 else:
                     enemy_type = 'normal'
                 
@@ -999,8 +1012,9 @@ def main():
                                     enemy_type = 'rage'
                                 elif isinstance(projectile.target, StealthEnemy):
                                     enemy_type = 'stealth'
-                                elif isinstance(projectile.target, ImmunityBoss) or isinstance(projectile.target, SpeedBoss) or isinstance(projectile.target, MagnetBoss):
+                                elif isinstance(projectile.target, ImmunityBoss) or isinstance(projectile.target, SpeedBoss) or isinstance(projectile.target, MagnetBoss) or isinstance(projectile.target, VampiricBoss):
                                     enemy_type = 'boss'
+                                    mission_manager.orbes += 3  # Adiciona 3 orbes ao derrotar um chefe
                                 else:
                                     enemy_type = 'normal'
                                 

@@ -9,7 +9,7 @@ class WaveManager:
     HEALTH_INCREASE_PER_WAVE = 1.05  # Aumento de vida por onda
     
     def __init__(self):
-        self.current_wave = 30  # Começando da onda 1 (corrigido de 30)
+        self.current_wave = 1
         self.enemies_in_wave = self.calculate_wave_size()
         self.enemies_spawned = 0
         self.spawn_timer = 0
@@ -128,6 +128,13 @@ class WaveManager:
             self.enemies_spawned += 1
             self.boss_spawn_cooldown = self.get_spawn_interval()  # Define o intervalo após o boss
             return "magnet_boss"
+            
+        # Verifica se é a onda 40 e o boss ainda não foi spawnado
+        if self.current_wave == 40 and not self.boss_spawned and self.enemies_spawned == 0:
+            self.boss_spawned = True
+            self.enemies_spawned += 1
+            self.boss_spawn_cooldown = self.get_spawn_interval()  # Define o intervalo após o boss
+            return "vampiric_boss"
             
         # Se o boss acabou de ser spawnado, espera o cooldown
         if self.boss_spawn_cooldown > 0:

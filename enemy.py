@@ -639,6 +639,70 @@ class MagnetBoss(Enemy):
         # Desenha o chefão normalmente
         super().draw(screen)
 
+class VampiricBoss(Enemy):
+    COLOR = (20, 0, 0)  # Preto avermelhado
+    BASE_HEALTH = 1400  # Vida base
+    BASE_SPEED = 1.1  # Velocidade
+    NAME = "Vampiro"
+    SPAWN_CHANCE = 0  # Não spawna aleatoriamente
+    
+    def __init__(self, path):
+        super().__init__(path)
+        self.radius = 20  # Raio maior que inimigos normais
+        self.has_revived = False  # Controla se já usou a revive
+        self.original_color = self.COLOR
+        self.revival_health_percent = 0  # vida ao reviver
+        self.drain_percent = 0.5  # 50% de drenagem de vida
+        
+    def take_damage(self, damage):
+        """Sobrescreve o método take_damage para implementar a mecânica de revive"""
+        self.health -= damage
+        if self.health <= 0 and not self.has_revived:
+            # Ativa a habilidade vampírica
+            self.drain_life_from_allies()
+            if self.revival_health_percent > 0:
+                self.has_revived = True
+                return False  # Não morre ainda
+        return self.health <= 0
+        
+    def drain_life_from_allies(self):
+        """Drena vida de aliados próximos"""
+        total_health_drained = 0
+        enemies_drained = 0
+        
+        # Drena vida de todos os outros inimigos
+        for enemy in self._all_enemies:
+            if enemy != self:  # Não drena de si mesmo
+                health_to_drain = enemy.health * self.drain_percent
+                enemy.health -= health_to_drain
+                total_health_drained += health_to_drain
+                enemies_drained += 1
+        
+        # Calcula a porcentagem de vida a ser recuperada
+        self.revival_health_percent = min(enemies_drained * 0.1, 1.0)  # Máximo de 100%
+        
+        # Recupera vida baseado no total drenado e inimigos afetados
+        self.health = self.max_health * self.revival_health_percent
+        
+    def draw(self, screen):
+        # Efeito visual quando está com pouca vida
+        if self.health < self.max_health * 0.3:
+            self.COLOR = (min(255, self.original_color[0] + 100), 0, 0)  # Vermelho mais intenso
+        else:
+            self.COLOR = self.original_color
+            
+        # Desenha o chefão normalmente
+        super().draw(screen)
+        
+        # Desenha aura vampírica quando está com pouca vida
+        if self.health < self.max_health * 0.3 and not self.has_revived:
+            aura_surface = pygame.Surface((self.radius * 3, self.radius * 3), pygame.SRCALPHA)
+            pygame.draw.circle(aura_surface, (255, 0, 0, 30), 
+                             (self.radius * 1.5, self.radius * 1.5), 
+                             self.radius * 1.5)
+            screen.blit(aura_surface, (int(self.x - self.radius * 1.5), 
+                                     int(self.y - self.radius * 1.5)))
+
 def spawn_random_enemy(path, wave_manager):
     """Spawna um inimigo aleatório baseado nas chances da onda atual"""
     chances = wave_manager.get_spawn_chances()
@@ -666,6 +730,8 @@ def spawn_random_enemy(path, wave_manager):
                 return StealthEnemy(path), True
             elif enemy_type == 'magnet':
                 return MagnetBoss(path), True
+            elif enemy_type == 'vampiric':
+                return VampiricBoss(path), True
             break
             
     # Se algo der errado, retorna um inimigo normal
