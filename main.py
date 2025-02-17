@@ -3,7 +3,7 @@ import math
 import os
 import sys
 import random
-from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy, ImmunityBoss, SpeedBoss
+from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy, ImmunityBoss, SpeedBoss, MagnetBoss
 from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender, GreenDefender, OrangeDefender, PurpleDefender
 from wave_manager import WaveManager
 from base import Base, SkipButton
@@ -484,10 +484,8 @@ class BossShopMenu:
         self.height = SCREEN_HEIGHT - WAVE_MENU_HEIGHT
         self.is_expanded = False
         self.header_rect = None
-        self.current_page = 0  # Current page index
-        self.bosses_per_page = 2  # Number of bosses per page
-        self.prev_button_rect = None  # Rectangle for previous page button
-        self.next_button_rect = None  # Rectangle for next page button
+        self.current_page = 0
+        self.bosses_per_page = 5
         self.bosses = [
             {
                 'class': ImmunityBoss,
@@ -503,6 +501,14 @@ class BossShopMenu:
                 'description1': 'Aumenta velocidade de',
                 'description2': 'todos os inimigos',
                 'ability_duration': '2s',
+                'ability_cooldown': '5s'
+            },
+            {
+                'class': MagnetBoss,
+                'wave': 30,
+                'description1': 'Atrai todos os projéteis',
+                'description2': 'para si',
+                'ability_duration': '3s',
                 'ability_cooldown': '5s'
             }
         ]
@@ -872,6 +878,11 @@ def main():
                 speed_boss = SpeedBoss(PATH)
                 speed_boss.set_enemies_list(enemies)
                 enemies.append(speed_boss)
+            elif spawn_result == "magnet_boss":
+                # Spawna o boss magnético
+                magnet_boss = MagnetBoss(PATH)
+                magnet_boss.set_enemies_list(enemies)
+                enemies.append(magnet_boss)
             else:
                 enemy, is_special = spawn_random_enemy(PATH, wave_manager)
                 enemy.set_enemies_list(enemies)
@@ -944,6 +955,15 @@ def main():
                 
             # Verifica os projéteis que atingiram inimigos
             for projectile in defender.projectiles[:]:
+                # Verifica se algum MagnetBoss está atraindo projéteis
+                for enemy in enemies:
+                    if isinstance(enemy, MagnetBoss) and enemy.is_attracting:
+                        if projectile not in enemy.attracted_projectiles:
+                            projectile.color = enemy.COLOR  # Muda a cor do projétil
+                            projectile.target = enemy  # Redireciona o projétil para o chefão
+                            enemy.attracted_projectiles.append(projectile)
+                        break
+                
                 if projectile.move():
                     if projectile.target and hasattr(projectile.target, 'take_damage'):
                         # Verifica se o alvo está protegido pela aura de imunidade
@@ -979,21 +999,16 @@ def main():
                                     enemy_type = 'rage'
                                 elif isinstance(projectile.target, StealthEnemy):
                                     enemy_type = 'stealth'
-                                elif isinstance(projectile.target, ImmunityBoss) or isinstance(projectile.target, SpeedBoss):
+                                elif isinstance(projectile.target, ImmunityBoss) or isinstance(projectile.target, SpeedBoss) or isinstance(projectile.target, MagnetBoss):
                                     enemy_type = 'boss'
                                 else:
                                     enemy_type = 'normal'
                                 
-                                # Adiciona o ouro e remove o inimigo
-                                if not projectile.target.reward_given:  # Verifica se já deu recompensa
+                                if not projectile.target.reward_given:
                                     gold += wave_manager.enemy_defeated(enemy_type)
-                                    projectile.target.reward_given = True  # Marca que já deu recompensa
-                                    mission_manager.update_kills()  # Atualiza contagem de kills quando inimigo morre por projétil
-                                if projectile.target in enemies:  # Verifica se o inimigo ainda está na lista
+                                    projectile.target.reward_given = True
+                                    mission_manager.update_kills()
                                     enemies.remove(projectile.target)
-                                if projectile.target == defender.current_target:
-                                    defender.current_target = None
-                    
                     defender.projectiles.remove(projectile)
             
         # Verifica se a onda terminou

@@ -592,6 +592,53 @@ class SpeedBoss(Enemy):
         # Desenha o inimigo normalmente
         super().draw(screen)
 
+class MagnetBoss(Enemy):
+    COLOR = (200, 0, 0)  # Vermelho intenso
+    BASE_HEALTH = 1600  # Vida base
+    BASE_SPEED = 0.85  # Velocidade reduzida
+    NAME = "Magnético"
+    SPAWN_CHANCE = 0  # Não spawna aleatoriamente
+    
+    def __init__(self, path):
+        super().__init__(path)
+        self.radius = 20  # Raio maior que inimigos normais
+        self.magnet_interval = 300  # 5 segundos entre ativações
+        self.magnet_duration = 120  # 2 segundos de duração
+        self.magnet_timer = self.magnet_interval  # Começa com o timer cheio
+        self.is_attracting = False  # Não começa atraindo
+        self.attracted_projectiles = []  # Lista de projéteis atraídos
+        
+    def update(self):
+        result = super().update()
+        
+        # Atualiza o timer do magnetismo
+        if self.magnet_timer > 0:
+            self.magnet_timer -= 1
+            if self.magnet_timer <= 0:
+                if self.is_attracting:
+                    # Terminou fase de atração, começa intervalo
+                    self.magnet_timer = self.magnet_interval
+                    self.is_attracting = False
+                    # Limpa a lista de projéteis atraídos
+                    self.attracted_projectiles = []
+                else:
+                    # Terminou intervalo, começa atração
+                    self.magnet_timer = self.magnet_duration
+                    self.is_attracting = True
+            
+        return result
+        
+    def draw(self, screen):
+        # Desenha o efeito magnético quando ativo
+        if self.is_attracting:        
+            # Desenha uma borda vermelho escuro em volta do boss
+            pygame.draw.circle(screen, (139, 0, 0), (int(self.x), int(self.y)), self.radius + 4, 3)
+            pygame.draw.circle(screen, (139, 0, 0), (int(self.x), int(self.y)), self.radius + 8, 2)
+            pygame.draw.circle(screen, (139, 0, 0), (int(self.x), int(self.y)), self.radius + 10, 1)
+        
+        # Desenha o chefão normalmente
+        super().draw(screen)
+
 def spawn_random_enemy(path, wave_manager):
     """Spawna um inimigo aleatório baseado nas chances da onda atual"""
     chances = wave_manager.get_spawn_chances()
@@ -617,6 +664,8 @@ def spawn_random_enemy(path, wave_manager):
                 return RageEnemy(path), True
             elif enemy_type == 'stealth':
                 return StealthEnemy(path), True
+            elif enemy_type == 'magnet':
+                return MagnetBoss(path), True
             break
             
     # Se algo der errado, retorna um inimigo normal

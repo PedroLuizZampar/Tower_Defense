@@ -64,6 +64,39 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
   - Aura visual branca quando ativa
   - Imunidade cíclica (2s ativo, 3s inativo)
 
+#### 2. Boss de Velocidade (Veloz)
+- **Estatísticas**:
+  - Vida: 1250 + bônus/onda
+  - Velocidade: 1.2
+  - Recompensa: 50 ouro
+  - Aparece: Onda 20
+- **Habilidade: Aura de Velocidade**
+  - Duração: 2 segundos
+  - Intervalo: 5 segundos
+  - Efeito: Aumenta a velocidade de todos os inimigos em 50%
+- **Características**:
+  - Primeiro inimigo da onda 20
+  - Intervalo especial antes dos próximos inimigos
+  - Inimigos afetados mudam de cor
+  - Velocidade cíclica (2s ativo, 5s inativo)
+
+#### 3. Boss Magnético (Magnético)
+- **Estatísticas**:
+  - Vida: 1600 + bônus/onda
+  - Velocidade: 0.85
+  - Recompensa: 50 ouro
+  - Aparece: Onda 30
+- **Habilidade: Atração Magnética**
+  - Duração: 3 segundos
+  - Intervalo: 5 segundos
+  - Efeito: Atrai todos os projéteis para si
+- **Características**:
+  - Primeiro inimigo da onda 30
+  - Intervalo especial antes dos próximos inimigos
+  - Projéteis atraídos mudam para sua cor
+  - Atração cíclica (3s ativo, 5s inativo)
+  - Efeito visual de ondas magnéticas quando ativo
+
 4. **Menu de Missões (Retrátil)**
    - Lista de missões ativas
    - Barra de progresso para cada missão
