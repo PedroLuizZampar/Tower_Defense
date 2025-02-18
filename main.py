@@ -864,11 +864,13 @@ def main():
                             else:
                                 enemy_type = 'normal'
                             
-                            # Adiciona o ouro
-                            gold += wave_manager.enemy_defeated(enemy_type)
-                            dead_enemy.reward_given = True
-                            enemies.remove(dead_enemy)
-                            mission_manager.update_kills()  # Atualiza contagem de kills
+                            if not dead_enemy.reward_given:
+                                # Adiciona o ouro
+                                gold += wave_manager.enemy_defeated(enemy_type)
+                                dead_enemy.reward_given = True
+                                if dead_enemy in enemies:  # Verifica se o inimigo ainda está na lista
+                                    enemies.remove(dead_enemy)
+                                mission_manager.update_kills()  # Atualiza contagem de kills
             elif not spell_result:  # Se o feitiço terminou
                 spells.remove(spell)
         
@@ -957,7 +959,8 @@ def main():
                     gold += wave_manager.enemy_defeated(enemy_type)
                     enemy.reward_given = True
                     mission_manager.update_kills()
-                enemies.remove(enemy)
+                    if enemy in enemies:  # Verifica se o inimigo ainda está na lista
+                        enemies.remove(enemy)
         
         # Atualização dos defensores
         for defender in defenders:
@@ -1022,7 +1025,8 @@ def main():
                                     gold += wave_manager.enemy_defeated(enemy_type)
                                     projectile.target.reward_given = True
                                     mission_manager.update_kills()
-                                    enemies.remove(projectile.target)
+                                    if projectile.target in enemies:  # Verifica se o inimigo ainda está na lista
+                                        enemies.remove(projectile.target)
                     defender.projectiles.remove(projectile)
             
         # Verifica se a onda terminou
