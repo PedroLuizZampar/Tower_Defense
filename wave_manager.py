@@ -46,7 +46,8 @@ class WaveManager:
         
     def get_spawn_interval(self):
         # Diminui o intervalo entre spawns conforme as ondas avançam
-        return max(45, self.BASE_SPAWN_INTERVAL - 1)
+        self.BASE_SPAWN_INTERVAL -= 1
+        return max(40, self.BASE_SPAWN_INTERVAL)
         
     def get_health_increase(self):
         """Retorna o multiplicador de vida baseado na onda atual"""
@@ -113,14 +114,14 @@ class WaveManager:
             self.boss_spawned = True
             self.enemies_spawned += 1
             self.boss_spawn_cooldown = self.get_spawn_interval()  # Define o intervalo após o boss
-            return "immunity_boss"
+            return "speed_boss"
             
         # Verifica se é a onda 20 e o boss ainda não foi spawnado
         if self.current_wave == 20 and not self.boss_spawned and self.enemies_spawned == 0:
             self.boss_spawned = True
             self.enemies_spawned += 1
             self.boss_spawn_cooldown = self.get_spawn_interval()  # Define o intervalo após o boss
-            return "speed_boss"
+            return "split_boss"
             
         # Verifica se é a onda 30 e o boss ainda não foi spawnado
         if self.current_wave == 30 and not self.boss_spawned and self.enemies_spawned == 0:
@@ -135,6 +136,13 @@ class WaveManager:
             self.enemies_spawned += 1
             self.boss_spawn_cooldown = self.get_spawn_interval()  # Define o intervalo após o boss
             return "vampiric_boss"
+
+        # Verifica se é a onda 50 e o boss ainda não foi spawnado
+        if self.current_wave == 50 and not self.boss_spawned and self.enemies_spawned == 0:
+            self.boss_spawned = True
+            self.enemies_spawned += 1
+            self.boss_spawn_cooldown = self.get_spawn_interval()  # Define o intervalo após o boss
+            return "immunity_boss"
             
         # Se o boss acabou de ser spawnado, espera o cooldown
         if self.boss_spawn_cooldown > 0:
@@ -147,24 +155,6 @@ class WaveManager:
             self.enemies_spawned += 1
             return True
         return False
-        
-    def enemy_defeated(self, enemy_type):
-        # Recompensas base ajustadas por tipo de inimigo
-        base_rewards = {
-            'normal': 2,    # 2 de ouro
-            'speed': 3,     # 3 de ouro
-            'tank': 6,     # 6 de ouro
-            'armored': 6,  # 6 de ouro
-            'healer': 4,     # 4 de ouro
-            'freeze_aura': 4, # 4 de ouro
-            'rage': 5, # 5 de ouro
-            'stealth': 3, # 3 de ouro
-            'boss': 50  # Recompensa especial para o boss
-        }
-        
-        # Aplica multiplicador de onda e retorna o valor final
-        gold = base_rewards[enemy_type] * self.get_gold_multiplier()
-        return int(gold)  # Arredonda para número inteiro
         
     def check_wave_complete(self, active_enemies):
         if self.enemies_spawned >= self.enemies_in_wave and len(active_enemies) == 0:

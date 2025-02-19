@@ -3,7 +3,7 @@ import math
 import os
 import sys
 import random
-from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy, ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss
+from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy, ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss
 from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender, GreenDefender, OrangeDefender, PurpleDefender
 from wave_manager import WaveManager
 from base import Base, SkipButton
@@ -486,25 +486,25 @@ class BossShopMenu:
         self.is_expanded = False
         self.header_rect = None
         self.current_page = 0
-        self.bosses_per_page = 5
+        self.bosses_per_page = 4
         self.bosses = [
             {
-                'class': ImmunityBoss,
-                'wave': 10,
-                'description1': "Protege aliados próximos",
-                'description2': "de todo dano e feitiço",
-                'ability_name': "Aura de Imunidade",
-                'duration': "2s",
-                'cooldown': "3s"
-            },
-            {
                 'class': SpeedBoss,
-                'wave': 20,
+                'wave': 10,
                 'description1': "Aumenta a velocidade de",
                 'description2': "todos os inimigos em 50%",
                 'ability_name': "Aura de Velocidade",
                 'duration': "2s",
                 'cooldown': "5s"
+            },
+            {
+                'class': SplitBoss,
+                'wave': 20,
+                'description1': "Ao morrer, se divide em",
+                'description2': "dois minions mais fracos",
+                'ability_name': "Divisão",
+                'duration': "N/A",
+                'cooldown': "N/A"
             },
             {
                 'class': MagnetBoss,
@@ -523,6 +523,15 @@ class BossShopMenu:
                 'ability_name': "Drenagem Vital",
                 'duration': "N/A",
                 'cooldown': "N/A"
+            },
+            {
+                'class': ImmunityBoss,
+                'wave': 50,
+                'description1': "Protege aliados próximos",
+                'description2': "de todo dano e feitiço",
+                'ability_name': "Aura de Imunidade",
+                'duration': "2s",
+                'cooldown': "3s"
             }
         ]
         
@@ -551,6 +560,7 @@ class BossShopMenu:
             
             y_offset = WAVE_MENU_HEIGHT + 45
             font = pygame.font.Font(None, 16)
+            vampiric_font = pygame.font.Font(None, 14)
             font_title = pygame.font.Font(None, 24)
             
             for boss_info in self.bosses[start_index:end_index]:
@@ -583,11 +593,20 @@ class BossShopMenu:
                 health_text = font.render(f"Vida: {int(base_health)} | Velocidade: {boss_class.BASE_SPEED}", True, WHITE)
                 screen.blit(health_text, (card_rect.x + 60, y_offset + 35))
                 
-                # Descrição da habilidade em duas linhas
-                desc_text1 = font.render(boss_info['description1'], True, (50, 255, 50))
-                desc_text2 = font.render(boss_info['description2'], True, (50, 255, 50))
-                screen.blit(desc_text1, (card_rect.x + 60, y_offset + 50))
-                screen.blit(desc_text2, (card_rect.x + 60, y_offset + 65))
+                if boss_class == VampiricBoss:
+                    font = vampiric_font
+                    # Descrição da habilidade em duas linhas
+                    desc_text1 = font.render(boss_info['description1'], True, (50, 255, 50))
+                    desc_text2 = font.render(boss_info['description2'], True, (50, 255, 50))
+                    screen.blit(desc_text1, (card_rect.x + 60, y_offset + 50))
+                    screen.blit(desc_text2, (card_rect.x + 60, y_offset + 65))
+                    font = pygame.font.Font(None, 16)
+                else:
+                    # Descrição da habilidade em duas linhas
+                    desc_text1 = font.render(boss_info['description1'], True, (50, 255, 50))
+                    desc_text2 = font.render(boss_info['description2'], True, (50, 255, 50))
+                    screen.blit(desc_text1, (card_rect.x + 60, y_offset + 50))
+                    screen.blit(desc_text2, (card_rect.x + 60, y_offset + 65))
 
                 # Duração e cooldown
                 timing_text = font.render(f"Duração: {boss_info['duration']} | Cooldown: {boss_info['cooldown']}", 
@@ -836,43 +855,24 @@ def main():
         
         # Atualização dos feitiços
         for spell in spells[:]:  # Usa uma cópia da lista para poder modificá-la durante a iteração
-            spell_result = spell.update(enemies)
+            update_result = spell.update(enemies)
             
-            # Se o feitiço matou um inimigo
-            if spell_result == "died":
-                # Processa todos os inimigos mortos pelo feitiço
-                if hasattr(spell, 'killed_enemies'):
-                    for dead_enemy in spell.killed_enemies:
-                        if dead_enemy in enemies and not dead_enemy.reward_given:
-                            # Identifica o tipo do inimigo
-                            if isinstance(dead_enemy, SpeedEnemy):
-                                enemy_type = 'speed'
-                            elif isinstance(dead_enemy, TankEnemy):
-                                enemy_type = 'tank'
-                            elif isinstance(dead_enemy, ArmoredEnemy):
-                                enemy_type = 'armored'
-                            elif isinstance(dead_enemy, HealerEnemy):
-                                enemy_type = 'healer'
-                            elif isinstance(dead_enemy, FreezeAuraEnemy):
-                                enemy_type = 'freeze_aura'
-                            elif isinstance(dead_enemy, RageEnemy):
-                                enemy_type = 'rage'
-                            elif isinstance(dead_enemy, StealthEnemy):
-                                enemy_type = 'stealth'
-                            elif isinstance(dead_enemy, ImmunityBoss) or isinstance(dead_enemy, SpeedBoss) or isinstance(dead_enemy, MagnetBoss) or isinstance(dead_enemy, VampiricBoss):
-                                enemy_type = 'boss'
-                                mission_manager.orbes += 3  # Adiciona 3 orbes ao derrotar um chefe
-                            else:
-                                enemy_type = 'normal'
+            if update_result == "died":
+                # Se o feitiço matou inimigos, dá a recompensa
+                for enemy in spell.killed_enemies:
+                    if not enemy.reward_given:
+                        # Usa diretamente a recompensa definida na classe do inimigo
+                        gold += enemy.__class__.REWARD
+                        enemy.reward_given = True
+                        mission_manager.update_kills()
+                        
+                        # Adiciona orbes para bosses
+                        if isinstance(enemy, (ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss)):
+                            mission_manager.orbes += 3
                             
-                            if not dead_enemy.reward_given:
-                                # Adiciona o ouro
-                                gold += wave_manager.enemy_defeated(enemy_type)
-                                dead_enemy.reward_given = True
-                                if dead_enemy in enemies:  # Verifica se o inimigo ainda está na lista
-                                    enemies.remove(dead_enemy)
-                                mission_manager.update_kills()  # Atualiza contagem de kills
-            elif not spell_result:  # Se o feitiço terminou
+                        if enemy in enemies:  # Verifica se o inimigo ainda está na lista
+                            enemies.remove(enemy)
+            elif not update_result:  # Se o feitiço terminou
                 spells.remove(spell)
         
         # Atualiza os cooldowns dos botões de feitiço
@@ -898,6 +898,10 @@ def main():
                 vampiric_boss = VampiricBoss(PATH)
                 vampiric_boss.set_enemies_list(enemies)
                 enemies.append(vampiric_boss)
+            elif spawn_result == "split_boss":
+                split_boss = SplitBoss(PATH)
+                split_boss.set_enemies_list(enemies)
+                enemies.append(split_boss)
             else:
                 enemy, is_special = spawn_random_enemy(PATH, wave_manager)
                 enemy.set_enemies_list(enemies)
@@ -922,7 +926,7 @@ def main():
                 pygame.draw.circle(heal_effect, (*enemy.COLOR, 100), 
                                 (enemy.heal_radius, enemy.heal_radius), enemy.heal_radius)
                 screen.blit(heal_effect, (int(enemy.x - enemy.heal_radius), 
-                                        int(enemy.y - enemy.heal_radius)))
+                                int(enemy.y - enemy.heal_radius)))
                 # Cura todos os inimigos próximos
                 for other_enemy in enemies:
                     if other_enemy != enemy:
@@ -935,31 +939,16 @@ def main():
             
             # Verifica morte por DoT
             elif move_result == "died":  # Morreu por dano ao longo do tempo
-                # Identifica o tipo do inimigo e adiciona o ouro
-                if isinstance(enemy, SpeedEnemy):
-                    enemy_type = 'speed'
-                elif isinstance(enemy, TankEnemy):
-                    enemy_type = 'tank'
-                elif isinstance(enemy, ArmoredEnemy):
-                    enemy_type = 'armored'
-                elif isinstance(enemy, HealerEnemy):
-                    enemy_type = 'healer'
-                elif isinstance(enemy, FreezeAuraEnemy):
-                    enemy_type = 'freeze_aura'
-                elif isinstance(enemy, RageEnemy):
-                    enemy_type = 'rage'
-                elif isinstance(enemy, StealthEnemy):
-                    enemy_type = 'stealth'
-                elif isinstance(enemy, ImmunityBoss) or isinstance(enemy, SpeedBoss) or isinstance(enemy, MagnetBoss) or isinstance(enemy, VampiricBoss):
-                    enemy_type = 'boss'
-                    mission_manager.orbes += 3  # Adiciona 3 orbes ao derrotar um chefe
-                else:
-                    enemy_type = 'normal'
-                
                 if not enemy.reward_given:
-                    gold += wave_manager.enemy_defeated(enemy_type)
+                    # Usa diretamente a recompensa definida na classe do inimigo
+                    gold += enemy.__class__.REWARD
                     enemy.reward_given = True
                     mission_manager.update_kills()
+                    
+                    # Adiciona orbes para bosses
+                    if isinstance(enemy, (ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss)):
+                        mission_manager.orbes += 3
+                    
                     if enemy in enemies:  # Verifica se o inimigo ainda está na lista
                         enemies.remove(enemy)
         
@@ -970,8 +959,8 @@ def main():
             else:
                 defender.update(enemies)
                 
-            # Verifica os projéteis que atingiram inimigos
-            for projectile in defender.projectiles[:]:
+            # Atualiza os projéteis e verifica colisões
+            for projectile in defender.projectiles[:]:  # Usa uma cópia da lista
                 # Verifica se algum MagnetBoss está atraindo projéteis
                 for enemy in enemies:
                     if isinstance(enemy, MagnetBoss) and enemy.is_attracting:
@@ -999,37 +988,24 @@ def main():
                             # Se o inimigo é um FreezeAuraEnemy e morreu, aplica congelamento em área
                             if isinstance(projectile.target, FreezeAuraEnemy) and damage_result == "freeze_aura":
                                 projectile.target.apply_freeze_aura(defenders)
+                                damage_result = True  # Garante que o inimigo será removido
                                 
-                            if damage_result:  # Se morreu normalmente
-                                # Identifica o tipo do inimigo
-                                if isinstance(projectile.target, SpeedEnemy):
-                                    enemy_type = 'speed'
-                                elif isinstance(projectile.target, TankEnemy):
-                                    enemy_type = 'tank'
-                                elif isinstance(projectile.target, ArmoredEnemy):
-                                    enemy_type = 'armored'
-                                elif isinstance(projectile.target, HealerEnemy):
-                                    enemy_type = 'healer'
-                                elif isinstance(projectile.target, FreezeAuraEnemy):
-                                    enemy_type = 'freeze_aura'
-                                elif isinstance(projectile.target, RageEnemy):
-                                    enemy_type = 'rage'
-                                elif isinstance(projectile.target, StealthEnemy):
-                                    enemy_type = 'stealth'
-                                elif isinstance(projectile.target, ImmunityBoss) or isinstance(projectile.target, SpeedBoss) or isinstance(projectile.target, MagnetBoss) or isinstance(projectile.target, VampiricBoss):
-                                    enemy_type = 'boss'
-                                    mission_manager.orbes += 3  # Adiciona 3 orbes ao derrotar um chefe
-                                else:
-                                    enemy_type = 'normal'
-                                
+                            if damage_result:  # Se morreu
                                 if not projectile.target.reward_given:
-                                    gold += wave_manager.enemy_defeated(enemy_type)
+                                    # Usa diretamente a recompensa definida na classe do inimigo
+                                    gold += projectile.target.__class__.REWARD
                                     projectile.target.reward_given = True
                                     mission_manager.update_kills()
-                                    if projectile.target in enemies:  # Verifica se o inimigo ainda está na lista
+                                    
+                                    # Adiciona orbes para bosses
+                                    if isinstance(projectile.target, (ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss)):
+                                        mission_manager.orbes += 3
+                                    
+                                    if projectile.target in enemies:
                                         enemies.remove(projectile.target)
-                    defender.projectiles.remove(projectile)
-            
+                        
+                        defender.projectiles.remove(projectile)
+        
         # Verifica se a onda terminou
         if wave_manager.check_wave_complete(enemies):
             if not wave_manager.start_next_wave():

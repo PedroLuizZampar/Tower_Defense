@@ -51,7 +51,7 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 - **Estatísticas**:
   - Vida: 1250 + bônus/onda
   - Velocidade: 0.8
-  - Recompensa: 50 ouro
+  - Recompensa: 50 ouro + 3 orbes
   - Aparece: Onda 10
 - **Habilidade: Aura de Imunidade**
   - Raio: 150px
@@ -68,7 +68,7 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 - **Estatísticas**:
   - Vida: 1250 + bônus/onda
   - Velocidade: 1.2
-  - Recompensa: 50 ouro
+  - Recompensa: 50 ouro + 3 orbes
   - Aparece: Onda 20
 - **Habilidade: Aura de Velocidade**
   - Duração: 2 segundos
@@ -84,7 +84,7 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
 - **Estatísticas**:
   - Vida: 1600 + bônus/onda
   - Velocidade: 0.85
-  - Recompensa: 50 ouro
+  - Recompensa: 50 ouro + 3 orbes
   - Aparece: Onda 30
 - **Habilidade: Atração Magnética**
   - Duração: 3 segundos
@@ -96,6 +96,65 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
   - Projéteis atraídos mudam para sua cor
   - Atração cíclica (3s ativo, 5s inativo)
   - Efeito visual de ondas magnéticas quando ativo
+
+#### 4. Boss Vampírico (Vampiro)
+- **Estatísticas**:
+  - Vida: 1400 + bônus/onda
+  - Velocidade: 1.1
+  - Recompensa: 50 ouro + 3 orbes
+  - Aparece: Onda 40
+- **Habilidade: Drenagem Vital**
+  - Efeito: Ao morrer, drena 50% da vida de todos os inimigos
+  - Recupera 10% de vida por inimigo drenado
+  - Máximo de 100% de vida recuperada
+- **Características**:
+  - Primeiro inimigo da onda 40
+  - Aura vermelha quando com pouca vida
+  - Pode reviver uma vez se houver aliados próximos
+  - Drena vida de todos os inimigos ao morrer
+
+#### 5. Boss Hidra (Hidra)
+- **Estatísticas**:
+  - Vida: 1800 + bônus/onda
+  - Velocidade: 1.0
+  - Recompensa: 50 ouro + 3 orbes
+  - Aparece: Onda 50
+- **Habilidade: Divisão**
+  - Efeito: Ao morrer, se divide em dois minions
+  - Minions têm 40% da vida do boss
+  - Minions têm 50% mais velocidade
+  - Recompensa dos minions: 10 ouro cada
+- **Características**:
+  - Primeiro inimigo da onda 50
+  - Maior vida base entre os chefões
+  - Minions são mais rápidos e ágeis
+  - Requer estratégia para lidar com os minions
+
+### Sistema de Recompensas
+
+#### Recompensas em Ouro
+- **Inimigos Básicos**:
+  - Básico: 2 ouro
+  - Tanque: 6 ouro
+  - Veloz: 3 ouro
+  - Blindado: 6 ouro
+  - Curador: 4 ouro
+  - Gelado: 4 ouro
+  - Furioso: 5 ouro
+  - Furtivo: 3 ouro
+
+#### Recompensas Especiais
+- **Chefões**: 50 ouro + 3 orbes cada
+- **Minions da Hidra**: 10 ouro cada
+- **Recompensas são dadas apenas uma vez por inimigo**
+- **Sistema anti-duplicação de recompensas implementado**
+
+### Melhorias no Sistema de Combate
+- Verificação de imunidade antes de aplicar dano
+- Priorização de alvos para projéteis
+- Sistema de redirecionamento de projéteis pelo Boss Magnético
+- Efeitos visuais para todos os status especiais
+- Indicadores de dano e cura
 
 4. **Menu de Missões (Retrátil)**
    - Lista de missões ativas

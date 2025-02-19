@@ -8,6 +8,7 @@ class Enemy:
     BASE_SPEED = 1.8  # Reduzido para 1.8
     SPAWN_CHANCE = 65  # Aumentado para 65%
     NAME = "Básico"  # Nome do inimigo padrão
+    REWARD = 2  # Recompensa em ouro
     
     def __init__(self, path):
         self.radius = 12
@@ -221,6 +222,7 @@ class TankEnemy(Enemy):
     BASE_SPEED = 1.0  # Reduzido para 1.0
     SPAWN_CHANCE = 15  # Reduzido para 15%
     NAME = "Tanque"  # Nome do inimigo tanque
+    REWARD = 6  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -240,6 +242,7 @@ class SpeedEnemy(Enemy):
     BASE_SPEED = 3.2  # Aumentado para 3.2
     SPAWN_CHANCE = 25  # Reduzido para 25%
     NAME = "Célere"  # Nome do inimigo veloz
+    REWARD = 3  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -255,6 +258,7 @@ class ArmoredEnemy(Enemy):
     BASE_SPEED = 1.4  # Reduzido para 1.4
     SPAWN_CHANCE = 20  # Reduzido para 20%
     NAME = "Blindado"  # Nome do inimigo blindado
+    REWARD = 6  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -272,6 +276,7 @@ class HealerEnemy(Enemy):
     BASE_SPEED = 1.6  # Ajustado para 1.6
     SPAWN_CHANCE = 15  # Reduzido para 15%
     NAME = "Curador"  # Nome do inimigo curador
+    REWARD = 4  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -315,6 +320,7 @@ class FreezeAuraEnemy(Enemy):
     BASE_SPEED = 2.0  # Aumentado para 2.0
     SPAWN_CHANCE = 15  # Reduzido para 15%
     NAME = "Gelado"
+    REWARD = 4  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -358,6 +364,7 @@ class RageEnemy(Enemy):
     BASE_SPEED = 1.6  # Ajustado para 1.6
     SPAWN_CHANCE = 20  # Reduzido para 20%
     NAME = "Furioso"
+    REWARD = 5  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -404,6 +411,7 @@ class StealthEnemy(Enemy):
     BASE_SPEED = 2.0  # Ajustado para 2.0
     SPAWN_CHANCE = 15  # Reduzido para 15%
     NAME = "Furtivo"
+    REWARD = 3  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -484,69 +492,6 @@ class StealthEnemy(Enemy):
             pygame.draw.circle(weakness_surface, (0, 0, 0, int(opacity * 0.5)), 
                              (self.radius, self.radius), self.radius)
             screen.blit(weakness_surface, (int(self.x - self.radius), int(self.y - self.radius)))
-
-class ImmunityBoss(Enemy):
-    COLOR = (255, 255, 255)  # Branco
-    BASE_HEALTH = 1250  # Aumentado para 1250
-    BASE_SPEED = 0.8  # Velocidade reduzida
-    NAME = "Protetor"
-    SPAWN_CHANCE = 0  # Não spawna aleatoriamente
-    
-    def __init__(self, path):
-        super().__init__(path)
-        self.radius = 20  # Raio maior que inimigos normais
-        self.immunity_radius = 150  # Raio da aura de imunidade
-        self.immunity_interval = 180  # 3 segundos entre ativações
-        self.immunity_duration = 120  # 2 segundos de duração
-        self.immunity_timer = self.immunity_duration  # Começa com o timer cheio
-        self.is_immunized = False  # Não começa imunizado
-        self.in_immunity_phase = True  # Controla se está na fase de imunidade ou intervalo
-        
-    def update(self):
-        result = super().update()
-        
-        # Atualiza o timer da imunidade
-        if self.immunity_timer > 0:
-            self.immunity_timer -= 1
-            if self.immunity_timer <= 0:
-                if self.in_immunity_phase:
-                    # Terminou fase de imunidade, começa intervalo
-                    self.immunity_timer = self.immunity_interval
-                    self.is_immunized = False
-                    self.in_immunity_phase = False
-                else:
-                    # Terminou intervalo, começa imunidade
-                    self.immunity_timer = self.immunity_duration
-                    self.is_immunized = True
-                    self.in_immunity_phase = True
-            
-        return result
-        
-    def draw(self, screen):
-        # Desenha a aura de imunidade se estiver ativa
-        if self.is_immunized:
-            immunity_surface = pygame.Surface((self.immunity_radius * 2, self.immunity_radius * 2), pygame.SRCALPHA)
-            pygame.draw.circle(immunity_surface, (255, 255, 255, 50), 
-                             (self.immunity_radius, self.immunity_radius), 
-                             self.immunity_radius)
-            screen.blit(immunity_surface, (int(self.x - self.immunity_radius), 
-                                         int(self.y - self.immunity_radius)))
-        
-        # Desenha o inimigo normalmente
-        super().draw(screen)
-        
-    def get_enemies_in_immunity_range(self, enemies):
-        """Retorna todos os inimigos dentro do raio de imunidade"""
-        in_range = []
-        if self.is_immunized:
-            for enemy in enemies:
-                if enemy != self:  # Não inclui a si mesmo
-                    dx = enemy.x - self.x
-                    dy = enemy.y - self.y
-                    distance = math.sqrt(dx ** 2 + dy ** 2)
-                    if distance <= self.immunity_radius:
-                        in_range.append(enemy)
-        return in_range
     
 class SpeedBoss(Enemy):
     COLOR = (22, 102, 58)  # Verde escuro
@@ -554,6 +499,7 @@ class SpeedBoss(Enemy):
     BASE_SPEED = 1.2  # Velocidade reduzida
     NAME = "Veloz"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
+    REWARD = 50  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -592,12 +538,68 @@ class SpeedBoss(Enemy):
         # Desenha o inimigo normalmente
         super().draw(screen)
 
+class SplitBoss(Enemy):
+    COLOR = (217, 217, 0)  # Amarelo
+    BASE_HEALTH = 1800  # Vida base
+    BASE_SPEED = 1.0  # Velocidade
+    NAME = "Divisor"
+    SPAWN_CHANCE = 0  # Não spawna aleatoriamente
+    REWARD = 50  # Recompensa em ouro
+    
+    def __init__(self, path):
+        super().__init__(path)
+        self.radius = 20  # Raio maior que inimigos normais
+        self.has_split = False  # Controla se já se dividiu
+        self.original_color = self.COLOR
+        
+    def take_damage(self, damage):
+        """Sobrescreve o método take_damage para implementar a mecânica de divisão"""
+        self.health -= damage
+        if self.health <= 0 and not self.has_split:
+            # Ativa a habilidade de divisão
+            self.split()
+            return True
+        return self.health <= 0
+        
+    def split(self):
+        """Cria dois inimigos menores quando derrotado"""
+        self.has_split = True
+        # Cria dois minions em posições diferentes
+        offsets = [(-20, -20), (20, 20)]  # Deslocamentos para cada minion
+        for offset_x, offset_y in offsets:
+            split = SplitMinion(self.path, self.path_index, self.x + offset_x, self.y + offset_y)
+            split.set_enemies_list(self._all_enemies)
+            self._all_enemies.append(split)
+
+class SplitMinion(Enemy):
+    """Classe para os minions criados quando o SplitBoss é derrotado"""
+    COLOR = (245, 245, 86)  # Amarelo claro
+    BASE_HEALTH = 720  # 40% da vida do boss
+    BASE_SPEED = 1.5  # +50% da velocidade do boss
+    NAME = "Dividido"
+    SPAWN_CHANCE = 0
+    REWARD = 10  # Recompensa em ouro
+    
+    def __init__(self, path, path_index, x, y):
+        super().__init__(path)
+        self.radius = 12  # Raio menor que o boss
+        self.path_index = path_index  # Começa do ponto onde o boss morreu
+        self.x = x
+        self.y = y
+        self.reward_given = False  # Permite que dê recompensa ao morrer
+        
+    def draw(self, screen):
+        
+        # Depois desenha o inimigo normalmente
+        super().draw(screen)
+
 class MagnetBoss(Enemy):
     COLOR = (200, 0, 0)  # Vermelho intenso
     BASE_HEALTH = 1600  # Vida base
     BASE_SPEED = 0.85  # Velocidade reduzida
     NAME = "Magnético"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
+    REWARD = 50  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -645,6 +647,7 @@ class VampiricBoss(Enemy):
     BASE_SPEED = 1.1  # Velocidade
     NAME = "Vampiro"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
+    REWARD = 50  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -703,6 +706,70 @@ class VampiricBoss(Enemy):
             screen.blit(aura_surface, (int(self.x - self.radius * 1.5), 
                                      int(self.y - self.radius * 1.5)))
 
+class ImmunityBoss(Enemy):
+    COLOR = (255, 255, 255)  # Branco
+    BASE_HEALTH = 1250  # Aumentado para 1250
+    BASE_SPEED = 0.8  # Velocidade reduzida
+    NAME = "Protetor"
+    SPAWN_CHANCE = 0  # Não spawna aleatoriamente
+    REWARD = 50  # Recompensa em ouro
+    
+    def __init__(self, path):
+        super().__init__(path)
+        self.radius = 20  # Raio maior que inimigos normais
+        self.immunity_radius = 150  # Raio da aura de imunidade
+        self.immunity_interval = 180  # 3 segundos entre ativações
+        self.immunity_duration = 120  # 2 segundos de duração
+        self.immunity_timer = self.immunity_duration  # Começa com o timer cheio
+        self.is_immunized = False  # Não começa imunizado
+        self.in_immunity_phase = True  # Controla se está na fase de imunidade ou intervalo
+        
+    def update(self):
+        result = super().update()
+        
+        # Atualiza o timer da imunidade
+        if self.immunity_timer > 0:
+            self.immunity_timer -= 1
+            if self.immunity_timer <= 0:
+                if self.in_immunity_phase:
+                    # Terminou fase de imunidade, começa intervalo
+                    self.immunity_timer = self.immunity_interval
+                    self.is_immunized = False
+                    self.in_immunity_phase = False
+                else:
+                    # Terminou intervalo, começa imunidade
+                    self.immunity_timer = self.immunity_duration
+                    self.is_immunized = True
+                    self.in_immunity_phase = True
+            
+        return result
+        
+    def draw(self, screen):
+        # Desenha a aura de imunidade se estiver ativa
+        if self.is_immunized:
+            immunity_surface = pygame.Surface((self.immunity_radius * 2, self.immunity_radius * 2), pygame.SRCALPHA)
+            pygame.draw.circle(immunity_surface, (255, 255, 255, 50), 
+                             (self.immunity_radius, self.immunity_radius), 
+                             self.immunity_radius)
+            screen.blit(immunity_surface, (int(self.x - self.immunity_radius), 
+                                         int(self.y - self.immunity_radius)))
+        
+        # Desenha o inimigo normalmente
+        super().draw(screen)
+        
+    def get_enemies_in_immunity_range(self, enemies):
+        """Retorna todos os inimigos dentro do raio de imunidade"""
+        in_range = []
+        if self.is_immunized:
+            for enemy in enemies:
+                if enemy != self:  # Não inclui a si mesmo
+                    dx = enemy.x - self.x
+                    dy = enemy.y - self.y
+                    distance = math.sqrt(dx ** 2 + dy ** 2)
+                    if distance <= self.immunity_radius:
+                        in_range.append(enemy)
+        return in_range
+
 def spawn_random_enemy(path, wave_manager):
     """Spawna um inimigo aleatório baseado nas chances da onda atual"""
     chances = wave_manager.get_spawn_chances()
@@ -732,6 +799,8 @@ def spawn_random_enemy(path, wave_manager):
                 return MagnetBoss(path), True
             elif enemy_type == 'vampiric':
                 return VampiricBoss(path), True
+            elif enemy_type == 'split':
+                return SplitBoss(path), True
             break
             
     # Se algo der errado, retorna um inimigo normal
