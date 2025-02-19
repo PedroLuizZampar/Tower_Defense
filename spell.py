@@ -200,7 +200,7 @@ class SpellButton:
         
     def update(self):
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= 2
+            self.cooldown_timer -= 1
         
     def handle_click(self, pos, gold):
         if self.rect.collidepoint(pos) and self.cooldown_timer <= 0:

@@ -22,7 +22,7 @@ class WaveManager:
         
     def update(self):
         if not self.wave_active:
-            self.preparation_timer -= 2
+            self.preparation_timer -= 1
             if self.preparation_timer <= 0:
                 self.wave_active = True
                 

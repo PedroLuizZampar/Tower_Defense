@@ -11,15 +11,16 @@ from upgrade_menu import UpgradeMenu
 from spell import DamageSpell, FreezeSpell, DotSpell, SpellButton
 from mission_manager import MissionManager
 
-# Inicialização do Pygame
+# Inicialização do Pygame com flags otimizadas
 pygame.init()
+pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONDOWN])
 
-# Configurações da tela
+# Configurações da tela com aceleração de hardware
 SCREEN_WIDTH = 1000  # Removido menu lateral
 WAVE_MENU_HEIGHT = 100  # Altura do menu superior
 SCREEN_HEIGHT = 650  # Altura total reduzida em 100px
 GAME_HEIGHT = SCREEN_HEIGHT - WAVE_MENU_HEIGHT  # Altura do jogo ajustada
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
 pygame.display.set_caption("Tower Defense")
 
 # Cores
@@ -28,8 +29,8 @@ RED = (255, 0, 0)
 MENU_GRAY = (40, 40, 40)
 MENU_LIGHT_GRAY = (60, 60, 60)
 
-# Carrega o background
-background = pygame.image.load(os.path.join('assets', 'background.png'))
+# Carrega o background otimizado
+background = pygame.image.load(os.path.join('assets', 'background.png')).convert()
 background = pygame.transform.scale(background, (SCREEN_WIDTH, GAME_HEIGHT))
 
 # Definição do caminho (waypoints)
