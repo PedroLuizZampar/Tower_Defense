@@ -255,11 +255,13 @@ class RedDefender(Defender):
     UNLOCK_COST = 2
     RANGE = 140
     HITS_TO_ACTIVATE = 6
+    EFFECT_COLOR = (255, 165, 0)  # Laranja para o efeito de queimadura
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
         self.HITS_TO_ACTIVATE = 6
         self.attack_counter = 0
+        self.effect_duration = 0  # Duração do efeito visual
         
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
@@ -272,6 +274,10 @@ class RedDefender(Defender):
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
             self.cooldown_timer -= 1
+            
+        # Atualiza a duração do efeito visual
+        if self.effect_duration > 0:
+            self.effect_duration -= 1
             
         # Procura alvo e atira
         if self.cooldown_timer <= 0:
@@ -290,10 +296,22 @@ class RedDefender(Defender):
                 # Se atingiu o número necessário de ataques, ativa a habilidade especial
                 if self.attack_counter >= self.HITS_TO_ACTIVATE:
                     self.attack_counter = 0  # Reseta o contador
+                    self.effect_duration = 60  # 1 segundo de efeito visual
                     # Aplica dano ao longo do tempo em todos os inimigos no alcance
                     dot_damage = projectile.damage * 0.5  # 50% do dano normal
                     for enemy in self.get_enemies_in_range(enemies):
                         enemy.apply_dot(dot_damage, duration_frames=180)
+
+    def draw(self, screen, show_range=False):
+        # Desenha o efeito de queimadura se estiver ativo
+        if self.effect_duration > 0:
+            effect_surface = pygame.Surface((self.RANGE * 2, self.RANGE * 2), pygame.SRCALPHA)
+            opacity = int((self.effect_duration / 60) * 50)  # Máximo de 50 de opacidade
+            pygame.draw.circle(effect_surface, (*self.EFFECT_COLOR, opacity), 
+                             (self.RANGE, self.RANGE), self.RANGE)
+            screen.blit(effect_surface, (int(self.x - self.RANGE), int(self.y - self.RANGE)))
+            
+        super().draw(screen, show_range)
 
 class YellowDefender(Defender):
     COLOR = (194, 187, 0)  # Amarelo
@@ -305,10 +323,12 @@ class YellowDefender(Defender):
     UNLOCK_COST = 3
     RANGE = 200
     HITS_TO_ACTIVATE = 8
+    EFFECT_COLOR = (255, 255, 0)  # Amarelo brilhante para o efeito de buff
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
         self.attack_counter = 0
+        self.effect_duration = 0  # Duração do efeito visual
         
     def update(self, enemies, defenders=None):
         # Atualiza o efeito de congelamento primeiro
@@ -321,6 +341,10 @@ class YellowDefender(Defender):
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
             self.cooldown_timer -= 1
+            
+        # Atualiza a duração do efeito visual
+        if self.effect_duration > 0:
+            self.effect_duration -= 1
             
         # Procura alvo e atira
         if self.cooldown_timer <= 0:
@@ -339,9 +363,21 @@ class YellowDefender(Defender):
                 # Se atingiu o número necessário de ataques, ativa a habilidade especial
                 if self.attack_counter >= self.HITS_TO_ACTIVATE and defenders:
                     self.attack_counter = 0  # Reseta o contador
+                    self.effect_duration = 60  # 1 segundo de efeito visual
                     # Aplica buff de dano em todos os defensores no alcance
                     for defender in self.get_defenders_in_range(defenders):
                         defender.apply_damage_buff()
+
+    def draw(self, screen, show_range=False):
+        # Desenha o efeito de buff se estiver ativo
+        if self.effect_duration > 0:
+            effect_surface = pygame.Surface((self.RANGE * 2, self.RANGE * 2), pygame.SRCALPHA)
+            opacity = int((self.effect_duration / 60) * 50)  # Máximo de 50 de opacidade
+            pygame.draw.circle(effect_surface, (*self.EFFECT_COLOR, opacity), 
+                             (self.RANGE, self.RANGE), self.RANGE)
+            screen.blit(effect_surface, (int(self.x - self.RANGE), int(self.y - self.RANGE)))
+            
+        super().draw(screen, show_range)
 
 class GreenDefender(Defender):
     COLOR = (0, 100, 0)  # Verde escuro
@@ -353,10 +389,12 @@ class GreenDefender(Defender):
     RANGE = 130
     UNLOCK_COST = 4
     HITS_TO_ACTIVATE = 5
+    EFFECT_COLOR = (0, 255, 0)  # Verde claro para o efeito de slow
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
         self.attack_counter = 0
+        self.effect_duration = 0  # Duração do efeito visual
         
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
@@ -369,6 +407,10 @@ class GreenDefender(Defender):
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
             self.cooldown_timer -= 1
+            
+        # Atualiza a duração do efeito visual
+        if self.effect_duration > 0:
+            self.effect_duration -= 1
             
         # Procura alvo e atira
         if self.cooldown_timer <= 0:
@@ -387,9 +429,21 @@ class GreenDefender(Defender):
                 # Se atingiu o número necessário de ataques, ativa a habilidade especial
                 if self.attack_counter >= self.HITS_TO_ACTIVATE:
                     self.attack_counter = 0  # Reseta o contador
+                    self.effect_duration = 60  # 1 segundo de efeito visual
                     # Aplica slow em todos os inimigos no alcance
                     for enemy in self.get_enemies_in_range(enemies):
                         enemy.apply_slow(180)  # 3 segundos de slow
+
+    def draw(self, screen, show_range=False):
+        # Desenha o efeito de slow se estiver ativo
+        if self.effect_duration > 0:
+            effect_surface = pygame.Surface((self.RANGE * 2, self.RANGE * 2), pygame.SRCALPHA)
+            opacity = int((self.effect_duration / 60) * 50)  # Máximo de 50 de opacidade
+            pygame.draw.circle(effect_surface, (*self.EFFECT_COLOR, opacity), 
+                             (self.RANGE, self.RANGE), self.RANGE)
+            screen.blit(effect_surface, (int(self.x - self.RANGE), int(self.y - self.RANGE)))
+            
+        super().draw(screen, show_range)
 
 class BlueDefender(Defender):
     COLOR = (0, 0, 255)  # Azul
@@ -401,10 +455,12 @@ class BlueDefender(Defender):
     UNLOCK_COST = 5
     RANGE = 140
     HITS_TO_ACTIVATE = 8
+    EFFECT_COLOR = (135, 206, 235)  # Azul claro para o efeito de congelamento
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
         self.attack_counter = 0
+        self.effect_duration = 0  # Duração do efeito visual
         
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
@@ -417,6 +473,10 @@ class BlueDefender(Defender):
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
             self.cooldown_timer -= 1
+            
+        # Atualiza a duração do efeito visual
+        if self.effect_duration > 0:
+            self.effect_duration -= 1
             
         # Procura alvo e atira
         if self.cooldown_timer <= 0:
@@ -435,9 +495,21 @@ class BlueDefender(Defender):
                 # Se atingiu o número necessário de ataques, ativa a habilidade especial
                 if self.attack_counter >= self.HITS_TO_ACTIVATE:
                     self.attack_counter = 0  # Reseta o contador
-                    # Aplica slow em todos os inimigos no alcance
+                    self.effect_duration = 60  # 1 segundo de efeito visual
+                    # Aplica freeze em todos os inimigos no alcance
                     for enemy in self.get_enemies_in_range(enemies):
-                        enemy.apply_freeze(90)  # 1.5 segundos de slow
+                        enemy.apply_freeze(90)  # 1.5 segundos de freeze
+
+    def draw(self, screen, show_range=False):
+        # Desenha o efeito de congelamento se estiver ativo
+        if self.effect_duration > 0:
+            effect_surface = pygame.Surface((self.RANGE * 2, self.RANGE * 2), pygame.SRCALPHA)
+            opacity = int((self.effect_duration / 60) * 50)  # Máximo de 50 de opacidade
+            pygame.draw.circle(effect_surface, (*self.EFFECT_COLOR, opacity), 
+                             (self.RANGE, self.RANGE), self.RANGE)
+            screen.blit(effect_surface, (int(self.x - self.RANGE), int(self.y - self.RANGE)))
+            
+        super().draw(screen, show_range)
 
 class OrangeDefender(Defender):
     COLOR = (255, 140, 0)  # Laranja
@@ -512,10 +584,12 @@ class PurpleDefender(Defender):
     UNLOCK_COST = 8
     BASE_ATTACK_COOLDOWN = 50
     HITS_TO_ACTIVATE = 8
+    EFFECT_COLOR = (147, 112, 219)  # Roxo claro para o efeito de fraqueza
     
     def __init__(self, x, y, current_wave):
         super().__init__(x, y, current_wave)
         self.hits_counter = 0
+        self.effect_duration = 0  # Duração do efeito visual
         
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
@@ -528,6 +602,10 @@ class PurpleDefender(Defender):
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
             self.cooldown_timer -= 1
+            
+        # Atualiza a duração do efeito visual
+        if self.effect_duration > 0:
+            self.effect_duration -= 1
             
         # Procura alvo e atira
         if self.cooldown_timer <= 0:
@@ -546,11 +624,23 @@ class PurpleDefender(Defender):
                 # Se atingiu o número necessário de hits, aplica fraqueza em todos os inimigos no alcance
                 if self.hits_counter >= self.HITS_TO_ACTIVATE:
                     self.hits_counter = 0  # Reseta o contador
+                    self.effect_duration = 60  # 1 segundo de efeito visual
                     # Aplica fraqueza em todos os inimigos no alcance
                     for enemy in self.get_enemies_in_range(enemies):
                         enemy.apply_weakness()  # Aplica o efeito de fraqueza
                 return projectile
         return None
+        
+    def draw(self, screen, show_range=False):
+        # Desenha o efeito de fraqueza se estiver ativo
+        if self.effect_duration > 0:
+            effect_surface = pygame.Surface((self.RANGE * 2, self.RANGE * 2), pygame.SRCALPHA)
+            opacity = int((self.effect_duration / 60) * 50)  # Máximo de 50 de opacidade
+            pygame.draw.circle(effect_surface, (*self.EFFECT_COLOR, opacity), 
+                             (self.RANGE, self.RANGE), self.RANGE)
+            screen.blit(effect_surface, (int(self.x - self.RANGE), int(self.y - self.RANGE)))
+            
+        super().draw(screen, show_range)
 
 class DefenderButton:
     def __init__(self, defender_class, x_pos, mission_manager=None):

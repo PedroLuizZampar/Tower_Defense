@@ -1116,7 +1116,10 @@ def main():
         
         # Atualização dos defensores e seus projéteis
         for defender in defenders:
-            defender.update(enemies)
+            if isinstance(defender, YellowDefender):
+                defender.update(enemies, defenders)  # Passa a lista de defensores para o YellowDefender
+            else:
+                defender.update(enemies)
             # Atualiza os projéteis
             for projectile in defender.projectiles[:]:  # Usa uma cópia da lista para poder modificá-la
                 if projectile.move():  # Se o projétil atingiu o alvo

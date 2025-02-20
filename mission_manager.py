@@ -46,7 +46,7 @@ class MissionManager:
         ]
         self.total_kills = 0
         self.current_wave = 1
-        self.orbes = 0
+        self.orbes = 100
         self.is_expanded = False  # Controla se o menu está expandido
         self.header_rect = None  # Retângulo do cabeçalho para detectar cliques
         
