@@ -81,7 +81,7 @@ class Enemy:
         # Atualiza o DoT apenas se o novo dano for maior ou se não houver DoT ativo
         if not self.is_burning or damage > self.dot_damage:
             self.dot_timer = duration_frames
-            self.dot_tick_timer = 30  # Tick a cada 0.5 segundos
+            self.dot_tick_timer = 60  # Tick a cada 1 segundo
             self.dot_damage = damage
             self.is_burning = True
         
@@ -153,7 +153,7 @@ class Enemy:
                     if not self.is_under_immunity_aura():
                         if self.take_damage(self.dot_damage):
                             return "died"  # Retorna indicador de morte por DoT
-                    self.dot_tick_timer = 30  # Reseta o timer do tick
+                    self.dot_tick_timer = 60  # Reseta o timer do tick para 1 segundo
         return False
         
     def move(self):

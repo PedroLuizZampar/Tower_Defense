@@ -7,8 +7,8 @@ class Defender:
     RANGE = 150  # Alcance do defensor
     MIN_DISTANCE = 40  # Distância mínima entre defensores
     COST = 100  # Custo do defensor
-    BASE_UPGRADE_COST = 12  # Custo base da melhoria
-    UPGRADE_SELL_BONUS = 8  # Bônus de venda por melhoria
+    BASE_UPGRADE_COST = 10  # Custo base da melhoria
+    UPGRADE_SELL_BONUS = 5  # Bônus de venda por melhoria
     COLOR = (0, 0, 255)  # Cor padrão (azul)
     PROJECTILE_COLOR = (255, 255, 0)  # Cor padrão do projétil
     DAMAGE_BUFF = 15  # Buff fixo de dano
