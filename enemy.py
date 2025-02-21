@@ -82,7 +82,7 @@ class Enemy:
         # Atualiza o DoT apenas se o novo dano for maior ou se não houver DoT ativo
         if not self.is_burning or damage > self.dot_damage:
             self.dot_timer = duration_frames
-            self.dot_tick_timer = 60  # Tick a cada 1 segundo
+            self.dot_tick_timer = 0  # Começa em 0 para aplicar o primeiro tick imediatamente
             self.dot_damage = damage
             self.is_burning = True
         
@@ -98,12 +98,12 @@ class Enemy:
         self.weakness_timer = duration_frames
         self.is_weakened = True
         
-    def apply_speed(self, duration_frames=150):  # 2.5 segundos de duração
+    def apply_speed(self, duration_frames=120):  # 2 segundos de duração
         """Aplica efeito de velocidade aumentada"""
-        self.speed_timer = duration_frames
+        self.speed_timer = duration_frames // GameSpeed.get_instance().current_multiplier  # Usa a duração base
         self.is_accelerated = True
         self.COLOR = SpeedEnemy.COLOR  # Muda a cor para a cor do SpeedEnemy
-        if not self.is_frozen or not self.is_slowed:
+        if not self.is_frozen and not self.is_slowed:  # Corrigido a condição também
             self.speed = self.base_speed * 1.5  # Aumenta a velocidade em 50%
         
     def update(self):
@@ -303,12 +303,9 @@ class HealerEnemy(Enemy):
                         enemy.health = min(enemy.health + self.heal_amount, enemy.max_health)
         
     def move(self):
-        # Primeiro verifica se deve curar
-        should_heal = False
         self.heal_timer -= GameSpeed.get_instance().current_multiplier
         if self.heal_timer <= 0:
             self.heal_timer = 90
-            should_heal = True
             self.heal_effect_duration = 30  # 0.5 segundos de efeito visual
             self.heal_nearby_enemies()  # Aplica a cura quando o timer zera
             

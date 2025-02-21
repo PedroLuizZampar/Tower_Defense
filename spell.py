@@ -122,7 +122,7 @@ class DamageSpell(Spell):
         """Aplica dano instantâneo em área"""
         affected = self.affect_enemies(enemies)
         for enemy in affected[:]:  # Usa uma cópia da lista para poder modificá-la
-            damage = self.get_damage() * 0.7 if isinstance(enemy, ArmoredEnemy) else self.get_damage()
+            damage = self.get_damage()
             if enemy.take_damage(damage):  # Se o inimigo morreu
                 self.killed_enemies.append(enemy)  # Adiciona à lista de mortos
                 
@@ -139,7 +139,7 @@ class FreezeSpell(Spell):
     UPGRADE_COSTS = [2, 4, 6, 8, 10]  # Custo em orbes para cada nível
     DURATION_INCREASE = 30  # Aumento da duração por nível (0.5 segundos)
     MAX_LEVEL = 5
-
+    
     def __init__(self, x, y):
         super().__init__(x, y)
         self.duration = 30  # 0.5 segundos
@@ -173,7 +173,7 @@ class DotSpell(Spell):
     DAMAGE_INCREASE_PERCENT = 0.10  # 10% de aumento de dano por nível
     DURATION_INCREASE = 60  # Aumento da duração por nível (1 segundo)
     MAX_LEVEL = 10
-
+    
     def __init__(self, x, y):
         super().__init__(x, y)
         self.duration = 60  # 1 segundo
@@ -302,7 +302,7 @@ class SpellButton:
             self.level += 1
             return True
         return False
-
+        
     def draw(self, screen, gold):
         # Desenha o fundo do botão
         button_color = self.color if self.cooldown_timer <= 0 else (100, 100, 100)
@@ -349,4 +349,4 @@ class SpellButton:
             self.cooldown_timer = cooldown
         else:
             self.cooldown_timer = self.spell_class.COOLDOWN
-        self.selected = False 
+            self.selected = False 
