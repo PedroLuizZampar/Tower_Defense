@@ -1,4 +1,5 @@
 import random
+from base import GameSpeed
 
 class WaveManager:
     MAX_WAVES = 60
@@ -22,7 +23,7 @@ class WaveManager:
         
     def update(self):
         if not self.wave_active:
-            self.preparation_timer -= 1
+            self.preparation_timer -= GameSpeed.get_instance().current_multiplier
             if self.preparation_timer <= 0:
                 self.wave_active = True
                 
@@ -146,10 +147,10 @@ class WaveManager:
             
         # Se o boss acabou de ser spawnado, espera o cooldown
         if self.boss_spawn_cooldown > 0:
-            self.boss_spawn_cooldown -= 1
+            self.boss_spawn_cooldown -= GameSpeed.get_instance().current_multiplier
             return False
             
-        self.spawn_timer -= 1
+        self.spawn_timer -= GameSpeed.get_instance().current_multiplier
         if self.spawn_timer <= 0:
             self.spawn_timer = self.get_spawn_interval()
             self.enemies_spawned += 1

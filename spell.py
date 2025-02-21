@@ -1,6 +1,7 @@
 import pygame
 import math
 from enemy import TankEnemy, ArmoredEnemy, SpeedEnemy, HealerEnemy
+from base import GameSpeed
 
 class Spell:
     COST = 0  # Removido custo em ouro
@@ -22,7 +23,7 @@ class Spell:
             self.apply_effect(enemies)
             self.effect_applied = True
             
-        self.current_duration -= 1
+        self.current_duration -= GameSpeed.get_instance().current_multiplier
         if self.current_duration <= 0:
             self.active = False
         return self.active
@@ -103,7 +104,7 @@ class DamageSpell(Spell):
             if self.killed_enemies:  # Se matou algum inimigo
                 return "died"  # Retorna died apenas uma vez
             
-        self.current_duration -= 1
+        self.current_duration -= GameSpeed.get_instance().current_multiplier
         if self.current_duration <= 0:
             self.active = False
             return False
@@ -202,7 +203,7 @@ class DotSpell(Spell):
             self.apply_effect(enemies)
             self.effect_applied = True
             
-        self.current_duration -= 1
+        self.current_duration -= GameSpeed.get_instance().current_multiplier
         if self.current_duration <= 0:
             self.active = False
             return False
@@ -333,7 +334,7 @@ class SpellButton:
         
     def update(self):
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= 1
+            self.cooldown_timer -= GameSpeed.get_instance().current_multiplier
         
     def handle_click(self, pos, gold):
         if self.rect.collidepoint(pos) and self.cooldown_timer <= 0:

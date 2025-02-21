@@ -1,12 +1,13 @@
 import pygame
 import math
+from base import GameSpeed  # Adicione no topo do arquivo
 
 class Projectile:
     def __init__(self, x, y, target_enemy, color=(255, 255, 0)):  # Cor padrão amarela
         self.x = x
         self.y = y
         self.radius = 5
-        self.speed = 7
+        self.base_speed = 7
         self.damage = 20
         self.target = target_enemy
         self.color = color
@@ -23,9 +24,10 @@ class Projectile:
         if distance < self.radius + self.target.radius:
             return True
             
-        # Move em direção ao alvo
-        dx = dx / distance * self.speed
-        dy = dy / distance * self.speed
+        # Move em direção ao alvo usando a velocidade ajustada
+        current_speed = self.base_speed * GameSpeed.get_instance().current_multiplier
+        dx = dx / distance * current_speed
+        dy = dy / distance * current_speed
         self.x += dx
         self.y += dy
         return False

@@ -1,6 +1,7 @@
 import pygame
 import math
 import random
+from base import GameSpeed  # Adicione no topo do arquivo
 
 class Enemy:
     COLOR = (225, 148, 255)  # Cor padrão roxa
@@ -109,13 +110,13 @@ class Enemy:
         """Atualiza os efeitos de status"""
         # Atualiza efeito de fraqueza
         if self.weakness_timer > 0:
-            self.weakness_timer -= 1
+            self.weakness_timer -= GameSpeed.get_instance().current_multiplier
             if self.weakness_timer <= 0:
                 self.is_weakened = False
                 
         # Atualiza efeito de congelamento
         if self.freeze_timer > 0:
-            self.freeze_timer -= 1
+            self.freeze_timer -= GameSpeed.get_instance().current_multiplier
             if self.freeze_timer <= 0:
                 self.speed = self.base_speed if not self.is_slowed else self.base_speed * 0.5
                 if self.is_accelerated:
@@ -124,7 +125,7 @@ class Enemy:
                 
         # Atualiza efeito de slow
         if self.slow_timer > 0:
-            self.slow_timer -= 1
+            self.slow_timer -= GameSpeed.get_instance().current_multiplier
             if self.slow_timer <= 0:
                 self.is_slowed = False
                 self.speed = self.base_speed
@@ -133,7 +134,7 @@ class Enemy:
                 
         # Atualiza efeito de velocidade
         if self.speed_timer > 0:
-            self.speed_timer -= 1
+            self.speed_timer -= GameSpeed.get_instance().current_multiplier
             if self.speed_timer <= 0:
                 self.is_accelerated = False
                 self.COLOR = self.original_color
@@ -142,12 +143,12 @@ class Enemy:
                 
         # Atualiza dano ao longo do tempo
         if self.dot_timer > 0:
-            self.dot_timer -= 1
+            self.dot_timer -= GameSpeed.get_instance().current_multiplier
             if self.dot_timer <= 0:
                 self.is_burning = False
                 self.dot_damage = 0
             else:
-                self.dot_tick_timer -= 1
+                self.dot_tick_timer -= GameSpeed.get_instance().current_multiplier
                 if self.dot_tick_timer <= 0:
                     # Só aplica o dano se não estiver sob efeito de imunidade
                     if not self.is_under_immunity_aura():
@@ -170,13 +171,16 @@ class Enemy:
         dy = target_y - self.y
         distance = math.sqrt(dx ** 2 + dy ** 2)
         
-        if distance < self.speed:
+        # Usa a velocidade atual multiplicada pelo multiplicador global
+        current_speed = self.speed * GameSpeed.get_instance().current_multiplier
+        
+        if distance < current_speed:
             self.path_index += 1
             if self.path_index < len(self.path) - 1:
                 self.x, self.y = self.path[self.path_index]
         else:
-            dx = dx / distance * self.speed
-            dy = dy / distance * self.speed
+            dx = dx / distance * current_speed
+            dy = dy / distance * current_speed
             self.x += dx
             self.y += dy
             
@@ -254,7 +258,7 @@ class SpeedEnemy(Enemy):
 
 class ArmoredEnemy(Enemy):
     COLOR = (128, 128, 128)  # Cinza
-    BASE_HEALTH = 180  # Aumentado para 180
+    BASE_HEALTH = 135  # Aumentado para 135
     BASE_SPEED = 1.4  # Reduzido para 1.4
     SPAWN_CHANCE = 20  # Reduzido para 20%
     NAME = "Blindado"  # Nome do inimigo blindado
@@ -281,58 +285,127 @@ class HealerEnemy(Enemy):
     def __init__(self, path):
         super().__init__(path)
         self.radius = 10
-        self.heal_timer = 60  # Reduzido para 1 segundo
-        self.heal_amount = 8  # Aumentado para 8
-        self.heal_radius = 150  # Reduzido para 150
+        self.heal_timer = 60
+        self.heal_amount = 10
+        self.heal_radius = 150
+        self.heal_effect_duration = 0  # Novo: duração do efeito visual
+        
+    def heal_nearby_enemies(self):
+        """Cura inimigos próximos"""
+        for enemy in self._all_enemies:
+            if enemy != self:  # Não cura a si mesmo
+                dx = enemy.x - self.x
+                dy = enemy.y - self.y
+                distance = math.sqrt(dx ** 2 + dy ** 2)
+                if distance <= self.heal_radius:
+                    # Só cura se o inimigo não estiver com vida máxima
+                    if enemy.health < enemy.max_health:
+                        enemy.health = min(enemy.health + self.heal_amount, enemy.max_health)
         
     def move(self):
         # Primeiro verifica se deve curar
         should_heal = False
-        self.heal_timer -= 1
+        self.heal_timer -= GameSpeed.get_instance().current_multiplier
         if self.heal_timer <= 0:
-            self.heal_timer = 90  # Reseta o timer
+            self.heal_timer = 90
             should_heal = True
+            self.heal_effect_duration = 30  # 0.5 segundos de efeito visual
+            self.heal_nearby_enemies()  # Aplica a cura quando o timer zera
+            
+        # Atualiza a duração do efeito visual
+        if self.heal_effect_duration > 0:
+            self.heal_effect_duration -= GameSpeed.get_instance().current_multiplier
             
         # Depois move normalmente
         move_result = super().move()
         
-        # Se chegou ao final do caminho ou morreu, retorna isso
         if move_result is True or move_result == "died":
             return move_result
             
-        # Se deve curar, retorna "heal"
-        if should_heal:
-            return "heal"
-            
-        # Caso contrário, retorna False (continua movendo)
         return False
         
     def draw(self, screen):
         super().draw(screen)
-        # Desenha o raio de cura como um círculo semi-transparente
-        heal_surface = pygame.Surface((self.heal_radius * 2, self.heal_radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(heal_surface, (*self.COLOR, 50), (self.heal_radius, self.heal_radius), self.heal_radius)
-        screen.blit(heal_surface, (int(self.x - self.heal_radius), int(self.y - self.heal_radius)))
+        
+        # Desenha o efeito de cura apenas quando ativo
+        if self.heal_effect_duration > 0:
+            opacity = int((self.heal_effect_duration / 30) * 100)  # Fade out do efeito
+            heal_surface = pygame.Surface((self.heal_radius * 2, self.heal_radius * 2), pygame.SRCALPHA)
+            
+            # Círculo externo que expande
+            expansion = (30 - self.heal_effect_duration) * 2
+            outer_radius = min(self.heal_radius, self.heal_radius - 20 + expansion)
+            pygame.draw.circle(heal_surface, (*self.COLOR, opacity), 
+                             (self.heal_radius, self.heal_radius), outer_radius, 3)
+            
+            # Círculo interno que brilha
+            inner_opacity = int((self.heal_effect_duration / 30) * 150)
+            pygame.draw.circle(heal_surface, (*self.COLOR, inner_opacity), 
+                             (self.heal_radius, self.heal_radius), 30)
+            
+            screen.blit(heal_surface, (int(self.x - self.heal_radius), 
+                                     int(self.y - self.heal_radius)))
 
 class FreezeAuraEnemy(Enemy):
     COLOR = (135, 206, 235)  # Azul claro
-    BASE_HEALTH = 100  # Reduzido para 100
-    BASE_SPEED = 2.0  # Aumentado para 2.0
-    SPAWN_CHANCE = 15  # Reduzido para 15%
+    BASE_HEALTH = 100
+    BASE_SPEED = 2.0
+    SPAWN_CHANCE = 15
     NAME = "Gelado"
-    REWARD = 4  # Recompensa em ouro
+    REWARD = 4
     
     def __init__(self, path):
         super().__init__(path)
         self.radius = 11
-        self.freeze_radius = 100  # Reduzido para 100
+        self.freeze_radius = 100
+        self._all_defenders = []
+        self.aura_duration = 60  # 1 segundo de efeito
+        self.is_dying = False  # Flag para controlar o estado de morte
         
     def take_damage(self, damage):
-        """Aplica dano e retorna True se morreu, aplicando congelamento em todas as torres próximas"""
         self.health -= damage
-        if self.health <= 0:
-            return "freeze_aura"  # Retorna indicador especial para aplicar o efeito
+        if self.health <= 0 and not self.is_dying:
+            self.is_dying = True
+            self.apply_freeze_aura(self._all_defenders)
+            return False  # Não remove o inimigo ainda
+        return self.health <= 0 and self.aura_duration <= 0  # Só remove quando o efeito acabar
+        
+    def move(self):
+        if self.is_dying:
+            self.aura_duration -= GameSpeed.get_instance().current_multiplier
+            if self.aura_duration <= 0:
+                return "died"  # Retorna "died" ao invés de True quando o efeito acabar
+            return False
+            
+        # Se não estiver morrendo, usa o movimento normal
+        move_result = super().move()
+        
+        # Se chegou ao final do caminho, retorna True
+        if move_result is True:
+            return True
+            
         return False
+        
+    def draw(self, screen):
+        if not self.is_dying:
+            super().draw(screen)
+            
+        # Desenha a aura de congelamento quando está morrendo
+        if self.is_dying and self.aura_duration > 0:
+            # Calcula a opacidade baseada no tempo restante
+            opacity = int((self.aura_duration / 60) * 100)
+            
+            # Cria uma superfície para a aura com transparência
+            surface = pygame.Surface((self.freeze_radius * 2, self.freeze_radius * 2), pygame.SRCALPHA)
+            
+            # Desenha o círculo da aura com a opacidade calculada
+            pygame.draw.circle(surface, (*self.COLOR, opacity), 
+                             (self.freeze_radius, self.freeze_radius), 
+                             self.freeze_radius)
+            
+            # Desenha a aura
+            screen.blit(surface, (int(self.x - self.freeze_radius), 
+                                int(self.y - self.freeze_radius)))
         
     def get_defenders_in_range(self, defenders):
         """Retorna todos os defensores dentro do raio de congelamento"""
@@ -350,13 +423,6 @@ class FreezeAuraEnemy(Enemy):
         affected_defenders = self.get_defenders_in_range(defenders)
         for defender in affected_defenders:
             defender.apply_freeze(90)  # 1.5 segundos de congelamento
-        
-    def draw(self, screen):
-        super().draw(screen)
-        # Desenha uma aura indicando o raio de efeito
-        aura_surface = pygame.Surface((self.freeze_radius * 2, self.freeze_radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(aura_surface, (*self.COLOR, 30), (self.freeze_radius, self.freeze_radius), self.freeze_radius)
-        screen.blit(aura_surface, (int(self.x - self.freeze_radius), int(self.y - self.freeze_radius)))
 
 class RageEnemy(Enemy):
     COLOR = (139, 0, 0)  # Vermelho escuro
@@ -515,7 +581,7 @@ class SpeedBoss(Enemy):
         
         # Atualiza o timer da velocidade
         if self.speed_timer > 0:
-            self.speed_timer -= 1
+            self.speed_timer -= GameSpeed.get_instance().current_multiplier
             if self.speed_timer <= 0:
                 if self.in_speed_phase:
                     # Terminou fase de velocidade, começa intervalo
@@ -603,19 +669,20 @@ class MagnetBoss(Enemy):
     
     def __init__(self, path):
         super().__init__(path)
-        self.radius = 20  # Raio maior que inimigos normais
-        self.magnet_interval = 300  # 5 segundos entre ativações
-        self.magnet_duration = 120  # 2 segundos de duração
-        self.magnet_timer = self.magnet_interval  # Começa com o timer cheio
-        self.is_attracting = False  # Não começa atraindo
-        self.attracted_projectiles = []  # Lista de projéteis atraídos
+        self.radius = 20
+        self.magnet_interval = 300
+        self.magnet_duration = 120
+        self.magnet_timer = self.magnet_interval
+        self.is_attracting = False
+        self.attracted_projectiles = []
+        self._all_defenders = []  # Nova lista para referência dos defensores
         
     def update(self):
         result = super().update()
         
         # Atualiza o timer do magnetismo
         if self.magnet_timer > 0:
-            self.magnet_timer -= 1
+            self.magnet_timer -= GameSpeed.get_instance().current_multiplier
             if self.magnet_timer <= 0:
                 if self.is_attracting:
                     # Terminou fase de atração, começa intervalo
@@ -627,6 +694,15 @@ class MagnetBoss(Enemy):
                     # Terminou intervalo, começa atração
                     self.magnet_timer = self.magnet_duration
                     self.is_attracting = True
+            
+        # Se estiver na fase de atração, atrai todos os projéteis
+        if self.is_attracting:
+            for defender in self._all_defenders:  # Precisamos adicionar essa referência
+                for projectile in defender.projectiles:
+                    if projectile not in self.attracted_projectiles:
+                        projectile.color = self.COLOR  # Muda a cor do projétil
+                        projectile.target = self  # Redireciona o projétil para o boss
+                        self.attracted_projectiles.append(projectile)
             
         return result
         
@@ -729,7 +805,7 @@ class ImmunityBoss(Enemy):
         
         # Atualiza o timer da imunidade
         if self.immunity_timer > 0:
-            self.immunity_timer -= 1
+            self.immunity_timer -= GameSpeed.get_instance().current_multiplier
             if self.immunity_timer <= 0:
                 if self.in_immunity_phase:
                     # Terminou fase de imunidade, começa intervalo

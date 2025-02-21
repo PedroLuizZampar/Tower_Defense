@@ -418,6 +418,91 @@ Um jogo de Tower Defense desenvolvido em Pygame onde o jogador defende uma base 
   - 10 segundos nas demais ondas
   - Pode ser pulado com botão
 
+### Sistema de Velocidade do Jogo
+- Botão de velocidade 2x
+- Ícone verde quando ativo
+- Afeta:
+  - Movimento dos inimigos
+  - Ataques dos defensores
+  - Duração dos efeitos
+  - Cooldown dos feitiços
+  - Timers de onda
+
+### Sistema de Melhorias de Feitiços
+
+#### 1. Feitiço de Gelo
+- **Níveis**: 1-5
+- **Melhorias por Nível**:
+  - +0.5s de duração do congelamento
+  - -1 frame de cooldown
+- **Custos**: 2, 4, 6, 8, 10 orbes
+
+#### 2. Feitiço de Fogo
+- **Níveis**: 1-10
+- **Melhorias por Nível**:
+  - +10% de dano por segundo
+  - +1s de duração a cada 5 níveis
+  - -1 frame de cooldown
+- **Custos**: 1-10 orbes (crescente)
+
+#### 3. Feitiço de Explosão
+- **Níveis**: 1-10
+- **Melhorias por Nível**:
+  - +20% de dano
+  - -1 frame de cooldown
+- **Custos**: 1-10 orbes (crescente)
+
+### Interface Aprimorada
+
+#### Menu de Inimigos
+- Lista paginada (5 por página)
+- Informações detalhadas:
+  - Vida atual com bônus da onda
+  - Velocidade base
+  - Imunidades e resistências
+  - Habilidades especiais
+
+#### Menu de Defensores
+- Lista paginada (5 por página)
+- Informações detalhadas:
+  - Dano atual
+  - DPS calculado
+  - Hits para ativação especial
+  - Custo de desbloqueio em orbes
+
+#### Menu de Feitiços
+- Lista paginada (3 por página)
+- Sistema de melhorias
+- Estatísticas por nível
+- Custos de upgrade em orbes
+- Cooldowns atualizados
+
+#### Menu de Chefões
+- Lista paginada (4 por página)
+- Informações detalhadas:
+  - Vida e velocidade
+  - Descrição da habilidade
+  - Duração e cooldown dos efeitos
+  - Onda de aparição
+
+### Efeitos Visuais
+- Aura de congelamento (azul translúcido)
+- Efeito de queimadura (laranja)
+- Indicador de fraqueza (roxo)
+- Aura de buff (amarelo)
+- Efeito de cura (verde)
+- Aura de imunidade (branco)
+- Efeito magnético (vermelho)
+- Indicadores de invisibilidade
+- Transições suaves de opacidade
+
+### Otimizações
+- Aceleração de hardware habilitada
+- Eventos de mouse filtrados
+- Background pré-renderizado
+- Superfícies com transparência otimizadas
+- Sistema de cooldown global
+
 ### Como Jogar
 
 1. **Início do Jogo**

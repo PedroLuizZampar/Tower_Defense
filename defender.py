@@ -1,6 +1,7 @@
 import pygame
 import math
 from projectile import Projectile
+from base import GameSpeed  # Adicione no topo do arquivo
 
 class Defender:
     SIZE = 30  # Tamanho do quadrado do defensor
@@ -143,13 +144,13 @@ class Defender:
         self.freeze_timer = duration_frames
 
     def update(self, enemies):
-        # Atualiza o cooldown
+        # Atualiza o cooldown considerando o multiplicador de velocidade global
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= 1
+            self.cooldown_timer -= GameSpeed.get_instance().current_multiplier
             
         # Atualiza o efeito de congelamento
         if self.is_frozen:
-            self.freeze_timer -= 1
+            self.freeze_timer -= GameSpeed.get_instance().current_multiplier
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
@@ -266,18 +267,18 @@ class RedDefender(Defender):
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
         if self.is_frozen:
-            self.freeze_timer -= 1
+            self.freeze_timer -= GameSpeed.get_instance().current_multiplier
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= 1
+            self.cooldown_timer -= GameSpeed.get_instance().current_multiplier
             
         # Atualiza a duração do efeito visual
         if self.effect_duration > 0:
-            self.effect_duration -= 1
+            self.effect_duration -= GameSpeed.get_instance().current_multiplier
             
         # Procura alvo e atira
         if self.cooldown_timer <= 0:
@@ -333,18 +334,18 @@ class YellowDefender(Defender):
     def update(self, enemies, defenders=None):
         # Atualiza o efeito de congelamento primeiro
         if self.is_frozen:
-            self.freeze_timer -= 1
+            self.freeze_timer -= GameSpeed.get_instance().current_multiplier
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= 1
+            self.cooldown_timer -= GameSpeed.get_instance().current_multiplier
             
         # Atualiza a duração do efeito visual
         if self.effect_duration > 0:
-            self.effect_duration -= 1
+            self.effect_duration -= GameSpeed.get_instance().current_multiplier
             
         # Procura alvo e atira
         if self.cooldown_timer <= 0:
@@ -399,18 +400,18 @@ class GreenDefender(Defender):
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
         if self.is_frozen:
-            self.freeze_timer -= 1
+            self.freeze_timer -= GameSpeed.get_instance().current_multiplier
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= 1
+            self.cooldown_timer -= GameSpeed.get_instance().current_multiplier
             
         # Atualiza a duração do efeito visual
         if self.effect_duration > 0:
-            self.effect_duration -= 1
+            self.effect_duration -= GameSpeed.get_instance().current_multiplier
             
         # Procura alvo e atira
         if self.cooldown_timer <= 0:
@@ -465,18 +466,18 @@ class BlueDefender(Defender):
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
         if self.is_frozen:
-            self.freeze_timer -= 1
+            self.freeze_timer -= GameSpeed.get_instance().current_multiplier
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= 1
+            self.cooldown_timer -= GameSpeed.get_instance().current_multiplier
             
         # Atualiza a duração do efeito visual
         if self.effect_duration > 0:
-            self.effect_duration -= 1
+            self.effect_duration -= GameSpeed.get_instance().current_multiplier
             
         # Procura alvo e atira
         if self.cooldown_timer <= 0:
@@ -553,14 +554,14 @@ class OrangeDefender(Defender):
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
         if self.is_frozen:
-            self.freeze_timer -= 1
+            self.freeze_timer -= GameSpeed.get_instance().current_multiplier
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= 1
+            self.cooldown_timer -= GameSpeed.get_instance().current_multiplier
             
         # Procura alvos e atira
         if self.cooldown_timer <= 0:
@@ -594,18 +595,18 @@ class PurpleDefender(Defender):
     def update(self, enemies):
         # Atualiza o efeito de congelamento primeiro
         if self.is_frozen:
-            self.freeze_timer -= 1
+            self.freeze_timer -= GameSpeed.get_instance().current_multiplier
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
-            self.cooldown_timer -= 1
+            self.cooldown_timer -= GameSpeed.get_instance().current_multiplier
             
         # Atualiza a duração do efeito visual
         if self.effect_duration > 0:
-            self.effect_duration -= 1
+            self.effect_duration -= GameSpeed.get_instance().current_multiplier
             
         # Procura alvo e atira
         if self.cooldown_timer <= 0:

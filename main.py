@@ -6,7 +6,7 @@ import random
 from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy, ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss
 from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender, GreenDefender, OrangeDefender, PurpleDefender
 from wave_manager import WaveManager
-from base import Base, SkipButton
+from base import Base, SkipButton, SpeedButton
 from upgrade_menu import UpgradeMenu
 from spell import DamageSpell, FreezeSpell, DotSpell, SpellButton
 from mission_manager import MissionManager
@@ -111,8 +111,8 @@ def is_valid_placement(x, y, path, game_height, defenders, is_spell=False):
         # Verifica pontos em um raio de 20px ao redor do mouse
         for angle in range(0, 360, 45):
             rad = math.radians(angle)
-            check_x = x + 25 * math.cos(rad)
-            check_y = y + 25 * math.sin(rad)
+            check_x = x + 18 * math.cos(rad)
+            check_y = y + 13 * math.sin(rad)
             
             # Não pode colocar no caminho
             if is_point_on_path(check_x, check_y, path):
@@ -850,7 +850,7 @@ class SpellShopMenu:
             
             # Page indicator
             total_pages = (len(self.spells) + self.spells_per_page - 1) // self.spells_per_page
-            page_text = font.render(f"{self.current_page + 1}/{total_pages}", True, WHITE)
+            page_text = font_title.render(f"{self.current_page + 1}/{total_pages}", True, WHITE)
             page_rect = page_text.get_rect(centerx=panel_rect.centerx, bottom=panel_rect.bottom - 10)
             screen.blit(page_text, page_rect)
         
@@ -912,12 +912,13 @@ def main():
     mission_manager = MissionManager()
 
     # Interface
-    enemy_shop = EnemyShopMenu()  # Menu lateral de inimigos
-    defender_shop = DefenderShopMenu(mission_manager)  # Menu lateral de defensores
-    boss_shop = BossShopMenu()  # Menu lateral de chefões
-    spell_shop = SpellShopMenu()  # Menu lateral de feitiços
+    enemy_shop = EnemyShopMenu()
+    defender_shop = DefenderShopMenu(mission_manager)
+    boss_shop = BossShopMenu()
+    spell_shop = SpellShopMenu()
     selected_button = None
     skip_button = SkipButton()
+    speed_button = SpeedButton()
     base = Base()
     upgrade_menu = UpgradeMenu()
 
@@ -953,6 +954,10 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # Verifica clique no botão de velocidade
+                if speed_button.handle_click(mouse_pos):
+                    continue
+                    
                 # Verifica clique no botão de pular
                 if skip_button.handle_click(mouse_pos, wave_manager.wave_active):
                     wave_manager.skip_preparation()
@@ -1165,8 +1170,12 @@ def main():
             
         # Atualização dos inimigos
         for enemy in enemies[:]:
-            enemy.set_enemies_list(enemies)  # Atualiza a lista de inimigos
-            move_result = enemy.move()  # Agora pode retornar True, False, "died" ou "heal"
+            if isinstance(enemy, MagnetBoss):
+                enemy._all_defenders = defenders  # Passa a referência dos defensores para o boss
+            if isinstance(enemy, FreezeAuraEnemy):
+                enemy._all_defenders = defenders  # Passa a referência dos defensores para o inimigo gelado
+            enemy.set_enemies_list(enemies)  # Mantém o código existente
+            move_result = enemy.move()
             
             # Primeiro verifica se morreu por DoT
             if move_result == "died":  # Se morreu por DoT
@@ -1278,7 +1287,7 @@ def main():
         
         # Desenha o texto de ouro e orbes no canto inferior esquerdo
         font = pygame.font.Font(None, 28)
-        info_menu_rect = pygame.Rect(0, SCREEN_HEIGHT - 70, 200, 70)
+        info_menu_rect = pygame.Rect(0, SCREEN_HEIGHT - 70, 180, 70)
         pygame.draw.rect(screen, MENU_GRAY, info_menu_rect)
         pygame.draw.rect(screen, WHITE, info_menu_rect, 2)
         
@@ -1287,6 +1296,9 @@ def main():
         
         orb_text = font.render(f"Orbes: {mission_manager.orbes}", True, (50, 255, 50))
         screen.blit(orb_text, (20, SCREEN_HEIGHT - 30))
+        
+        # Desenha o botão de velocidade
+        speed_button.draw(screen)
         
         pygame.display.flip()
         clock.tick(60)

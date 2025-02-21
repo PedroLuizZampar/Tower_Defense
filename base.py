@@ -63,4 +63,53 @@ class SkipButton:
     def handle_click(self, pos, wave_active):
         if not wave_active and self.rect.collidepoint(pos):
             return True
+        return False
+
+class GameSpeed:
+    _instance = None
+    
+    def __init__(self):
+        self.multiplier = 1
+        self.is_active = False
+        
+    @classmethod
+    def get_instance(cls):
+        if cls._instance is None:
+            cls._instance = GameSpeed()
+        return cls._instance
+    
+    @property
+    def current_multiplier(self):
+        return 2 if self.is_active else 1
+
+class SpeedButton:
+    def __init__(self):
+        self.width = 150
+        self.height = 40
+        self.rect = pygame.Rect(10, 10, self.width, self.height)  # Posição no canto inferior esquerdo
+        self.game_speed = GameSpeed.get_instance()
+        
+    def draw(self, screen):
+        # Define as cores baseado no estado
+        if self.game_speed.is_active:
+            color = (50, 200, 50)  # Verde quando ativo
+            text = "Velocidade: 2x"
+        else:
+            color = (60, 60, 60)  # Cinza quando normal
+            text = "Velocidade: 1x"
+            
+        # Desenha o botão com borda
+        pygame.draw.rect(screen, color, self.rect)
+        pygame.draw.rect(screen, (255, 255, 255), self.rect, 2)  # Borda branca
+        
+        # Texto do botão
+        font = pygame.font.Font(None, 28)
+        text_surface = font.render(text, True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center=self.rect.center)
+        screen.blit(text_surface, text_rect)
+        
+    def handle_click(self, pos):
+        if self.rect.collidepoint(pos):
+            self.game_speed.is_active = not self.game_speed.is_active
+            return True
         return False 
