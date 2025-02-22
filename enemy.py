@@ -37,6 +37,7 @@ class Enemy:
         self.is_accelerated = False  # Flag para indicar se está sob efeito de aceleração
         self._all_enemies = []  # Referência para a lista de todos os inimigos
         self.original_color = self.COLOR  # Guarda a cor original
+        self.speed_boss_boost = False  # Nova flag para controlar o efeito visual
         
     @classmethod
     def should_spawn(cls):
@@ -171,8 +172,18 @@ class Enemy:
         dy = target_y - self.y
         distance = math.sqrt(dx ** 2 + dy ** 2)
         
-        # Usa a velocidade atual multiplicada pelo multiplicador global
-        current_speed = self.speed * GameSpeed.get_instance().current_multiplier
+        # Verifica se há um SpeedBoss no jogo
+        speed_multiplier = 1.0
+        for enemy in self._all_enemies:
+            if isinstance(enemy, SpeedBoss) and enemy != self:
+                speed_multiplier += SpeedBoss.SPEED_BOOST
+                self.speed_boss_boost = True
+                break
+        else:
+            self.speed_boss_boost = False
+        
+        # Usa a velocidade atual multiplicada pelo multiplicador global e o boost do boss
+        current_speed = self.speed * GameSpeed.get_instance().current_multiplier * speed_multiplier
         
         if distance < current_speed:
             self.path_index += 1
@@ -189,6 +200,14 @@ class Enemy:
     def draw(self, screen):
         # Desenha o círculo do inimigo
         pygame.draw.circle(screen, self.COLOR, (int(self.x), int(self.y)), self.radius)
+        
+        # Se estiver sob efeito do SpeedBoss, desenha partículas verdes
+        if self.speed_boss_boost and not isinstance(self, SpeedBoss):
+            for _ in range(2):  # Reduzido para 2 partículas para não ficar muito poluído
+                offset_x = random.randint(-self.radius, self.radius)
+                offset_y = random.randint(-self.radius, self.radius)
+                pygame.draw.circle(screen, (22, 102, 58), 
+                                 (int(self.x + offset_x), int(self.y + offset_y)), 2)
         
         # Desenha a barra de vida
         health_percentage = self.health / self.max_health
@@ -521,6 +540,17 @@ class StealthEnemy(Enemy):
                          (self.radius, self.radius), self.radius)
         screen.blit(enemy_surface, (int(self.x - self.radius), int(self.y - self.radius)))
         
+        # Se estiver sob efeito do SpeedBoss, desenha partículas verdes com a mesma opacidade
+        if self.speed_boss_boost:
+            for _ in range(2):
+                offset_x = random.randint(-self.radius, self.radius)
+                offset_y = random.randint(-self.radius, self.radius)
+                particle_surface = pygame.Surface((4, 4), pygame.SRCALPHA)
+                pygame.draw.circle(particle_surface, (22, 102, 58, int(opacity)), 
+                                 (2, 2), 2)
+                screen.blit(particle_surface, (int(self.x + offset_x - 2), 
+                                            int(self.y + offset_y - 2)))
+        
         # Desenha a barra de vida apenas se não estiver totalmente invisível
         if opacity > 0:
             health_percentage = self.health / self.max_health
@@ -558,47 +588,27 @@ class StealthEnemy(Enemy):
     
 class SpeedBoss(Enemy):
     COLOR = (22, 102, 58)  # Verde escuro
-    BASE_HEALTH = 1250  # Aumentado para 1250
-    BASE_SPEED = 1.2  # Velocidade reduzida
+    BASE_HEALTH = 1250  # Mantido
+    BASE_SPEED = 1.2  # Mantido
     NAME = "Veloz"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
-    REWARD = 50  # Recompensa em ouro
+    REWARD = 50  # Mantido
+    SPEED_BOOST = 0.25 # 25% de aumento de velocidade
     
     def __init__(self, path):
         super().__init__(path)
         self.radius = 20  # Raio maior que inimigos normais
-        self.speed_interval = 300  # 5 segundos entre ativações
-        self.speed_duration = 120  # 2 segundos de duração
-        self.speed_timer = self.speed_duration  # Começa com o timer cheio
-        self.is_accelerated = False  # Não começa acelerado
-        self.in_speed_phase = False  # Controla se está na fase de velocidade ou intervalo
-        
-    def update(self):
-        result = super().update()
-        
-        # Atualiza o timer da velocidade
-        if self.speed_timer > 0:
-            self.speed_timer -= GameSpeed.get_instance().current_multiplier
-            if self.speed_timer <= 0:
-                if self.in_speed_phase:
-                    # Terminou fase de velocidade, começa intervalo
-                    self.speed_timer = self.speed_interval
-                    self.is_accelerated = False
-                    self.in_speed_phase = False
-                else:
-                    # Terminou intervalo, começa velocidade
-                    self.speed_timer = self.speed_duration
-                    self.is_accelerated = True
-                    self.in_speed_phase = True
-                    # Aplica velocidade em todos os inimigos
-                    for enemy in self._all_enemies:
-                        if enemy != self:  # Não aplica em si mesmo
-                            enemy.apply_speed(self.speed_duration)
-                
-        return result
         
     def draw(self, screen):
-        # Desenha o inimigo normalmente
+        # Desenha o boss com uma aura verde constante
+        aura_surface = pygame.Surface((self.radius * 3, self.radius * 3), pygame.SRCALPHA)
+        pygame.draw.circle(aura_surface, (*self.COLOR, 50), 
+                         (self.radius * 1.5, self.radius * 1.5), 
+                         self.radius * 1.5)
+        screen.blit(aura_surface, (int(self.x - self.radius * 1.5), 
+                                 int(self.y - self.radius * 1.5)))
+        
+        # Desenha o boss normalmente
         super().draw(screen)
 
 class SplitBoss(Enemy):
