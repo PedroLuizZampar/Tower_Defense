@@ -159,12 +159,21 @@ class Defender:
         if self.cooldown_timer <= 0:
             target = self.find_target(enemies)
             if target:
-                projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
-                projectile.damage = self.get_total_damage()
-                self.projectiles.append(projectile)
-                self.cooldown_timer = self.attack_cooldown
-                self.has_damage_buff = False  # Remove o buff após o ataque
-                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                if hasattr(target, "is_dying"):
+                    if not target.is_dying:
+                        projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                        projectile.damage = self.get_total_damage()
+                        self.projectiles.append(projectile)
+                        self.cooldown_timer = self.attack_cooldown
+                        self.has_damage_buff = False  # Remove o buff após o ataque
+                        self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                else:
+                    projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                    projectile.damage = self.get_total_damage()
+                    self.projectiles.append(projectile)
+                    self.cooldown_timer = self.attack_cooldown
+                    self.has_damage_buff = False  # Remove o buff após o ataque
+                    self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
 
     def draw(self, screen, show_range=False):
         # Desenha o range se solicitado ou se selecionado
@@ -284,24 +293,45 @@ class RedDefender(Defender):
         if self.cooldown_timer <= 0:
             target = self.find_target(enemies)
             if target:
-                projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
-                projectile.damage = self.get_total_damage()
-                self.projectiles.append(projectile)
-                self.cooldown_timer = self.attack_cooldown
-                self.has_damage_buff = False  # Remove o buff após o ataque
-                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
-                
-                # Incrementa o contador de ataques
-                self.attack_counter += 1
-                
-                # Se atingiu o número necessário de ataques, ativa a habilidade especial
-                if self.attack_counter >= self.HITS_TO_ACTIVATE:
-                    self.attack_counter = 0  # Reseta o contador
-                    self.effect_duration = 60  # 1 segundo de efeito visual
-                    # Aplica dano ao longo do tempo em todos os inimigos no alcance
-                    dot_damage = projectile.damage * 0.5  # 50% do dano normal
-                    for enemy in self.get_enemies_in_range(enemies):
-                        enemy.apply_dot(dot_damage, duration_frames=180)
+                if hasattr(target, "is_dying"):
+                    if not target.is_dying:
+                        projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                        projectile.damage = self.get_total_damage()
+                        self.projectiles.append(projectile)
+                        self.cooldown_timer = self.attack_cooldown
+                        self.has_damage_buff = False  # Remove o buff após o ataque
+                        self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                        
+                        # Incrementa o contador de ataques
+                        self.attack_counter += 1
+                        
+                        # Se atingiu o número necessário de ataques, ativa a habilidade especial
+                        if self.attack_counter >= self.HITS_TO_ACTIVATE:
+                            self.attack_counter = 0  # Reseta o contador
+                            self.effect_duration = 60  # 1 segundo de efeito visual
+                            # Aplica dano ao longo do tempo em todos os inimigos no alcance
+                            dot_damage = projectile.damage * 0.5  # 50% do dano normal
+                            for enemy in self.get_enemies_in_range(enemies):
+                                enemy.apply_dot(dot_damage, duration_frames=180)
+                else:
+                    projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                    projectile.damage = self.get_total_damage()
+                    self.projectiles.append(projectile)
+                    self.cooldown_timer = self.attack_cooldown
+                    self.has_damage_buff = False  # Remove o buff após o ataque
+                    self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                    
+                    # Incrementa o contador de ataques
+                    self.attack_counter += 1
+                    
+                    # Se atingiu o número necessário de ataques, ativa a habilidade especial
+                    if self.attack_counter >= self.HITS_TO_ACTIVATE:
+                        self.attack_counter = 0  # Reseta o contador
+                        self.effect_duration = 60  # 1 segundo de efeito visual
+                        # Aplica dano ao longo do tempo em todos os inimigos no alcance
+                        dot_damage = projectile.damage * 0.5  # 50% do dano normal
+                        for enemy in self.get_enemies_in_range(enemies):
+                            enemy.apply_dot(dot_damage, duration_frames=180)
 
     def draw(self, screen, show_range=False):
         # Desenha o efeito de queimadura se estiver ativo
@@ -351,23 +381,43 @@ class YellowDefender(Defender):
         if self.cooldown_timer <= 0:
             target = self.find_target(enemies)
             if target:
-                projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
-                projectile.damage = self.get_total_damage()
-                self.projectiles.append(projectile)
-                self.cooldown_timer = self.attack_cooldown
-                self.has_damage_buff = False  # Remove o buff após o ataque
-                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
-                
-                # Incrementa o contador de ataques
-                self.attack_counter += 1
-                
-                # Se atingiu o número necessário de ataques, ativa a habilidade especial
-                if self.attack_counter >= self.HITS_TO_ACTIVATE and defenders:
-                    self.attack_counter = 0  # Reseta o contador
-                    self.effect_duration = 60  # 1 segundo de efeito visual
-                    # Aplica buff de dano em todos os defensores no alcance
-                    for defender in self.get_defenders_in_range(defenders):
-                        defender.apply_damage_buff()
+                if hasattr(target, "is_dying"):
+                    if not target.is_dying:
+                        projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                        projectile.damage = self.get_total_damage()
+                        self.projectiles.append(projectile)
+                        self.cooldown_timer = self.attack_cooldown
+                        self.has_damage_buff = False  # Remove o buff após o ataque
+                        self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                        
+                        # Incrementa o contador de ataques
+                        self.attack_counter += 1
+                        
+                        # Se atingiu o número necessário de ataques, ativa a habilidade especial
+                        if self.attack_counter >= self.HITS_TO_ACTIVATE and defenders:
+                            self.attack_counter = 0  # Reseta o contador
+                            self.effect_duration = 60  # 1 segundo de efeito visual
+                            # Aplica buff de dano em todos os defensores no alcance
+                            for defender in self.get_defenders_in_range(defenders):
+                                defender.apply_damage_buff()
+                else:
+                    projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                    projectile.damage = self.get_total_damage()
+                    self.projectiles.append(projectile)
+                    self.cooldown_timer = self.attack_cooldown
+                    self.has_damage_buff = False  # Remove o buff após o ataque
+                    self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                    
+                    # Incrementa o contador de ataques
+                    self.attack_counter += 1
+                    
+                    # Se atingiu o número necessário de ataques, ativa a habilidade especial
+                    if self.attack_counter >= self.HITS_TO_ACTIVATE and defenders:
+                        self.attack_counter = 0  # Reseta o contador
+                        self.effect_duration = 60  # 1 segundo de efeito visual
+                        # Aplica buff de dano em todos os defensores no alcance
+                        for defender in self.get_defenders_in_range(defenders):
+                            defender.apply_damage_buff()
 
     def draw(self, screen, show_range=False):
         # Desenha o efeito de buff se estiver ativo
@@ -417,23 +467,43 @@ class GreenDefender(Defender):
         if self.cooldown_timer <= 0:
             target = self.find_target(enemies)
             if target:
-                projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
-                projectile.damage = self.get_total_damage()
-                self.projectiles.append(projectile)
-                self.cooldown_timer = self.attack_cooldown
-                self.has_damage_buff = False  # Remove o buff após o ataque
-                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
-                
-                # Incrementa o contador de ataques
-                self.attack_counter += 1
-                
-                # Se atingiu o número necessário de ataques, ativa a habilidade especial
-                if self.attack_counter >= self.HITS_TO_ACTIVATE:
-                    self.attack_counter = 0  # Reseta o contador
-                    self.effect_duration = 60  # 1 segundo de efeito visual
-                    # Aplica slow em todos os inimigos no alcance
-                    for enemy in self.get_enemies_in_range(enemies):
-                        enemy.apply_slow(180)  # 3 segundos de slow
+                if hasattr(target, "is_dying"):
+                    if not target.is_dying:
+                        projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                        projectile.damage = self.get_total_damage()
+                        self.projectiles.append(projectile)
+                        self.cooldown_timer = self.attack_cooldown
+                        self.has_damage_buff = False  # Remove o buff após o ataque
+                        self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                        
+                        # Incrementa o contador de ataques
+                        self.attack_counter += 1
+                        
+                        # Se atingiu o número necessário de ataques, ativa a habilidade especial
+                        if self.attack_counter >= self.HITS_TO_ACTIVATE:
+                            self.attack_counter = 0  # Reseta o contador
+                            self.effect_duration = 60  # 1 segundo de efeito visual
+                            # Aplica slow em todos os inimigos no alcance
+                            for enemy in self.get_enemies_in_range(enemies):
+                                enemy.apply_slow(180)  # 3 segundos de slow'
+                else:
+                    projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                    projectile.damage = self.get_total_damage()
+                    self.projectiles.append(projectile)
+                    self.cooldown_timer = self.attack_cooldown
+                    self.has_damage_buff = False  # Remove o buff após o ataque
+                    self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                    
+                    # Incrementa o contador de ataques
+                    self.attack_counter += 1
+                    
+                    # Se atingiu o número necessário de ataques, ativa a habilidade especial
+                    if self.attack_counter >= self.HITS_TO_ACTIVATE:
+                        self.attack_counter = 0  # Reseta o contador
+                        self.effect_duration = 60  # 1 segundo de efeito visual
+                        # Aplica slow em todos os inimigos no alcance
+                        for enemy in self.get_enemies_in_range(enemies):
+                            enemy.apply_slow(180)  # 3 segundos de slow'
 
     def draw(self, screen, show_range=False):
         # Desenha o efeito de slow se estiver ativo
@@ -483,23 +553,43 @@ class BlueDefender(Defender):
         if self.cooldown_timer <= 0:
             target = self.find_target(enemies)
             if target:
-                projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
-                projectile.damage = self.get_total_damage()
-                self.projectiles.append(projectile)
-                self.cooldown_timer = self.attack_cooldown
-                self.has_damage_buff = False  # Remove o buff após o ataque
-                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
-                
-                # Incrementa o contador de ataques
-                self.attack_counter += 1
-                
-                # Se atingiu o número necessário de ataques, ativa a habilidade especial
-                if self.attack_counter >= self.HITS_TO_ACTIVATE:
-                    self.attack_counter = 0  # Reseta o contador
-                    self.effect_duration = 60  # 1 segundo de efeito visual
-                    # Aplica freeze em todos os inimigos no alcance
-                    for enemy in self.get_enemies_in_range(enemies):
-                        enemy.apply_freeze(90)  # 1.5 segundos de freeze
+                if hasattr(target, "is_dying"):
+                    if not target.is_dying:
+                        projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                        projectile.damage = self.get_total_damage()
+                        self.projectiles.append(projectile)
+                        self.cooldown_timer = self.attack_cooldown
+                        self.has_damage_buff = False  # Remove o buff após o ataque
+                        self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                        
+                        # Incrementa o contador de ataques
+                        self.attack_counter += 1
+                        
+                        # Se atingiu o número necessário de ataques, ativa a habilidade especial
+                        if self.attack_counter >= self.HITS_TO_ACTIVATE:
+                            self.attack_counter = 0  # Reseta o contador
+                            self.effect_duration = 60  # 1 segundo de efeito visual
+                            # Aplica freeze em todos os inimigos no alcance
+                            for enemy in self.get_enemies_in_range(enemies):
+                                enemy.apply_freeze(90)  # 1.5 segundos de freeze
+                else:
+                    projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                    projectile.damage = self.get_total_damage()
+                    self.projectiles.append(projectile)
+                    self.cooldown_timer = self.attack_cooldown
+                    self.has_damage_buff = False  # Remove o buff após o ataque
+                    self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                    
+                    # Incrementa o contador de ataques
+                    self.attack_counter += 1
+                    
+                    # Se atingiu o número necessário de ataques, ativa a habilidade especial
+                    if self.attack_counter >= self.HITS_TO_ACTIVATE:
+                        self.attack_counter = 0  # Reseta o contador
+                        self.effect_duration = 60  # 1 segundo de efeito visual
+                        # Aplica freeze em todos os inimigos no alcance
+                        for enemy in self.get_enemies_in_range(enemies):
+                            enemy.apply_freeze(90)  # 1.5 segundos de freeze
 
     def draw(self, screen, show_range=False):
         # Desenha o efeito de congelamento se estiver ativo
@@ -568,9 +658,15 @@ class OrangeDefender(Defender):
             targets = self.find_targets(enemies)
             if targets:
                 for target in targets:
-                    projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
-                    projectile.damage = self.get_total_damage()
-                    self.projectiles.append(projectile)
+                    if hasattr(target, "is_dying"):
+                        if not target.is_dying:
+                            projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                            projectile.damage = self.get_total_damage()
+                            self.projectiles.append(projectile)
+                    else:
+                        projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                        projectile.damage = self.get_total_damage()
+                        self.projectiles.append(projectile)
                 self.cooldown_timer = self.attack_cooldown
                 self.has_damage_buff = False  # Remove o buff após o ataque
                 self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
@@ -612,24 +708,45 @@ class PurpleDefender(Defender):
         if self.cooldown_timer <= 0:
             target = self.find_target(enemies)
             if target:
-                projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
-                projectile.damage = self.get_total_damage()
-                self.projectiles.append(projectile)
-                self.cooldown_timer = self.attack_cooldown
-                self.has_damage_buff = False  # Remove o buff após o ataque
-                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
-                
-                # Incrementa o contador de hits
-                self.hits_counter += 1
-                
-                # Se atingiu o número necessário de hits, aplica fraqueza em todos os inimigos no alcance
-                if self.hits_counter >= self.HITS_TO_ACTIVATE:
-                    self.hits_counter = 0  # Reseta o contador
-                    self.effect_duration = 60  # 1 segundo de efeito visual
-                    # Aplica fraqueza em todos os inimigos no alcance
-                    for enemy in self.get_enemies_in_range(enemies):
-                        enemy.apply_weakness()  # Aplica o efeito de fraqueza
-                return projectile
+                if hasattr(target, "is_dying"):
+                    if not target.is_dying:
+                        projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                        projectile.damage = self.get_total_damage()
+                        self.projectiles.append(projectile)
+                        self.cooldown_timer = self.attack_cooldown
+                        self.has_damage_buff = False  # Remove o buff após o ataque
+                        self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                        
+                        # Incrementa o contador de hits
+                        self.hits_counter += 1
+                        
+                        # Se atingiu o número necessário de hits, aplica fraqueza em todos os inimigos no alcance
+                        if self.hits_counter >= self.HITS_TO_ACTIVATE:
+                            self.hits_counter = 0  # Reseta o contador
+                            self.effect_duration = 60  # 1 segundo de efeito visual
+                            # Aplica fraqueza em todos os inimigos no alcance
+                            for enemy in self.get_enemies_in_range(enemies):
+                                enemy.apply_weakness()  # Aplica o efeito de fraqueza
+                        return projectile
+                else:
+                    projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                    projectile.damage = self.get_total_damage()
+                    self.projectiles.append(projectile)
+                    self.cooldown_timer = self.attack_cooldown
+                    self.has_damage_buff = False  # Remove o buff após o ataque
+                    self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
+                    
+                    # Incrementa o contador de hits
+                    self.hits_counter += 1
+                    
+                    # Se atingiu o número necessário de hits, aplica fraqueza em todos os inimigos no alcance
+                    if self.hits_counter >= self.HITS_TO_ACTIVATE:
+                        self.hits_counter = 0  # Reseta o contador
+                        self.effect_duration = 60  # 1 segundo de efeito visual
+                        # Aplica fraqueza em todos os inimigos no alcance
+                        for enemy in self.get_enemies_in_range(enemies):
+                            enemy.apply_weakness()  # Aplica o efeito de fraqueza
+                    return projectile
         return None
         
     def draw(self, screen, show_range=False):
