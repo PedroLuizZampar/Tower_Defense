@@ -59,7 +59,7 @@ class Defender:
         cost = self.get_upgrade_cost()
         self.level += 1
         self.total_invested += cost
-        self.bonus_damage += round(self.get_total_damage() * 0.1, 1)
+        self.bonus_damage += round(self.get_total_damage() * 0.2, 1)
         self.attack_cooldown = self.base_attack_cooldown * (0.99 ** (self.level - 1))
         self.upgrades_count += 1
         return cost
@@ -247,7 +247,7 @@ class BasicDefender(Defender):
     PROJECTILE_COLOR = (66, 86, 110)  # Cinza azulado escuro mais claro
     COST = 50  # Defensor mais barato
     NAME = "Básico"
-    BASE_DAMAGE = 9
+    BASE_DAMAGE = 10
     BASE_ATTACK_COOLDOWN = 30
     RANGE = 130
     HITS_TO_ACTIVATE = 0
@@ -349,8 +349,8 @@ class YellowDefender(Defender):
     PROJECTILE_COLOR = (255, 255, 150)  # Amarelo claro
     COST = 100
     NAME = "Luminoso"
-    BASE_DAMAGE = 15
-    BASE_ATTACK_COOLDOWN = 45
+    BASE_DAMAGE = 20
+    BASE_ATTACK_COOLDOWN = 50
     UNLOCK_COST = 3
     RANGE = 200
     HITS_TO_ACTIVATE = 8

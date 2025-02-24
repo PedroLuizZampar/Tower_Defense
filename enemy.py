@@ -241,11 +241,11 @@ class Enemy:
 
 class TankEnemy(Enemy):
     COLOR = (150, 75, 0)  # Marrom
-    BASE_HEALTH = 250  # Aumentado para 250
+    BASE_HEALTH = 220  # Aumentado para 220
     BASE_SPEED = 1.0  # Reduzido para 1.0
     SPAWN_CHANCE = 15  # Reduzido para 15%
     NAME = "Tanque"  # Nome do inimigo tanque
-    REWARD = 6  # Recompensa em ouro
+    REWARD = 3  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -262,10 +262,10 @@ class TankEnemy(Enemy):
 class SpeedEnemy(Enemy):
     COLOR = (50, 255, 50)  # Verde
     BASE_HEALTH = 50  # Reduzido para 50
-    BASE_SPEED = 3.2  # Aumentado para 3.2
+    BASE_SPEED = 3.0  # Aumentado para 3.0
     SPAWN_CHANCE = 25  # Reduzido para 25%
     NAME = "Célere"  # Nome do inimigo veloz
-    REWARD = 3  # Recompensa em ouro
+    REWARD = 1  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -281,7 +281,7 @@ class ArmoredEnemy(Enemy):
     BASE_SPEED = 1.4  # Reduzido para 1.4
     SPAWN_CHANCE = 20  # Reduzido para 20%
     NAME = "Blindado"  # Nome do inimigo blindado
-    REWARD = 6  # Recompensa em ouro
+    REWARD = 3  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -299,7 +299,7 @@ class HealerEnemy(Enemy):
     BASE_SPEED = 1.6  # Ajustado para 1.6
     SPAWN_CHANCE = 15  # Reduzido para 15%
     NAME = "Curador"  # Nome do inimigo curador
-    REWARD = 4  # Recompensa em ouro
+    REWARD = 3  # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -365,10 +365,10 @@ class HealerEnemy(Enemy):
 class FreezeAuraEnemy(Enemy):
     COLOR = (135, 206, 235)  # Azul claro
     BASE_HEALTH = 100
-    BASE_SPEED = 2.0
+    BASE_SPEED = 1.8
     SPAWN_CHANCE = 15
     NAME = "Gelado"
-    REWARD = 4
+    REWARD = 2
     
     def __init__(self, path):
         super().__init__(path)
@@ -442,11 +442,11 @@ class FreezeAuraEnemy(Enemy):
 
 class RageEnemy(Enemy):
     COLOR = (139, 0, 0)  # Vermelho escuro
-    BASE_HEALTH = 140  # Reduzido para 140
+    BASE_HEALTH = 130  # Reduzido para 130
     BASE_SPEED = 1.6  # Ajustado para 1.6
     SPAWN_CHANCE = 20  # Reduzido para 20%
     NAME = "Furioso"
-    REWARD = 5  # Recompensa em ouro
+    REWARD = 4 # Recompensa em ouro
     
     def __init__(self, path):
         super().__init__(path)
@@ -588,12 +588,12 @@ class StealthEnemy(Enemy):
     
 class SpeedBoss(Enemy):
     COLOR = (22, 102, 58)  # Verde escuro
-    BASE_HEALTH = 1250  # Mantido
+    BASE_HEALTH = 850  # Mantido
     BASE_SPEED = 1.2  # Mantido
     NAME = "Veloz"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
     REWARD = 50  # Mantido
-    SPEED_BOOST = 0.25 # 25% de aumento de velocidade
+    SPEED_BOOST = 0.30 # 30% de aumento de velocidade
     
     def __init__(self, path):
         super().__init__(path)
@@ -613,8 +613,8 @@ class SpeedBoss(Enemy):
 
 class SplitBoss(Enemy):
     COLOR = (217, 217, 0)  # Amarelo
-    BASE_HEALTH = 1800  # Vida base
-    BASE_SPEED = 1.0  # Velocidade
+    BASE_HEALTH = 600  # Vida base
+    BASE_SPEED = 1.2  # Velocidade
     NAME = "Divisor"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
     REWARD = 50  # Recompensa em ouro
@@ -647,8 +647,8 @@ class SplitBoss(Enemy):
 class SplitMinion(Enemy):
     """Classe para os minions criados quando o SplitBoss é derrotado"""
     COLOR = (245, 245, 86)  # Amarelo claro
-    BASE_HEALTH = 720  # 40% da vida do boss
-    BASE_SPEED = 1.5  # +50% da velocidade do boss
+    BASE_HEALTH = 300  # 50% da vida do boss
+    BASE_SPEED = 1.8  # +50% da velocidade do boss
     NAME = "Dividido"
     SPAWN_CHANCE = 0
     REWARD = 10  # Recompensa em ouro
@@ -668,7 +668,7 @@ class SplitMinion(Enemy):
 
 class MagnetBoss(Enemy):
     COLOR = (200, 0, 0)  # Vermelho intenso
-    BASE_HEALTH = 1600  # Vida base
+    BASE_HEALTH = 1250  # Vida base
     BASE_SPEED = 0.85  # Velocidade reduzida
     NAME = "Magnético"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
@@ -726,7 +726,7 @@ class MagnetBoss(Enemy):
 
 class VampiricBoss(Enemy):
     COLOR = (20, 0, 0)  # Preto avermelhado
-    BASE_HEALTH = 1400  # Vida base
+    BASE_HEALTH = 600  # Vida base
     BASE_SPEED = 1.1  # Velocidade
     NAME = "Vampiro"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
@@ -791,7 +791,7 @@ class VampiricBoss(Enemy):
 
 class ImmunityBoss(Enemy):
     COLOR = (255, 255, 255)  # Branco
-    BASE_HEALTH = 1250  # Aumentado para 1250
+    BASE_HEALTH = 800  # Aumentado para 1250
     BASE_SPEED = 0.8  # Velocidade reduzida
     NAME = "Protetor"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente

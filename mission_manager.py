@@ -39,10 +39,10 @@ class Mission:
 class MissionManager:    
     def __init__(self):
         self.missions = [
-            Mission("Elimine 25 inimigos", 25, 1),  # 1 orbes de recompensa
-            Mission("Elimine 100 inimigos", 100, 3),  # 3 orbes de recompensa
-            Mission("Sobreviva 5 ondas", 5, 1),      # 1 orbes de recompensa
-            Mission("Sobreviva 10 ondas", 10, 2)      # 2 orbes de recompensa
+            Mission("Elimine 25 inimigos", 25, 1),  # 1 orbe de recompensa
+            Mission("Elimine 100 inimigos", 100, 1),  # 1 orbe de recompensa
+            Mission("Sobreviva 5 ondas", 5, 1),      # 1 orbe de recompensa
+            Mission("Sobreviva 10 ondas", 10, 1)      # 1 orbe de recompensa
         ]
         self.total_kills = 0
         self.current_wave = 1
@@ -149,7 +149,7 @@ class MissionManager:
                     pygame.draw.rect(screen, (50, 200, 50), button_rect)
                     pygame.draw.rect(screen, (255, 255, 255), button_rect, 1)
                     
-                    claim_text = font.render(f"{mission.reward} Orbe" if mission.reward == 1 else f"{mission.reward} Orbes", True, (255, 255, 255))
+                    claim_text = font.render(f"Resgatar", True, (255, 255, 255))
                     text_rect = claim_text.get_rect(center=button_rect.center)
                     screen.blit(claim_text, text_rect)
                     

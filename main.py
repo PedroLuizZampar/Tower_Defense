@@ -906,7 +906,7 @@ def main():
 
     # Sistema de ondas e recursos
     wave_manager = WaveManager()
-    gold = 300  # Ouro inicial
+    gold = 350  # Ouro inicial
     
     # Sistema de missões
     mission_manager = MissionManager()
@@ -1108,7 +1108,7 @@ def main():
                         
                         # Adiciona orbes para bosses
                         if isinstance(enemy, (ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss)):
-                            mission_manager.orbes += 3
+                            mission_manager.orbes += 1
                             
                         if enemy in enemies:  # Verifica se o inimigo ainda está na lista
                             enemies.remove(enemy)

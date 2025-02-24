@@ -94,7 +94,7 @@ class DamageSpell(Spell):
         if self.active and not self.effect_applied:
             affected = self.affect_enemies(enemies)
             for enemy in affected[:]:
-                damage = self.get_damage() * (1 - enemy.damage_reduction) if isinstance(enemy, ArmoredEnemy) else self.get_damage()
+                damage = self.get_damage()
                 damage_result = enemy.take_damage(damage)
                 
                 if damage_result:  # Se o inimigo morreu
