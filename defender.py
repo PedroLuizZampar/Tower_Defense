@@ -247,7 +247,7 @@ class BasicDefender(Defender):
     PROJECTILE_COLOR = (66, 86, 110)  # Cinza azulado escuro mais claro
     COST = 50  # Defensor mais barato
     NAME = "Básico"
-    BASE_DAMAGE = 10
+    BASE_DAMAGE = 11
     BASE_ATTACK_COOLDOWN = 30
     RANGE = 130
     HITS_TO_ACTIVATE = 0
@@ -260,7 +260,7 @@ class RedDefender(Defender):
     PROJECTILE_COLOR = (255, 100, 100)  # Vermelho claro
     COST = 75
     NAME = "Flamejante"
-    BASE_DAMAGE = 8
+    BASE_DAMAGE = 9
     BASE_ATTACK_COOLDOWN = 25
     UNLOCK_COST = 2
     RANGE = 140
@@ -521,8 +521,8 @@ class BlueDefender(Defender):
     PROJECTILE_COLOR = (43, 181, 255)  # Azul claro
     COST = 150
     NAME = "Congelante"
-    BASE_DAMAGE = 8
-    BASE_ATTACK_COOLDOWN = 32
+    BASE_DAMAGE = 9
+    BASE_ATTACK_COOLDOWN = 35
     UNLOCK_COST = 5
     RANGE = 140
     HITS_TO_ACTIVATE = 8
@@ -607,7 +607,7 @@ class OrangeDefender(Defender):
     PROJECTILE_COLOR = (255, 165, 0)  # Laranja mais claro
     COST = 175
     NAME = "Duplo"
-    BASE_DAMAGE = 8
+    BASE_DAMAGE = 10
     BASE_ATTACK_COOLDOWN = 35
     RANGE = 160
     UNLOCK_COST = 6

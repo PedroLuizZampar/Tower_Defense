@@ -1144,23 +1144,23 @@ def main():
         spawn_result = wave_manager.should_spawn_enemy()
         if spawn_result:
             if spawn_result == "immunity_boss":
-                immunity_boss = ImmunityBoss(PATH)
+                immunity_boss = ImmunityBoss(PATH, wave_manager)
                 immunity_boss.set_enemies_list(enemies)
                 enemies.append(immunity_boss)
             elif spawn_result == "speed_boss":
-                speed_boss = SpeedBoss(PATH)
+                speed_boss = SpeedBoss(PATH, wave_manager)
                 speed_boss.set_enemies_list(enemies)
                 enemies.append(speed_boss)
             elif spawn_result == "magnet_boss":
-                magnet_boss = MagnetBoss(PATH)
+                magnet_boss = MagnetBoss(PATH, wave_manager)
                 magnet_boss.set_enemies_list(enemies)
                 enemies.append(magnet_boss)
             elif spawn_result == "vampiric_boss":
-                vampiric_boss = VampiricBoss(PATH)
+                vampiric_boss = VampiricBoss(PATH, wave_manager)
                 vampiric_boss.set_enemies_list(enemies)
                 enemies.append(vampiric_boss)
             elif spawn_result == "split_boss":
-                split_boss = SplitBoss(PATH)
+                split_boss = SplitBoss(PATH, wave_manager)
                 split_boss.set_enemies_list(enemies)
                 enemies.append(split_boss)
             else:

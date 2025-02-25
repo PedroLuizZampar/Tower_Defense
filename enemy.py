@@ -1,7 +1,9 @@
 import pygame
 import math
+from math import ceil
 import random
-from base import GameSpeed  # Adicione no topo do arquivo
+from base import GameSpeed  # Adicione no topo do arquivo]
+from wave_manager import WaveManager
 
 class Enemy:
     COLOR = (225, 148, 255)  # Cor padrão roxa
@@ -11,14 +13,14 @@ class Enemy:
     NAME = "Básico"  # Nome do inimigo padrão
     REWARD = 2  # Recompensa em ouro
     
-    def __init__(self, path):
+    def __init__(self, path, wave_manager):
         self.radius = 12
         self.path_index = 0
         self.path = path
         self.x, self.y = path[0]
         self.base_speed = self.BASE_SPEED
         self.speed = self.base_speed
-        self.max_health = self.BASE_HEALTH
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
         self.health = self.max_health
         self.freeze_timer = 0
         self.is_frozen = False
@@ -190,11 +192,13 @@ class Enemy:
             if self.path_index < len(self.path) - 1:
                 self.x, self.y = self.path[self.path_index]
         else:
-            dx = dx / distance * current_speed
-            dy = dy / distance * current_speed
+            if distance != 0:
+                dx = dx / distance * current_speed
+                dy = dy / distance * current_speed
+            else:
+                dx, dy = 0, 0  # Ou alguma outra lógica para evitar a divisão
             self.x += dx
-            self.y += dy
-            
+            self.y += dy            
         return False
         
     def draw(self, screen):
@@ -247,9 +251,11 @@ class TankEnemy(Enemy):
     NAME = "Tanque"  # Nome do inimigo tanque
     REWARD = 3  # Recompensa em ouro
     
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, wave_manager):
+        super().__init__(path, wave_manager)
         self.radius = 16  # Aumentado para 16
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
+        self.health = self.max_health
         
     def apply_freeze(self, duration_frames=120):
         # Imune a freeze
@@ -267,9 +273,11 @@ class SpeedEnemy(Enemy):
     NAME = "Célere"  # Nome do inimigo veloz
     REWARD = 1  # Recompensa em ouro
     
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, wave_manager):
+        super().__init__(path, wave_manager)
         self.radius = 8  # Reduzido para 8
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
+        self.health = self.max_health
         
     def apply_dot(self, damage, duration_frames=120):
         # Imune a DoT
@@ -283,9 +291,11 @@ class ArmoredEnemy(Enemy):
     NAME = "Blindado"  # Nome do inimigo blindado
     REWARD = 3  # Recompensa em ouro
     
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, wave_manager):
+        super().__init__(path, wave_manager)
         self.damage_reduction = 0.30  # Aumentado para 30%
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
+        self.health = self.max_health
         
     def take_damage(self, damage):
         # Reduz o dano recebido
@@ -301,13 +311,15 @@ class HealerEnemy(Enemy):
     NAME = "Curador"  # Nome do inimigo curador
     REWARD = 3  # Recompensa em ouro
     
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, wave_manager):
+        super().__init__(path, wave_manager)
         self.radius = 10
         self.heal_timer = 60
         self.heal_amount = 10
         self.heal_radius = 150
         self.heal_effect_duration = 0  # Novo: duração do efeito visual
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
+        self.health = self.max_health
         
     def heal_nearby_enemies(self):
         """Cura inimigos próximos"""
@@ -370,13 +382,15 @@ class FreezeAuraEnemy(Enemy):
     NAME = "Gelado"
     REWARD = 2
     
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, wave_manager):
+        super().__init__(path, wave_manager)
         self.radius = 11
         self.freeze_radius = 100
         self._all_defenders = []
         self.aura_duration = 60  # 1 segundo de efeito
         self.is_dying = False  # Flag para controlar o estado de morte
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
+        self.health = self.max_health
         
     def take_damage(self, damage):
         self.health -= damage
@@ -448,11 +462,13 @@ class RageEnemy(Enemy):
     NAME = "Furioso"
     REWARD = 4 # Recompensa em ouro
     
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, wave_manager):
+        super().__init__(path, wave_manager)
         self.radius = 13
         self.original_speed = self.speed
         self.max_speed_multiplier = 2.5  # Reduzido para 2.5x
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
+        self.health = self.max_health
         
     def update(self):
         result = super().update()
@@ -495,14 +511,16 @@ class StealthEnemy(Enemy):
     NAME = "Furtivo"
     REWARD = 3  # Recompensa em ouro
     
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, wave_manager):
+        super().__init__(path, wave_manager)
         self.radius = 10
         self.stealth_timer = 0
         self.stealth_interval = 60  # Aumentado para 1 segundo
         self.stealth_duration = 60  # Ajustado para 1 segundo
         self.is_stealthed = False
         self.fade_start = 20  # Frames para começar a aparecer/desaparecer
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
+        self.health = self.max_health
         
     def update(self):
         result = super().update()
@@ -593,11 +611,13 @@ class SpeedBoss(Enemy):
     NAME = "Veloz"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
     REWARD = 50  # Mantido
-    SPEED_BOOST = 0.30 # 30% de aumento de velocidade
+    SPEED_BOOST = 0.20 # 20% de aumento de velocidade
     
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, wave_manager):
+        super().__init__(path, wave_manager)
         self.radius = 20  # Raio maior que inimigos normais
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
+        self.health = self.max_health
         
     def draw(self, screen):
         # Desenha o boss com uma aura verde constante
@@ -618,12 +638,17 @@ class SplitBoss(Enemy):
     NAME = "Divisor"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
     REWARD = 50  # Recompensa em ouro
+    wave_manager_global = None
     
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, wave_manager):
+        super().__init__(path, wave_manager)
+        global wave_manager_global
         self.radius = 20  # Raio maior que inimigos normais
         self.has_split = False  # Controla se já se dividiu
         self.original_color = self.COLOR
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
+        self.health = self.max_health
+        wave_manager_global = wave_manager
         
     def take_damage(self, damage):
         """Sobrescreve o método take_damage para implementar a mecânica de divisão"""
@@ -640,7 +665,7 @@ class SplitBoss(Enemy):
         # Cria dois minions em posições diferentes
         offsets = [(-20, -20), (20, 20)]  # Deslocamentos para cada minion
         for offset_x, offset_y in offsets:
-            split = SplitMinion(self.path, self.path_index, self.x + offset_x, self.y + offset_y)
+            split = SplitMinion(self.path, self.path_index, wave_manager_global, self.x + offset_x, self.y + offset_y)
             split.set_enemies_list(self._all_enemies)
             self._all_enemies.append(split)
 
@@ -653,13 +678,16 @@ class SplitMinion(Enemy):
     SPAWN_CHANCE = 0
     REWARD = 10  # Recompensa em ouro
     
-    def __init__(self, path, path_index, x, y):
-        super().__init__(path)
+    def __init__(self, path, path_index, wave_manager, x, y):
+        print(type(wave_manager_global))
+        super().__init__(path, wave_manager_global)
         self.radius = 12  # Raio menor que o boss
         self.path_index = path_index  # Começa do ponto onde o boss morreu
         self.x = x
         self.y = y
         self.reward_given = False  # Permite que dê recompensa ao morrer
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager_global.get_health_increase())
+        self.health = self.max_health
         
     def draw(self, screen):
         
@@ -674,8 +702,8 @@ class MagnetBoss(Enemy):
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
     REWARD = 50  # Recompensa em ouro
     
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, wave_manager):
+        super().__init__(path, wave_manager)
         self.radius = 20
         self.magnet_interval = 300
         self.magnet_duration = 120
@@ -683,6 +711,8 @@ class MagnetBoss(Enemy):
         self.is_attracting = False
         self.attracted_projectiles = []
         self._all_defenders = []  # Nova lista para referência dos defensores
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
+        self.health = self.max_health
         
     def update(self):
         result = super().update()
@@ -732,13 +762,15 @@ class VampiricBoss(Enemy):
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
     REWARD = 50  # Recompensa em ouro
     
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, wave_manager):
+        super().__init__(path, wave_manager)
         self.radius = 20  # Raio maior que inimigos normais
         self.has_revived = False  # Controla se já usou a revive
         self.original_color = self.COLOR
         self.revival_health_percent = 0  # vida ao reviver
         self.drain_percent = 0.5  # 50% de drenagem de vida
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
+        self.health = self.max_health
         
     def take_damage(self, damage):
         """Sobrescreve o método take_damage para implementar a mecânica de revive"""
@@ -797,8 +829,8 @@ class ImmunityBoss(Enemy):
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
     REWARD = 50  # Recompensa em ouro
     
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, path, wave_manager):
+        super().__init__(path, wave_manager)
         self.radius = 20  # Raio maior que inimigos normais
         self.immunity_radius = 150  # Raio da aura de imunidade
         self.immunity_interval = 180  # 3 segundos entre ativações
@@ -806,6 +838,8 @@ class ImmunityBoss(Enemy):
         self.immunity_timer = self.immunity_duration  # Começa com o timer cheio
         self.is_immunized = False  # Não começa imunizado
         self.in_immunity_phase = True  # Controla se está na fase de imunidade ou intervalo
+        self.max_health = ceil(self.BASE_HEALTH * wave_manager.get_health_increase())
+        self.health = self.max_health
         
     def update(self):
         result = super().update()
@@ -863,27 +897,27 @@ def spawn_random_enemy(path, wave_manager):
         cumulative += chance
         if roll <= cumulative:
             if enemy_type == 'normal':
-                return Enemy(path), False
+                return Enemy(path, wave_manager), False
             elif enemy_type == 'tank':
-                return TankEnemy(path), True
+                return TankEnemy(path, wave_manager), True
             elif enemy_type == 'speed':
-                return SpeedEnemy(path), True
+                return SpeedEnemy(path, wave_manager), True
             elif enemy_type == 'armored':
-                return ArmoredEnemy(path), True
+                return ArmoredEnemy(path, wave_manager), True
             elif enemy_type == 'healer':
-                return HealerEnemy(path), True
+                return HealerEnemy(path, wave_manager), True
             elif enemy_type == 'freeze_aura':
-                return FreezeAuraEnemy(path), True
+                return FreezeAuraEnemy(path, wave_manager), True
             elif enemy_type == 'rage':
-                return RageEnemy(path), True
+                return RageEnemy(path, wave_manager), True
             elif enemy_type == 'stealth':
-                return StealthEnemy(path), True
+                return StealthEnemy(path, wave_manager), True
             elif enemy_type == 'magnet':
-                return MagnetBoss(path), True
+                return MagnetBoss(path, wave_manager), True
             elif enemy_type == 'vampiric':
-                return VampiricBoss(path), True
+                return VampiricBoss(path, wave_manager), True
             elif enemy_type == 'split':
-                return SplitBoss(path), True
+                return SplitBoss(path, wave_manager), True
             break
             
     # Se algo der errado, retorna um inimigo normal
