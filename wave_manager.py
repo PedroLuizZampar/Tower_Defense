@@ -2,7 +2,7 @@ import random
 from base import GameSpeed
 
 class WaveManager:
-    MAX_WAVES = 60
+    MAX_WAVES = 50
     BASE_ENEMIES = 5  # Número base de inimigos na primeira onda
     BASE_SPAWN_INTERVAL = 110  # Intervalo base entre spawns (em frames)
     PREPARATION_TIME = 10 * 60  # 10 segundos em frames

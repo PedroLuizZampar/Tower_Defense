@@ -19,6 +19,7 @@ class Spell:
         self.effect_applied = False  # Flag para controlar se o efeito já foi aplicado
         
     def update(self, enemies):
+        # AQUI É ONDE RECEBE A LISTA DE INIMIGOS (PASSAR TAMBÉM A LISTA DE DEFENSORES)
         if self.active and not self.effect_applied:
             self.apply_effect(enemies)
             self.effect_applied = True
@@ -161,6 +162,38 @@ class FreezeSpell(Spell):
             if not isinstance(enemy, TankEnemy):  # Tanques são imunes ao congelamento
                 enemy.apply_freeze(self.get_freeze_duration())
 
+class SlowSpell(Spell):
+    COST = 0
+    RADIUS = 150
+    COLOR = (30, 180, 30)  # Verde
+    NAME = "Lentidão"
+    SLOW_DURATION = 90  # 1.5 segundos
+    COOLDOWN = 3600  # 1 minuto de cooldown
+    UPGRADE_COSTS = [2, 4, 6, 8, 10]  # Custo em orbes para cada nível
+    DURATION_INCREASE = 30  # Aumento da duração por nível (0.5 segundos)
+    MAX_LEVEL = 5
+    
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.duration = 30  # 0.5 segundos
+        self.current_duration = self.duration
+        self.level = 1  # Nível atual do feitiço
+        
+    def get_slow_duration(self):
+        """Retorna a duração do congelamento baseado no nível"""
+        return self.SLOW_DURATION + (self.level - 1) * self.DURATION_INCREASE
+        
+    def get_cooldown(self):
+        """Retorna o cooldown atual baseado no nível"""
+        return self.COOLDOWN - (self.level - 1)
+        
+    def apply_effect(self, enemies):
+        """Aplica efeito de congelamento em área"""
+        affected = self.affect_enemies(enemies)
+        for enemy in affected:
+            if not isinstance(enemy, TankEnemy):  # Tanques são imunes ao slow
+                enemy.apply_slow(self.get_slow_duration())
+
 class DotSpell(Spell):
     COST = 0
     RADIUS = 200
@@ -276,6 +309,13 @@ class SpellButton:
                 "Duração": f"{duration:.1f}s",
                 "Recarga": f"{cooldown // 60}s"
             }
+        elif isinstance(self.spell_class, SlowSpell):
+            duration = (self.spell_class.get_slow_duration()) / 60
+            cooldown = self.spell_class.get_cooldown() - self.level
+            return {
+                "Duração": f"{duration:.1f}s",
+                "Recarga": f"{cooldown // 60}s"
+            }
         elif isinstance(self.spell_class, DotSpell):
             damage = self.spell_class.get_dot_damage() * (1 + self.level * self.spell_class.DAMAGE_INCREASE_PERCENT)
             cooldown = self.spell_class.get_cooldown() - self.level
@@ -344,7 +384,7 @@ class SpellButton:
         
     def start_cooldown(self):
         """Inicia o cooldown baseado no nível atual"""
-        if isinstance(self.spell_class, (DamageSpell, FreezeSpell, DotSpell)):
+        if isinstance(self.spell_class, (DamageSpell, FreezeSpell, DotSpell, SlowSpell)):
             cooldown = self.spell_class.get_cooldown()
             self.cooldown_timer = cooldown
         else:

@@ -602,6 +602,94 @@ class BlueDefender(Defender):
             
         super().draw(screen, show_range)
 
+class PinkDefender(Defender):
+    COLOR = (255, 182, 193)  # Rosa claro
+    PROJECTILE_COLOR = (255, 105, 180)  # Rosa mais escuro
+    COST = 250
+    UNLOCK_COST = 6
+    NAME = "Empilhador"
+    BASE_DAMAGE = 5
+    BASE_ATTACK_COOLDOWN = 15
+    RANGE = 180
+    MAX_STACK_MULTIPLIER = 10
+    HITS_TO_ACTIVATE = 4
+    BASE_UPGRADE_COST = 30
+
+    def __init__(self, x, y, current_wave):
+        super().__init__(x, y, current_wave)
+        self.attack_counter = 0
+        self.stack_multiplier = 1
+
+    def find_target(self, enemies):
+        previous_target = self.current_target
+        new_target = super().find_target(enemies)
+        if new_target != previous_target:
+            self.stack_multiplier = 1  # Reset stack multiplier when target changes
+            self.attack_counter = 0
+            self.color = self.COLOR  # Reset color to default
+        return new_target
+
+    def update(self, enemies):
+        if self.is_frozen:
+            self.freeze_timer -= GameSpeed.get_instance().current_multiplier
+            if self.freeze_timer <= 0:
+                self.is_frozen = False
+            return
+
+        if self.cooldown_timer > 0:
+            self.cooldown_timer -= GameSpeed.get_instance().current_multiplier
+
+        if self.cooldown_timer <= 0:
+            target = self.find_target(enemies)
+            if target:
+                if hasattr(target, "is_dying"):
+                    if not target.is_dying:
+                        projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                        projectile.damage = self.get_total_damage()
+                        self.projectiles.append(projectile)
+                        self.cooldown_timer = self.attack_cooldown
+                        self.attack_counter += 1
+
+                        if self.attack_counter >= self.HITS_TO_ACTIVATE:
+                            self.attack_counter = 0
+                            if self.stack_multiplier < self.MAX_STACK_MULTIPLIER:
+                                self.stack_multiplier += 1
+                                self.color = (
+                                    min(255, self.COLOR[0] + self.stack_multiplier * 10),
+                                    max(0, self.COLOR[1] - self.stack_multiplier * 20),
+                                    max(0, self.COLOR[2] - self.stack_multiplier * 20),
+                                )
+                else:
+                    projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
+                    projectile.damage = self.get_total_damage()
+                    self.projectiles.append(projectile)
+                    self.cooldown_timer = self.attack_cooldown
+                    self.attack_counter += 1
+
+                    if self.attack_counter >= self.HITS_TO_ACTIVATE:
+                        self.attack_counter = 0
+                        if self.stack_multiplier < self.MAX_STACK_MULTIPLIER:
+                            self.stack_multiplier += 1
+                            self.color = (
+                                min(255, self.COLOR[0] + self.stack_multiplier * 10),
+                                max(0, self.COLOR[1] - self.stack_multiplier * 20),
+                                max(0, self.COLOR[2] - self.stack_multiplier * 20),
+                            )
+
+    def get_total_damage(self):
+        return self.base_damage * self.stack_multiplier
+
+    def upgrade(self):
+        cost = self.get_upgrade_cost()
+        self.level += 1
+        self.total_invested += cost
+        self.base_damage += 1  # Increase base damage by 1
+        self.upgrades_count += 1
+        return cost
+
+    def draw(self, screen, show_range=False):
+        super().draw(screen, show_range)
+
 class OrangeDefender(Defender):
     COLOR = (255, 140, 0)  # Laranja
     PROJECTILE_COLOR = (255, 165, 0)  # Laranja mais claro
@@ -760,6 +848,7 @@ class PurpleDefender(Defender):
             
         super().draw(screen, show_range)
 
+
 class DefenderButton:
     def __init__(self, defender_class, x_pos, mission_manager=None):
         self.width = 230
@@ -807,4 +896,4 @@ class DefenderButton:
             elif self.unlocked and gold >= self.cost:
                 self.selected = not self.selected
                 return True
-        return False 
+        return False

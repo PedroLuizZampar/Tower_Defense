@@ -4,11 +4,11 @@ import os
 import sys
 import random
 from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy, ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss
-from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender, GreenDefender, OrangeDefender, PurpleDefender
+from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender, GreenDefender, OrangeDefender, PurpleDefender, PinkDefender
 from wave_manager import WaveManager
 from base import Base, SkipButton, SpeedButton
 from upgrade_menu import UpgradeMenu
-from spell import DamageSpell, FreezeSpell, DotSpell, SpellButton
+from spell import DamageSpell, FreezeSpell, DotSpell, SlowSpell, SpellButton
 from mission_manager import MissionManager
 
 # Inicialização do Pygame com flags otimizadas
@@ -310,8 +310,9 @@ class DefenderShopMenu:
             DefenderButton(YellowDefender, x_pos, self.mission_manager),
             DefenderButton(GreenDefender, x_pos, self.mission_manager),
             DefenderButton(BlueDefender, x_pos, self.mission_manager),
+            DefenderButton(PinkDefender, x_pos, self.mission_manager),
             DefenderButton(OrangeDefender, x_pos, self.mission_manager),
-            DefenderButton(PurpleDefender, x_pos, self.mission_manager)
+            DefenderButton(PurpleDefender, x_pos, self.mission_manager),
         ]
         
         # Update positions based on current page
@@ -388,6 +389,8 @@ class DefenderShopMenu:
                     special_text = "Aplica Queimaduras"
                 elif button.defender_class == YellowDefender:
                     special_text = "Aumenta Dano Aliado"
+                elif button.defender_class == PinkDefender:
+                    special_text = "Empilha o Dano"
                 elif button.defender_class == GreenDefender:
                     special_text = "Desacelera Inimigos"
                 elif button.defender_class == OrangeDefender:
@@ -687,10 +690,10 @@ class SpellShopMenu:
         self.is_expanded = False
         self.header_rect = None
         self.current_page = 0
-        self.spells_per_page = 3
+        self.spells_per_page = 4
         self.prev_button_rect = None
         self.next_button_rect = None
-        self.spells = [FreezeSpell, DotSpell, DamageSpell]
+        self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell]
         self.upgrade_buttons = {}  # Dicionário para armazenar os retângulos dos botões de upgrade
         
     def draw(self, screen, spell_buttons, mission_manager):
@@ -733,7 +736,7 @@ class SpellShopMenu:
                     continue
                 
                 # Fundo do card do feitiço
-                card_height = 115  # Aumentado para acomodar o botão de upgrade
+                card_height = 110  # Aumentado para acomodar o botão de upgrade
                 card_rect = pygame.Rect(panel_rect.x + 10, y_offset, self.width - 20, card_height)
                 pygame.draw.rect(screen, (40, 40, 40), card_rect)
                 pygame.draw.rect(screen, WHITE, card_rect, 1)
@@ -767,6 +770,14 @@ class SpellShopMenu:
                     stats_text = font.render(f"Raio: {spell_class.RADIUS}px | Duração: {duration:.1f}s", True, WHITE)
                     screen.blit(stats_text, (card_rect.x + 60, y_offset + 35))
                     desc_text = font.render("Congela inimigos na área", True, (50, 255, 50))
+                    screen.blit(desc_text, (card_rect.x + 60, y_offset + 50))
+                    immune_text = font.render("Inimigos Tanque são imunes", True, (255, 100, 100))
+                    screen.blit(immune_text, (card_rect.x + 60, y_offset + 65))
+                elif spell_class == SlowSpell:
+                    duration = (spell_button.spell_class.SLOW_DURATION + (spell_button.level - 1) * spell_button.spell_class.DURATION_INCREASE) / 60
+                    stats_text = font.render(f"Raio: {spell_class.RADIUS}px | Duração: {duration:.1f}s", True, WHITE)
+                    screen.blit(stats_text, (card_rect.x + 60, y_offset + 35))
+                    desc_text = font.render("Desacelera inimigos na área", True, (50, 255, 50))
                     screen.blit(desc_text, (card_rect.x + 60, y_offset + 50))
                     immune_text = font.render("Inimigos Tanque são imunes", True, (255, 100, 100))
                     screen.blit(immune_text, (card_rect.x + 60, y_offset + 65))
@@ -923,14 +934,15 @@ def main():
     upgrade_menu = UpgradeMenu()
 
     # Calcula as posições dos botões de feitiço
-    spell_spacing = 60
-    spell_start_x = 400  # Posição inicial dos botões de feitiço
+    spell_spacing = 70
+    spell_start_x = 375  # Posição inicial dos botões de feitiço
     
     # Interface
     spell_buttons = [
         SpellButton(FreezeSpell, spell_start_x),
         SpellButton(DotSpell, spell_start_x + spell_spacing),
         SpellButton(DamageSpell, spell_start_x + spell_spacing * 2),
+        SpellButton(SlowSpell, spell_start_x + spell_spacing * 3),
     ]
     selected_spell = None
 
@@ -1096,6 +1108,8 @@ def main():
         # Atualização dos feitiços
         for spell in spells[:]:  # Usa uma cópia da lista para poder modificá-la durante a iteração
             update_result = spell.update(enemies)
+
+            # AQUI É ONDE PASSAMOS OS INIMIGOS PARA OS FEITIÇOS (PASSAR TAMBÉM OS DEFENSORES)
             
             if update_result == "died":
                 # Se o feitiço matou inimigos, dá a recompensa
@@ -1307,4 +1321,4 @@ def main():
     sys.exit()
 
 if __name__ == "__main__":
-    main() 
+    main()
