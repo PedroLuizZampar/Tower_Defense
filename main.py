@@ -8,7 +8,7 @@ from defender import Defender, BlueDefender, RedDefender, YellowDefender, Defend
 from wave_manager import WaveManager
 from base import Base, SkipButton, SpeedButton
 from upgrade_menu import UpgradeMenu
-from spell import DamageSpell, FreezeSpell, DotSpell, SlowSpell, SpellButton
+from spell import DamageSpell, FreezeSpell, DotSpell, SlowSpell, SpeedSpell, SpellButton
 from mission_manager import MissionManager
 
 # Inicialização do Pygame com flags otimizadas
@@ -206,13 +206,13 @@ class EnemyShopMenu:
                     special_text = "Acelera ao Perder Vida"
                 elif enemy_class == StealthEnemy:
                     special_text = "Fica Invisível"
-                    
+
                 if special_text:
                     spec_text = font.render(special_text, True, (50, 255, 50))
                     screen.blit(spec_text, (card_rect.x + 60, y_offset + 65))
-                
+
                 y_offset += card_height + 5
-            
+
             # Draw pagination controls
             button_width = 40
             button_height = 30
@@ -221,48 +221,47 @@ class EnemyShopMenu:
             button_y = panel_rect.top + 10
             
             font_back_next = pygame.font.Font(None, 35)
-            
+
             # Previous page button
             self.prev_button_rect = pygame.Rect(start_x, button_y, button_width, button_height)
             prev_color = MENU_LIGHT_GRAY if self.current_page > 0 else (60, 60, 60)
             pygame.draw.rect(screen, prev_color, self.prev_button_rect)
             pygame.draw.rect(screen, WHITE, self.prev_button_rect, 1)
-            
+
             prev_text = font_back_next.render("<", True, WHITE if self.current_page > 0 else (150, 150, 150))
             prev_rect = prev_text.get_rect(center=self.prev_button_rect.center)
             screen.blit(prev_text, prev_rect)
-            
+
             # Next page button
             self.next_button_rect = pygame.Rect(start_x + button_width + spacing, button_y, button_width, button_height)
             next_color = MENU_LIGHT_GRAY if end_index < len(self.enemies) else (60, 60, 60)
             pygame.draw.rect(screen, next_color, self.next_button_rect)
             pygame.draw.rect(screen, WHITE, self.next_button_rect, 1)
-            
+
             next_text = font_back_next.render(">", True, WHITE if end_index < len(self.enemies) else (150, 150, 150))
             next_rect = next_text.get_rect(center=self.next_button_rect.center)
             screen.blit(next_text, next_rect)
-            
+
             # Page indicator
             total_pages = (len(self.enemies) + self.enemies_per_page - 1) // self.enemies_per_page
             page_text = font.render(f"{self.current_page + 1}/{total_pages}", True, WHITE)
             page_rect = page_text.get_rect(centerx=panel_rect.centerx, bottom=panel_rect.bottom - 10)
             screen.blit(page_text, page_rect)
-        
+
         # Sempre desenha o botão da aba
         pygame.draw.rect(screen, MENU_GRAY, self.header_rect)
         pygame.draw.rect(screen, WHITE, self.header_rect, 2)
-        
+
         # Desenha o ícone na vertical
         font = pygame.font.Font(None, 18)
         text = font.render("Inimigos", True, WHITE)
-        
+
         # Rotaciona o texto em 90 graus
         text_vertical = pygame.transform.rotate(text, 270)
-        
+
         # Obtém a nova posição central para manter alinhado
         text_rect = text_vertical.get_rect(center=self.header_rect.center)
-        
-        # Desenha na tela
+
         screen.blit(text_vertical, text_rect)
         
     def handle_click(self, pos):
@@ -693,10 +692,13 @@ class SpellShopMenu:
         self.spells_per_page = 4
         self.prev_button_rect = None
         self.next_button_rect = None
-        self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell]
+        self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell, SpeedSpell]
         self.upgrade_buttons = {}  # Dicionário para armazenar os retângulos dos botões de upgrade
         
     def draw(self, screen, spell_buttons, mission_manager):
+        # Limpa os botões de upgrade para evitar ações em páginas anteriores
+        self.upgrade_buttons.clear()
+        
         # Desenha o cabeçalho (sempre visível)
         header_width = 40
         header_height = 100
@@ -781,6 +783,15 @@ class SpellShopMenu:
                     screen.blit(desc_text, (card_rect.x + 60, y_offset + 50))
                     immune_text = font.render("Inimigos Tanque são imunes", True, (255, 100, 100))
                     screen.blit(immune_text, (card_rect.x + 60, y_offset + 65))
+                elif spell_class == SpeedSpell:
+                    duration = (spell_button.spell_class.VELOCITY_DURATION + (spell_button.level - 1) * spell_button.spell_class.DURATION_INCREASE) / 60
+                    stats_text = font.render(f"Raio: {spell_class.RADIUS}px | Duração: {duration:.1f}s", True, WHITE)
+                    screen.blit(stats_text, (card_rect.x + 60, y_offset + 35))
+                    speed_buff = (spell_button.spell_class.VELOCITY_BOOST + (spell_button.level - 1) * spell_button.spell_class.VELOCITY_INCREASE_PERCENT) * 100
+                    desc_text = font.render("Acelera defensores na área", True, (50, 255, 50))
+                    screen.blit(desc_text, (card_rect.x + 60, y_offset + 50))
+                    desc_text = font.render(f"em {speed_buff:.0f}%", True, (50, 255, 50))
+                    screen.blit(desc_text, (card_rect.x + 60, y_offset + 65))
                 elif spell_class == DotSpell:
                     damage = spell_button.spell_class.DOT_DAMAGE
                     for _ in range(spell_button.level - 1):
@@ -935,7 +946,7 @@ def main():
 
     # Calcula as posições dos botões de feitiço
     spell_spacing = 70
-    spell_start_x = 375  # Posição inicial dos botões de feitiço
+    spell_start_x = 350  # Posição inicial dos botões de feitiço
     
     # Interface
     spell_buttons = [
@@ -943,6 +954,7 @@ def main():
         SpellButton(DotSpell, spell_start_x + spell_spacing),
         SpellButton(DamageSpell, spell_start_x + spell_spacing * 2),
         SpellButton(SlowSpell, spell_start_x + spell_spacing * 3),
+        SpellButton(SpeedSpell, spell_start_x + spell_spacing * 4),
     ]
     selected_spell = None
 
@@ -1049,6 +1061,7 @@ def main():
                 if action == "upgrade":
                     gold -= value
                     selected_defender.upgrade()
+                    mission_manager.update_tower_upgrades()  # Atualiza missão de melhorias
                     continue
                 elif action == "sell":
                     gold += value
@@ -1099,35 +1112,60 @@ def main():
                             new_spell.level = selected_spell.level
                             spells.append(new_spell)
                         selected_spell.start_cooldown()  # Inicia o cooldown do feitiço
-                        selected_spell = None
+                        selected_spell.selected = False
+                        mission_manager.update_spell_use()  # Atualiza contagem de uso de feitiços
                     continue
+
+                # Verifica clique com feitiço selecionado
+                if any(button.selected for button in spell_buttons):
+                    for button in spell_buttons:
+                        if button.selected:
+                            if button.cooldown_timer <= 0:
+                                if isinstance(button.spell_class, SpeedSpell):
+                                    spell = button.spell_class(mouse_pos[0], mouse_pos[1])
+                                    spells.append(spell)
+                                    button.start_cooldown()
+                                    mission_manager.update_spell_use()  # Atualiza missão de uso de feitiços
+                                else:
+                                    spell = button.spell_class(mouse_pos[0], mouse_pos[1])
+                                    spells.append(spell)
+                                    button.start_cooldown()
+                                    button.selected = False
+                                    mission_manager.update_spell_use()  # Atualiza missão de uso de feitiços
 
         # Atualização da onda
         wave_manager.update()
         
         # Atualização dos feitiços
         for spell in spells[:]:  # Usa uma cópia da lista para poder modificá-la durante a iteração
-            update_result = spell.update(enemies)
+            if not isinstance(spell, SpeedSpell):
+                update_enemy_result = spell.update(enemies)  
+            else:
+                update_defender_result = spell.update(defenders)
 
             # AQUI É ONDE PASSAMOS OS INIMIGOS PARA OS FEITIÇOS (PASSAR TAMBÉM OS DEFENSORES)
             
-            if update_result == "died":
-                # Se o feitiço matou inimigos, dá a recompensa
-                for enemy in spell.killed_enemies:
-                    if not enemy.reward_given:
-                        # Usa diretamente a recompensa definida na classe do inimigo
-                        gold += enemy.__class__.REWARD
-                        enemy.reward_given = True
-                        mission_manager.update_kills()
-                        
-                        # Adiciona orbes para bosses
-                        if isinstance(enemy, (ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss)):
-                            mission_manager.orbes += 1
+            if not isinstance(spell, SpeedSpell):
+                if update_enemy_result == "died":
+                    # Se o feitiço matou inimigos, dá a recompensa
+                    for enemy in spell.killed_enemies:
+                        if not enemy.reward_given:
+                            # Usa diretamente a recompensa definida na classe do inimigo
+                            gold += enemy.__class__.REWARD
+                            enemy.reward_given = True
+                            mission_manager.update_kills()
                             
-                        if enemy in enemies:  # Verifica se o inimigo ainda está na lista
-                            enemies.remove(enemy)
-            elif not update_result:  # Se o feitiço terminou
-                spells.remove(spell)
+                            # Adiciona orbes para bosses
+                            if isinstance(enemy, (ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss)):
+                                mission_manager.orbes += 1
+                                
+                            if enemy in enemies:  # Verifica se o inimigo ainda está na lista
+                                enemies.remove(enemy)
+                elif not update_enemy_result:  # Se o feitiço terminou
+                    spells.remove(spell)
+            else:
+                if not update_defender_result:  # Se o feitiço terminou
+                    spells.remove(spell)
         
         # Atualiza os cooldowns dos botões de feitiço
         for button in spell_buttons:
