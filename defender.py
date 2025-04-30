@@ -305,6 +305,14 @@ class RedDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
+        
+        if self.is_accelerated:
+            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
+            if self.velocity_timer <= 0:
+                self.attack_cooldown = self.base_attack_cooldown
+                self.is_accelerated = False
+            else:
+                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
@@ -393,6 +401,14 @@ class YellowDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
+        
+        if self.is_accelerated:
+            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
+            if self.velocity_timer <= 0:
+                self.attack_cooldown = self.base_attack_cooldown
+                self.is_accelerated = False
+            else:
+                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
@@ -479,6 +495,14 @@ class GreenDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
+        
+        if self.is_accelerated:
+            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
+            if self.velocity_timer <= 0:
+                self.attack_cooldown = self.base_attack_cooldown
+                self.is_accelerated = False
+            else:
+                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
@@ -565,6 +589,14 @@ class BlueDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
+        
+        if self.is_accelerated:
+            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
+            if self.velocity_timer <= 0:
+                self.attack_cooldown = self.base_attack_cooldown
+                self.is_accelerated = False
+            else:
+                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
@@ -660,6 +692,14 @@ class PinkDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return
+        
+        if self.is_accelerated:
+            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
+            if self.velocity_timer <= 0:
+                self.attack_cooldown = self.base_attack_cooldown
+                self.is_accelerated = False
+            else:
+                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         if self.cooldown_timer > 0:
             self.cooldown_timer -= GameSpeed.get_instance().current_multiplier
@@ -761,6 +801,14 @@ class OrangeDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
+        
+        if self.is_accelerated:
+            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
+            if self.velocity_timer <= 0:
+                self.attack_cooldown = self.base_attack_cooldown
+                self.is_accelerated = False
+            else:
+                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
@@ -808,6 +856,14 @@ class PurpleDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
+        
+        if self.is_accelerated:
+            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
+            if self.velocity_timer <= 0:
+                self.attack_cooldown = self.base_attack_cooldown
+                self.is_accelerated = False
+            else:
+                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:

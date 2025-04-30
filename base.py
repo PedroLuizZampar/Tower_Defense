@@ -69,8 +69,7 @@ class GameSpeed:
     _instance = None
     
     def __init__(self):
-        self.multiplier = 1
-        self.is_active = False
+        self.current_speed = 1  # Velocidade atual (1, 2 ou 4)
         
     @classmethod
     def get_instance(cls):
@@ -80,36 +79,70 @@ class GameSpeed:
     
     @property
     def current_multiplier(self):
-        return 2 if self.is_active else 1
+        return self.current_speed
+        
+    def set_speed(self, speed):
+        """Define a velocidade do jogo (1x, 2x, 5x ou 10x)"""
+        if speed in [1, 2, 5, 10]:
+            self.current_speed = speed
 
 class SpeedButton:
     def __init__(self):
-        self.width = 150
-        self.height = 40
-        self.rect = pygame.Rect(10, 10, self.width, self.height)  # Posição no canto inferior esquerdo
+        self.button_width = 50
+        self.button_height = 40
+        self.spacing = 5  # Espaço entre os botões
+        self.y = 10  # Posição Y dos botões
+        
+        # Cria os três botões
+        self.buttons = [
+            {
+                'rect': pygame.Rect(10, self.y, self.button_width, self.button_height),
+                'speed': 1,
+                'text': "1x"
+            },
+            {
+                'rect': pygame.Rect(10 + self.button_width + self.spacing, self.y, 
+                                  self.button_width, self.button_height),
+                'speed': 2,
+                'text': "2x"
+            },
+            {
+                'rect': pygame.Rect(10 + (self.button_width + self.spacing) * 2, self.y, 
+                                  self.button_width, self.button_height),
+                'speed': 5,
+                'text': "5x"
+            },
+            {
+                'rect': pygame.Rect(10 + (self.button_width + self.spacing) * 3, self.y, 
+                                  self.button_width, self.button_height),
+                'speed': 10,
+                'text': "10x"
+            }
+        ]
         self.game_speed = GameSpeed.get_instance()
         
     def draw(self, screen):
-        # Define as cores baseado no estado
-        if self.game_speed.is_active:
-            color = (50, 200, 50)  # Verde quando ativo
-            text = "Velocidade: 2x"
-        else:
-            color = (60, 60, 60)  # Cinza quando normal
-            text = "Velocidade: 1x"
-            
-        # Desenha o botão com borda
-        pygame.draw.rect(screen, color, self.rect)
-        pygame.draw.rect(screen, (255, 255, 255), self.rect, 2)  # Borda branca
-        
-        # Texto do botão
         font = pygame.font.Font(None, 28)
-        text_surface = font.render(text, True, (255, 255, 255))
-        text_rect = text_surface.get_rect(center=self.rect.center)
-        screen.blit(text_surface, text_rect)
+        
+        for button in self.buttons:
+            # Define a cor baseada se está selecionado
+            if self.game_speed.current_speed == button['speed']:
+                color = (50, 200, 50)  # Verde quando selecionado
+            else:
+                color = (60, 60, 60)  # Cinza quando não selecionado
+                
+            # Desenha o botão com borda
+            pygame.draw.rect(screen, color, button['rect'])
+            pygame.draw.rect(screen, (255, 255, 255), button['rect'], 2)
+            
+            # Texto do botão
+            text_surface = font.render(button['text'], True, (255, 255, 255))
+            text_rect = text_surface.get_rect(center=button['rect'].center)
+            screen.blit(text_surface, text_rect)
         
     def handle_click(self, pos):
-        if self.rect.collidepoint(pos):
-            self.game_speed.is_active = not self.game_speed.is_active
-            return True
-        return False 
+        for button in self.buttons:
+            if button['rect'].collidepoint(pos):
+                self.game_speed.set_speed(button['speed'])
+                return True
+        return False

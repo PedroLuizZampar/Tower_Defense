@@ -13,7 +13,15 @@ class Projectile:
         self.color = color
         
     def move(self):
+        # Se não tem alvo ou o alvo não tem coordenadas
         if self.target is None or not hasattr(self.target, 'x'):
+            return True
+            
+        # Se o alvo morreu ou está morrendo
+        if hasattr(self.target, 'health') and self.target.health <= 0:
+            return True
+            
+        if hasattr(self.target, 'is_dying') and self.target.is_dying:
             return True
             
         dx = self.target.x - self.x
@@ -33,4 +41,4 @@ class Projectile:
         return False
         
     def draw(self, screen):
-        pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius) 
+        pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)

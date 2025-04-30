@@ -12,28 +12,36 @@ class Mission:
         self.base_value = 0  # Valor base para controlar o progresso após reset
         
     def update(self, value):
-        # Só atualiza se a missão não estiver completa
-        if not self.completed:
-            # Atualiza o valor atual em relação ao valor base
-            self.current_value = min(value - self.base_value, self.target_value)
-            
-            # Verifica se completou a missão
-            if self.current_value >= self.target_value:
-                self.completed = True
-                self.notification_shown = True
+        """Atualiza o progresso da missão e verifica se foi completada"""
+        # Verifica se tem progresso suficiente para completar
+        if (value - self.base_value) >= self.target_value:
+            self.completed = True
+            self.notification_shown = True
+        # Atualiza o valor atual
+        self.current_value = value - self.base_value
                 
     def claim_reward(self):
-        if self.completed and not self.claimed:
-            self.claimed = True
-            self.notification_shown = False
-            # Atualiza o valor base para o próximo ciclo
-            self.base_value += self.target_value
-            # Reseta o estado para poder fazer novamente
-            self.completed = False
-            self.claimed = False
-            # Zera o valor atual
-            self.current_value = 0
-            return self.reward
+        """Resgata a recompensa e retorna o total de orbes ganhos"""
+        if self.completed:
+            # Calcula quantos ciclos completos temos disponíveis
+            total_progress = self.current_value
+            cycles = total_progress // self.target_value
+            
+            if cycles > 0:
+                # Calcula a recompensa total
+                total_reward = self.reward * cycles
+                
+                # Atualiza o valor base para manter o progresso excedente
+                self.base_value += self.target_value * cycles
+                
+                # Atualiza o valor atual com o excedente
+                self.current_value = total_progress % self.target_value
+                
+                # Verifica se ainda tem um ciclo completo após atualizar
+                self.completed = self.current_value >= self.target_value
+                self.notification_shown = self.completed
+                
+                return total_reward
         return 0
 
 class MissionManager:    
@@ -42,14 +50,16 @@ class MissionManager:
             Mission("Elimine 25 inimigos", 25, 1),  # 1 orbe de recompensa
             Mission("Elimine 50 inimigos", 50, 1),  # 1 orbe de recompensa
             Mission("Elimine 100 inimigos", 100, 1),  # 1 orbe de recompensa
+            Mission("Melhore torres 10 vezes", 10, 1), # 1 orbe de recompensa
             Mission("Sobreviva 5 ondas", 5, 1),      # 1 orbe de recompensa
             Mission("Sobreviva 10 ondas", 10, 1),     # 1 orbe de recompensa
             Mission("Use feitiços 5 vezes", 5, 1),    # 1 orbe de recompensa
             Mission("Use feitiços 10 vezes", 10, 1),  # 1 orbe de recompensa
-            Mission("Melhore torres 10 vezes", 10, 1) # 1 orbe de recompensa
         ]
         self.total_kills = 0
-        self.current_wave = 1
+        self.total_waves = 0
+        self.total_spells = 0
+        self.total_upgrades = 0
         self.orbes = 0
         self.is_expanded = False  # Controla se o menu está expandido
         self.header_rect = None  # Retângulo do cabeçalho para detectar cliques
@@ -66,41 +76,47 @@ class MissionManager:
         return any(mission.notification_shown for mission in self.missions)
         
     def update_kills(self):
-        # Só incrementa se a missão de kills não estiver completa
-        if not self.missions[0].completed:
-            self.total_kills += 1
-            self.missions[0].update(self.total_kills)
-        elif not self.missions[1].completed:
-            self.total_kills += 1
-            self.missions[1].update(self.total_kills)
-        elif not self.missions[2].completed:
-            self.total_kills += 1
-            self.missions[2].update(self.total_kills)
+        """Atualiza o progresso das missões de kills"""
+        self.total_kills += 1  # Incrementa o contador total uma única vez
         
+        # Atualiza todas as missões de kills com o valor total
+        for mission in [self.missions[0], self.missions[1], self.missions[2]]:  # Missões de kills
+            mission.current_value = self.total_kills - mission.base_value
+            if mission.current_value >= mission.target_value and not mission.completed:
+                mission.completed = True
+                mission.notification_shown = True
+                
     def update_wave(self, wave):
-        # Só atualiza se a missão de ondas não estiver completa
-        if not self.missions[2].completed:
-            self.current_wave = wave
-            self.missions[2].update(wave)
-            if not self.missions[3].completed:
-                self.missions[3].update(wave)
-        elif not self.missions[3].completed:
-            self.current_wave = wave
-            self.missions[3].update(wave)
-
+        """Atualiza o progresso das missões de ondas"""
+        self.total_waves = wave  # Usa o número da onda atual
+        
+        # Atualiza todas as missões de ondas com o valor total
+        for mission in [self.missions[4], self.missions[5]]:  # Missões de ondas
+            mission.current_value = self.total_waves - mission.base_value
+            if mission.current_value >= mission.target_value and not mission.completed:
+                mission.completed = True
+                mission.notification_shown = True
+                
     def update_spell_use(self):
-        """Incrementa o contador de uso de feitiços"""
-        # Missão de 5 feitiços
-        if not self.missions[5].completed:
-            self.missions[5].update(self.missions[5].current_value + 1)
-        # Missão de 10 feitiços
-        elif not self.missions[6].completed:
-            self.missions[6].update(self.missions[6].current_value + 1)
-            
+        """Atualiza o progresso das missões de uso de feitiços"""
+        self.total_spells += 1  # Incrementa o contador total uma única vez
+        
+        # Atualiza todas as missões de feitiços com o valor total
+        for mission in [self.missions[6], self.missions[7]]:  # Missões de feitiços
+            mission.current_value = self.total_spells - mission.base_value
+            if mission.current_value >= mission.target_value and not mission.completed:
+                mission.completed = True
+                mission.notification_shown = True
+                
     def update_tower_upgrades(self):
-        """Incrementa o contador de melhorias de torres"""
-        if not self.missions[7].completed:
-            self.missions[7].update(self.missions[7].current_value + 1)
+        """Atualiza o progresso das missões de melhorias de torres"""
+        self.total_upgrades += 1  # Incrementa o contador total uma única vez
+        
+        mission = self.missions[3]  # Missão de melhorias
+        mission.current_value = self.total_upgrades - mission.base_value
+        if mission.current_value >= mission.target_value and not mission.completed:
+            mission.completed = True
+            mission.notification_shown = True
 
     def draw(self, screen):
         # Configurações do quadro de missões

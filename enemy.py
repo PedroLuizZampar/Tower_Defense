@@ -2,8 +2,7 @@ import pygame
 import math
 from math import ceil
 import random
-from base import GameSpeed  # Adicione no topo do arquivo]
-from wave_manager import WaveManager
+from base import GameSpeed  # Adicione no topo do arquivo
 
 class Enemy:
     COLOR = (225, 148, 255)  # Cor padrão roxa
@@ -606,12 +605,12 @@ class StealthEnemy(Enemy):
     
 class SpeedBoss(Enemy):
     COLOR = (22, 102, 58)  # Verde escuro
-    BASE_HEALTH = 850  # Mantido
+    BASE_HEALTH = 700  # Mantido
     BASE_SPEED = 1.2  # Mantido
     NAME = "Veloz"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
     REWARD = 50  # Mantido
-    SPEED_BOOST = 0.20 # 20% de aumento de velocidade
+    SPEED_BOOST = 0.5 # 50% de aumento de velocidade
     
     def __init__(self, path, wave_manager):
         super().__init__(path, wave_manager)
@@ -672,7 +671,7 @@ class SplitBoss(Enemy):
 class SplitMinion(Enemy):
     """Classe para os minions criados quando o SplitBoss é derrotado"""
     COLOR = (245, 245, 86)  # Amarelo claro
-    BASE_HEALTH = 300  # 50% da vida do boss
+    BASE_HEALTH = SplitBoss.BASE_HEALTH * 0.5  # 50% da vida do boss
     BASE_SPEED = 1.8  # +50% da velocidade do boss
     NAME = "Dividido"
     SPAWN_CHANCE = 0
@@ -696,7 +695,7 @@ class SplitMinion(Enemy):
 
 class MagnetBoss(Enemy):
     COLOR = (200, 0, 0)  # Vermelho intenso
-    BASE_HEALTH = 1250  # Vida base
+    BASE_HEALTH = 900  # Vida base
     BASE_SPEED = 0.85  # Velocidade reduzida
     NAME = "Magnético"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
@@ -756,7 +755,7 @@ class MagnetBoss(Enemy):
 
 class VampiricBoss(Enemy):
     COLOR = (20, 0, 0)  # Preto avermelhado
-    BASE_HEALTH = 600  # Vida base
+    BASE_HEALTH = 650  # Vida base
     BASE_SPEED = 1.1  # Velocidade
     NAME = "Vampiro"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente
@@ -823,7 +822,7 @@ class VampiricBoss(Enemy):
 
 class ImmunityBoss(Enemy):
     COLOR = (255, 255, 255)  # Branco
-    BASE_HEALTH = 800  # Aumentado para 1250
+    BASE_HEALTH = 800
     BASE_SPEED = 0.8  # Velocidade reduzida
     NAME = "Protetor"
     SPAWN_CHANCE = 0  # Não spawna aleatoriamente

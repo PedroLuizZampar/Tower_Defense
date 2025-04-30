@@ -7,7 +7,7 @@ class WaveManager:
     BASE_SPAWN_INTERVAL = 110  # Intervalo base entre spawns (em frames)
     PREPARATION_TIME = 10 * 60  # 10 segundos em frames
     INITIAL_PREPARATION_TIME = 60 * 60  # 60 segundos em frames para a primeira onda
-    HEALTH_INCREASE_PER_WAVE = 1.05  # Aumento de vida por onda
+    PERCENT_HEALTH_INCREASE_PER_WAVE = 0.05  # Aumento percentual de vida por onda
     
     def __init__(self):
         self.current_wave = 1
@@ -37,11 +37,13 @@ class WaveManager:
         # Inimigos base + 1 por onda
         enemies = self.BASE_ENEMIES + self.current_wave
         
-        # +1 inimigo extra a cada 5 ondas
-        enemies += (self.current_wave // 5)
-        
-        # +2 inimigos extras a cada 10 ondas
-        enemies += (self.current_wave // 10) * 2
+        if self.current_wave % 5 == 0:
+            # +1 inimigo extra a cada 5 ondas
+            enemies += 1
+
+        if self.current_wave % 10 == 0:
+            # +1 inimigo extra a cada 10 ondas
+            enemies += 1
         
         return enemies
         
@@ -53,9 +55,9 @@ class WaveManager:
         """Retorna o multiplicador de vida baseado na onda atual"""
         # Retorna o multiplicador de vida
         if self.current_wave <= 20:
-            return 1 + ((self.current_wave - 1) * 0.025)
+            return 1 + ((self.current_wave - 1) * self.PERCENT_HEALTH_INCREASE_PER_WAVE)
         else:
-            return 1 + ((self.current_wave - 1) * 0.04)
+            return 1 + ((self.current_wave - 1) * (self.PERCENT_HEALTH_INCREASE_PER_WAVE * 2))
         
     def get_spawn_chances(self):
         # Retorna as chances de spawn para cada tipo de inimigo baseado na onda atual
