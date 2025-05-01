@@ -8,7 +8,7 @@ from defender import Defender, BlueDefender, RedDefender, YellowDefender, Defend
 from wave_manager import WaveManager
 from base import Base, SkipButton, SpeedButton
 from upgrade_menu import UpgradeMenu
-from spell import DamageSpell, FreezeSpell, DotSpell, SlowSpell, SpeedSpell, SpellButton
+from spell import DamageSpell, FreezeSpell, DotSpell, SlowSpell, RageSpell, SpellButton
 from mission_manager import MissionManager
 
 # Inicialização do Pygame com flags otimizadas
@@ -446,7 +446,7 @@ class DefenderShopMenu:
         pygame.draw.rect(screen, WHITE, self.header_rect, 2)
         
         font = pygame.font.Font(None, 18)
-        text = font.render("Defensores", True, WHITE)
+        text = pygame.font.Font(None, 18).render("Defensores", True, WHITE)
         text_vertical = pygame.transform.rotate(text, 270)
         text_rect = text_vertical.get_rect(center=self.header_rect.center)
         screen.blit(text_vertical, text_rect)
@@ -692,7 +692,7 @@ class SpellShopMenu:
         self.spells_per_page = 4
         self.prev_button_rect = None
         self.next_button_rect = None
-        self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell, SpeedSpell]
+        self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell, RageSpell]
         self.upgrade_buttons = {}  # Dicionário para armazenar os retângulos dos botões de upgrade
         
     def draw(self, screen, spell_buttons, mission_manager):
@@ -783,7 +783,7 @@ class SpellShopMenu:
                     screen.blit(desc_text, (card_rect.x + 60, y_offset + 50))
                     immune_text = font.render("Inimigos Tanque são imunes", True, (255, 100, 100))
                     screen.blit(immune_text, (card_rect.x + 60, y_offset + 65))
-                elif spell_class == SpeedSpell:
+                elif spell_class == RageSpell:
                     duration = (spell_button.spell_class.VELOCITY_DURATION + (spell_button.level - 1) * spell_button.spell_class.DURATION_INCREASE) / 60
                     stats_text = font.render(f"Raio: {spell_class.RADIUS}px | Duração: {duration:.1f}s", True, WHITE)
                     screen.blit(stats_text, (card_rect.x + 60, y_offset + 35))
@@ -919,12 +919,238 @@ class SpellShopMenu:
                     
         return False
 
-def main():
+class ThrowableSpellsMenu:
+    def __init__(self):
+        self.is_expanded = False
+        self.width = 250
+        self.height = 180
+        self.header_rect = None
+        self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell]
+        
+    def draw(self, screen, spell_buttons):
+        # Define a posição do header (parte inferior da tela)
+        header_width = 250  # Aumentado de 150 para 250
+        header_height = 35  # Aumentado de 30 para 35
+        screen_width = pygame.display.get_surface().get_width()
+        screen_height = pygame.display.get_surface().get_height()
+        header_x = screen_width // 2 - header_width - 71
+        header_y = screen_height - header_height
+        
+        self.header_rect = pygame.Rect(header_x, header_y, header_width, header_height)
+        
+        # Desenha o header
+        pygame.draw.rect(screen, MENU_GRAY, self.header_rect)
+        pygame.draw.rect(screen, WHITE, self.header_rect, 2)
+        
+        # Texto do header
+        font = pygame.font.Font(None, 24)
+        text = font.render("Feitiços Arremessáveis", True, WHITE)
+        text_rect = text.get_rect(center=self.header_rect.center)
+        screen.blit(text, text_rect)
+        
+        # Se o menu estiver expandido, desenha o conteúdo
+        if self.is_expanded:
+            # Posição e tamanho do menu
+            menu_rect = pygame.Rect(header_x, screen_height - header_height - self.height, 
+                                  self.width, self.height)
+            pygame.draw.rect(screen, MENU_GRAY, menu_rect)
+            pygame.draw.rect(screen, WHITE, menu_rect, 2)
+            
+            # Desenha os feitiços
+            icon_size = 40
+            spacing = 20
+            x_start = menu_rect.x + 15
+            y_pos = menu_rect.y + + 15
+            
+            for i, spell_class in enumerate(self.spells):
+                # Encontra o botão correspondente
+                spell_button = next((button for button in spell_buttons 
+                                   if button.spell_class == spell_class), None)
+                if not spell_button:
+                    continue
+                
+                # Atualiza a posição do botão
+                spell_button.rect = pygame.Rect(x_start + (icon_size + spacing) * i, 
+                                              y_pos, icon_size, icon_size)
+                
+                # Desenha o fundo do botão
+                pygame.draw.rect(screen, (60, 60, 60), spell_button.rect)
+                
+                # Desenha o círculo do feitiço com cor normal ou acinzentada
+                center_x = spell_button.rect.centerx
+                center_y = spell_button.rect.centery
+                if spell_button.cooldown_timer > 0:
+                    # Converte a cor para tons de cinza
+                    color = spell_button.color
+                    gray = (color[0] * 0.3 + color[1] * 0.59 + color[2] * 0.11) * 0.6
+                    spell_color = (gray, gray, gray)
+                else:
+                    spell_color = spell_button.color
+                pygame.draw.circle(screen, spell_color, (center_x, center_y), icon_size//2 - 5)
+                
+                # Se estiver selecionado, desenha borda
+                if spell_button.selected:
+                    pygame.draw.rect(screen, WHITE, spell_button.rect, 3)
+                
+                # Desenha o nome do feitiço
+                name_font = pygame.font.Font(None, 16)
+                name_text = name_font.render(spell_class.NAME, True, WHITE)
+                name_rect = name_text.get_rect(centerx=center_x, top=spell_button.rect.bottom + 5)
+                screen.blit(name_text, name_rect)
+                
+                # Se estiver em cooldown, desenha o tempo restante
+                if spell_button.cooldown_timer > 0:
+                    cooldown_font = pygame.font.Font(None, 24)
+                    seconds = spell_button.cooldown_timer // 60
+                    cooldown_text = cooldown_font.render(str(seconds), True, WHITE)
+                    text_rect = cooldown_text.get_rect(center=spell_button.rect.center)
+                    screen.blit(cooldown_text, text_rect)
     
+    def handle_click(self, pos, spell_buttons):
+        # Verifica clique no header
+        if self.header_rect and self.header_rect.collidepoint(pos):
+            self.is_expanded = not self.is_expanded
+            return True
+            
+        # Se expandido, verifica cliques nos feitiços
+        if self.is_expanded:
+            for button in spell_buttons:
+                if button.spell_class in self.spells and button.rect:
+                    if button.rect.collidepoint(pos) and button.cooldown_timer <= 0:
+                        # Desseleciona todos os outros feitiços
+                        for other_button in spell_buttons:
+                            if other_button != button:
+                                other_button.selected = False
+                        button.selected = not button.selected
+                        # Se selecionou, fecha o menu
+                        if button.selected:
+                            self.is_expanded = False
+                        return True
+        return False
+
+class ConsumableSpellsMenu:
+    def __init__(self):
+        self.is_expanded = False
+        self.width = 250
+        self.height = 180
+        self.header_rect = None
+        self.spells = [RageSpell]
+        
+    def draw(self, screen, spell_buttons):
+        # Define a posição do header (parte inferior da tela)
+        header_width = 250  # Aumentado de 150 para 250
+        header_height = 35  # Aumentado de 30 para 35
+        screen_width = pygame.display.get_surface().get_width()
+        screen_height = pygame.display.get_surface().get_height()
+        header_x = screen_width // 2  - 72
+        header_y = screen_height - header_height
+        
+        self.header_rect = pygame.Rect(header_x, header_y, header_width, header_height)
+        
+        # Desenha o header
+        pygame.draw.rect(screen, MENU_GRAY, self.header_rect)
+        pygame.draw.rect(screen, WHITE, self.header_rect, 2)
+        
+        # Texto do header
+        font = pygame.font.Font(None, 24)
+        text = font.render("Feitiços Consumíveis", True, WHITE)
+        text_rect = text.get_rect(center=self.header_rect.center)
+        screen.blit(text, text_rect)
+        
+        # Se o menu estiver expandido, desenha o conteúdo
+        if self.is_expanded:
+            # Posição e tamanho do menu
+            menu_rect = pygame.Rect(header_x, screen_height - header_height - self.height, 
+                                  self.width, self.height)
+            pygame.draw.rect(screen, MENU_GRAY, menu_rect)
+            pygame.draw.rect(screen, WHITE, menu_rect, 2)
+            
+            # Desenha os feitiços
+            icon_size = 40
+            spacing = 20
+            x_start = menu_rect.x + 15
+            y_pos = menu_rect.y + + 15
+            
+            for i, spell_class in enumerate(self.spells):
+                # Encontra o botão correspondente
+                spell_button = next((button for button in spell_buttons 
+                                   if button.spell_class == spell_class), None)
+                if not spell_button:
+                    continue
+                
+                # Atualiza a posição do botão
+                spell_button.rect = pygame.Rect(x_start + (icon_size + spacing) * i, 
+                                              y_pos, icon_size, icon_size)
+                
+                # Desenha o fundo do botão
+                pygame.draw.rect(screen, (60, 60, 60), spell_button.rect)
+                
+                # Desenha o círculo do feitiço com cor normal ou acinzentada
+                center_x = spell_button.rect.centerx
+                center_y = spell_button.rect.centery
+                if spell_button.cooldown_timer > 0:
+                    # Converte a cor para tons de cinza
+                    color = spell_button.color
+                    gray = (color[0] * 0.3 + color[1] * 0.59 + color[2] * 0.11) * 0.6
+                    spell_color = (gray, gray, gray)
+                else:
+                    spell_color = spell_button.color
+                pygame.draw.circle(screen, spell_color, (center_x, center_y), icon_size//2 - 5)
+                
+                # Se estiver selecionado, desenha borda
+                if spell_button.selected:
+                    pygame.draw.rect(screen, WHITE, spell_button.rect, 3)
+                
+                # Desenha o nome do feitiço
+                name_font = pygame.font.Font(None, 16)
+                name_text = name_font.render(spell_class.NAME, True, WHITE)
+                name_rect = name_text.get_rect(centerx=center_x, top=spell_button.rect.bottom + 5)
+                screen.blit(name_text, name_rect)
+                
+                # Se estiver em cooldown, desenha o tempo restante
+                if spell_button.cooldown_timer > 0:
+                    cooldown_font = pygame.font.Font(None, 24)
+                    seconds = spell_button.cooldown_timer // 60
+                    cooldown_text = cooldown_font.render(str(seconds), True, WHITE)
+                    text_rect = cooldown_text.get_rect(center=spell_button.rect.center)
+                    screen.blit(cooldown_text, text_rect)
+    
+    def handle_click(self, pos, spell_buttons):
+        # Verifica clique no header
+        if self.header_rect and self.header_rect.collidepoint(pos):
+            self.is_expanded = not self.is_expanded
+            return True
+            
+        # Se expandido, verifica cliques nos feitiços
+        if self.is_expanded:
+            for button in spell_buttons:
+                if button.spell_class in self.spells and button.rect:
+                    if button.rect.collidepoint(pos) and button.cooldown_timer <= 0:
+                        # Desseleciona todos os outros feitiços
+                        for other_button in spell_buttons:
+                            if other_button != button:
+                                other_button.selected = False
+                        button.selected = not button.selected
+                        # Se selecionou, fecha o menu
+                        if button.selected:
+                            self.is_expanded = False
+                        return True
+        return False
+
+def close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager):
+    enemy_shop.is_expanded = False
+    defender_shop.is_expanded = False
+    boss_shop.is_expanded = False
+    spell_shop.is_expanded = False
+    throwable_spells_menu.is_expanded = False
+    consumable_spells_menu.is_expanded = False
+    mission_manager.is_expanded = False
+
+def main():
     # Lista de inimigos, defensores e feitiços
     enemies = []
     defenders = []
-    spells = []  # Nova lista para feitiços ativos
+    spells = []
 
     # Sistema de ondas e recursos
     wave_manager = WaveManager()
@@ -938,23 +1164,21 @@ def main():
     defender_shop = DefenderShopMenu(mission_manager)
     boss_shop = BossShopMenu()
     spell_shop = SpellShopMenu()
+    throwable_spells_menu = ThrowableSpellsMenu()
+    consumable_spells_menu = ConsumableSpellsMenu()
     selected_button = None
     skip_button = SkipButton()
     speed_button = SpeedButton()
     base = Base()
     upgrade_menu = UpgradeMenu()
-
-    # Calcula as posições dos botões de feitiço
-    spell_spacing = 70
-    spell_start_x = 350  # Posição inicial dos botões de feitiço
     
-    # Interface
+    # Interface - Botões de feitiço
     spell_buttons = [
-        SpellButton(FreezeSpell, spell_start_x),
-        SpellButton(DotSpell, spell_start_x + spell_spacing),
-        SpellButton(DamageSpell, spell_start_x + spell_spacing * 2),
-        SpellButton(SlowSpell, spell_start_x + spell_spacing * 3),
-        SpellButton(SpeedSpell, spell_start_x + spell_spacing * 4),
+        SpellButton(FreezeSpell, 0),  # A posição x será definida pelos menus
+        SpellButton(DotSpell, 0),
+        SpellButton(DamageSpell, 0),
+        SpellButton(SlowSpell, 0),
+        SpellButton(RageSpell, 0),
     ]
     selected_spell = None
 
@@ -989,23 +1213,24 @@ def main():
                     
                 # Verifica clique nas missões
                 if mission_manager.handle_click(mouse_pos):
+                    if mission_manager.is_expanded:
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        mission_manager.is_expanded = True
                     continue
                     
                 # Verifica clique no menu de inimigos
                 if enemy_shop.handle_click(mouse_pos):
                     if enemy_shop.is_expanded:
-                        defender_shop.is_expanded = False
-                        boss_shop.is_expanded = False
-                        spell_shop.is_expanded = False
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        enemy_shop.is_expanded = True
                     continue
                     
                 # Verifica clique no menu de defensores
                 button, was_header_click = defender_shop.handle_click(mouse_pos, gold)
                 if was_header_click:
                     if defender_shop.is_expanded:
-                        enemy_shop.is_expanded = False
-                        boss_shop.is_expanded = False
-                        spell_shop.is_expanded = False
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        defender_shop.is_expanded = True
                     continue
                 if button:
                     # Se já tinha um botão selecionado, desseleciona
@@ -1021,17 +1246,29 @@ def main():
                 # Verifica clique no menu de chefões
                 if boss_shop.handle_click(mouse_pos):
                     if boss_shop.is_expanded:
-                        enemy_shop.is_expanded = False
-                        defender_shop.is_expanded = False
-                        spell_shop.is_expanded = False
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        boss_shop.is_expanded = True
                     continue
                     
                 # Verifica clique no menu de feitiços
                 if spell_shop.handle_click(mouse_pos, spell_buttons, mission_manager):
                     if spell_shop.is_expanded:
-                        enemy_shop.is_expanded = False
-                        defender_shop.is_expanded = False
-                        boss_shop.is_expanded = False
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        spell_shop.is_expanded = True
+                    continue
+                
+                # Verifica clique no menu de feitiços arremessáveis
+                if throwable_spells_menu.handle_click(mouse_pos, spell_buttons):
+                    if throwable_spells_menu.is_expanded:
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        throwable_spells_menu.is_expanded = True
+                    continue
+                
+                # Verifica clique no menu de feitiços consumíveis
+                if consumable_spells_menu.handle_click(mouse_pos, spell_buttons):
+                    if consumable_spells_menu.is_expanded:
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        consumable_spells_menu.is_expanded = True
                     continue
                     
                 # Verifica clique nos botões de feitiço
@@ -1099,53 +1336,46 @@ def main():
                         defender_shop.is_expanded = False
                         boss_shop.is_expanded = False
                 
-                # Se um feitiço estiver selecionado e tem ouro suficiente
-                if selected_spell and selected_spell.selected:
-                    # Verifica se o ponto é válido para colocação
-                    if is_valid_placement(mouse_pos[0], mouse_pos[1], PATH, GAME_HEIGHT, defenders, is_spell=True):
-                        if isinstance(selected_spell.spell_class, DamageSpell):
-                            new_spell = selected_spell.spell_class(mouse_pos[0], mouse_pos[1], wave_manager)
-                            new_spell.level = selected_spell.level
-                            spells.append(new_spell)
-                        else:
-                            new_spell = selected_spell.spell_class(mouse_pos[0], mouse_pos[1])
-                            new_spell.level = selected_spell.level
-                            spells.append(new_spell)
-                        selected_spell.start_cooldown()  # Inicia o cooldown do feitiço
-                        selected_spell.selected = False
-                        mission_manager.update_spell_use()  # Atualiza contagem de uso de feitiços
-                    continue
-
-                # Verifica clique com feitiço selecionado
-                if any(button.selected for button in spell_buttons):
-                    for button in spell_buttons:
-                        if button.selected:
-                            if button.cooldown_timer <= 0:
-                                if isinstance(button.spell_class, SpeedSpell):
+                # Se um feitiço estiver selecionado e o mouse está numa posição válida
+                for button in spell_buttons:
+                    if button.selected and button.cooldown_timer <= 0:
+                        if isinstance(button.spell_class, RageSpell):
+                            # Para feitiços consumíveis, apenas verifica se clicou em defensores
+                            for defender in defenders:
+                                dx = defender.x - mouse_pos[0]
+                                dy = defender.y - mouse_pos[1]
+                                distance = math.sqrt(dx ** 2 + dy ** 2)
+                                if distance <= button.radius:
                                     spell = button.spell_class(mouse_pos[0], mouse_pos[1])
-                                    spells.append(spell)
-                                    button.start_cooldown()
-                                    mission_manager.update_spell_use()  # Atualiza missão de uso de feitiços
-                                else:
-                                    spell = button.spell_class(mouse_pos[0], mouse_pos[1])
+                                    spell.level = button.level
                                     spells.append(spell)
                                     button.start_cooldown()
                                     button.selected = False
-                                    mission_manager.update_spell_use()  # Atualiza missão de uso de feitiços
+                                    mission_manager.update_spell_use()
+                                    break
+                        else:
+                            # Para feitiços arremessáveis, verifica se a posição é válida
+                            if is_valid_placement(mouse_pos[0], mouse_pos[1], PATH, GAME_HEIGHT, defenders, is_spell=True):
+                                spell = button.spell_class(mouse_pos[0], mouse_pos[1])
+                                spell.level = button.level
+                                spells.append(spell)
+                                button.start_cooldown()
+                                button.selected = False
+                                mission_manager.update_spell_use()
 
         # Atualização da onda
         wave_manager.update()
         
         # Atualização dos feitiços
         for spell in spells[:]:  # Usa uma cópia da lista para poder modificá-la durante a iteração
-            if not isinstance(spell, SpeedSpell):
+            if not isinstance(spell, RageSpell):
                 update_enemy_result = spell.update(enemies)  
             else:
                 update_defender_result = spell.update(defenders)
 
             # AQUI É ONDE PASSAMOS OS INIMIGOS PARA OS FEITIÇOS (PASSAR TAMBÉM OS DEFENSORES)
             
-            if not isinstance(spell, SpeedSpell):
+            if not isinstance(spell, RageSpell):
                 if update_enemy_result == "died":
                     # Se o feitiço matou inimigos, dá a recompensa
                     for enemy in spell.killed_enemies:
@@ -1285,10 +1515,6 @@ def main():
         # Desenha todos os defensores
         for defender in defenders:
             defender.draw(screen)
-            
-        # Desenha os botões de feitiço
-        for button in spell_buttons:
-            button.draw(screen, gold)
         
         # Desenha os menus laterais
         enemy_shop.draw(screen, wave_manager)
@@ -1296,16 +1522,14 @@ def main():
         boss_shop.draw(screen, wave_manager)
         spell_shop.draw(screen, spell_buttons, mission_manager)
         
+        # Desenha os novos menus de feitiço
+        throwable_spells_menu.draw(screen, spell_buttons)
+        consumable_spells_menu.draw(screen, spell_buttons)
+        
         # Se um feitiço estiver selecionado, mostra a prévia
-        if selected_spell and selected_spell.selected:
-            # Verifica se a posição é válida
-            is_valid = is_valid_placement(mouse_pos[0], mouse_pos[1], PATH, GAME_HEIGHT, defenders, is_spell=True)
-            if is_valid:
-                # Desenha o raio do feitiço
-                color = (*selected_spell.spell_class.COLOR, 128)
-                spell_surface = pygame.Surface((selected_spell.radius * 2, selected_spell.radius * 2), pygame.SRCALPHA)
-                pygame.draw.circle(spell_surface, color, (selected_spell.radius, selected_spell.radius), selected_spell.radius)
-                screen.blit(spell_surface, (mouse_pos[0] - selected_spell.radius, mouse_pos[1] - selected_spell.radius))
+        for spell_button in spell_buttons:
+            if spell_button.selected:
+                spell_button.draw_preview(screen, mouse_pos[0], mouse_pos[1], is_valid_placement, PATH, GAME_HEIGHT)
         
         # Se um botão de defensor estiver selecionado, mostra a prévia
         if selected_button and selected_button.selected:

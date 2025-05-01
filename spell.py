@@ -273,7 +273,7 @@ class DotSpell(Spell):
                 else:
                     enemy.apply_dot(self.get_dot_damage(), self.get_dot_duration())
 
-class SpeedSpell(Spell):
+class RageSpell(Spell):
     COST = 0
     RADIUS = 100
     COLOR = (250, 60, 250)  # Rosa-claro
@@ -329,12 +329,12 @@ class SpeedSpell(Spell):
 
 class SpellButton:
     def __init__(self, spell_class, x_pos):
-        self.width = 50
-        self.height = 50
-        self.color = spell_class.COLOR
-        self.rect = pygame.Rect(x_pos, 600, self.width, self.height)
-        self.selected = False
         self.spell_class = spell_class
+        self.rect = pygame.Rect(x_pos, 0, 50, 50)  # Posição x será definida depois
+        self.color = spell_class.COLOR
+        self.cooldown_timer = 0
+        self.selected = False
+        self.level = 1
         self.radius = spell_class.RADIUS
         self.cooldown_timer = 0
         self.level = 1  # Nível atual do feitiço
@@ -390,7 +390,7 @@ class SpellButton:
                 "Duração": f"{duration:.1f}s",
                 "Recarga": f"{cooldown // 60}s"
             }
-        elif isinstance(self.spell_class, SpeedSpell):
+        elif isinstance(self.spell_class, RageSpell):
             duration = (self.spell_class.get_velocity_duration()) / 60
             buff = self.spell_class.get_velocity()
             return {
@@ -454,15 +454,18 @@ class SpellButton:
         screen.blit(text, text_rect)
         
     def update(self):
+        """Atualiza o cooldown do feitiço"""
         if self.cooldown_timer > 0:
             self.cooldown_timer -= GameSpeed.get_instance().current_multiplier
-        
+            
     def handle_click(self, pos, gold):
-        if self.rect.collidepoint(pos) and self.cooldown_timer <= 0:
-            self.selected = not self.selected
+        """Verifica se houve clique no botão"""
+        if self.rect.collidepoint(pos):
+            if self.cooldown_timer <= 0:
+                self.selected = not self.selected
             return True
         return False
-        
+    
     def start_cooldown(self):
         """Inicia o cooldown baseado no nível atual"""
         if isinstance(self.spell_class, (DamageSpell, FreezeSpell, DotSpell, SlowSpell)):
@@ -471,3 +474,27 @@ class SpellButton:
         else:
             self.cooldown_timer = self.spell_class.COOLDOWN
             self.selected = False 
+        
+    def draw_preview(self, screen, x, y, is_valid_placement_func, path, game_height):
+        """Desenha a prévia da área do feitiço"""
+        if self.selected and self.cooldown_timer <= 0:
+            # Verifica se a posição é válida para o feitiço
+            is_valid = is_valid_placement_func(x, y, path, game_height, [], is_spell=True)
+            if is_valid:
+                # Desenha a área de efeito
+                color = (*self.spell_class.COLOR, 128)  # Cor semi-transparente
+                preview_surface = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
+                pygame.draw.circle(preview_surface, color, (self.radius, self.radius), self.radius)
+                screen.blit(preview_surface, (x - self.radius, y - self.radius))
+                
+    def draw(self, screen):
+        """Desenha o botão do feitiço"""
+        # Desenha o fundo do botão
+        pygame.draw.rect(screen, (60, 60, 60), self.rect)
+        
+        # Se estiver em cooldown, desenha um overlay cinza semi-transparente
+        if self.cooldown_timer > 0:
+            cooldown_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
+            pygame.draw.rect(cooldown_surface, (128, 128, 128, 180), 
+                           (0, 0, self.rect.width, self.rect.height))
+            screen.blit(cooldown_surface, self.rect)
