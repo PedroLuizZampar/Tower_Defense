@@ -273,6 +273,38 @@ class DotSpell(Spell):
                 else:
                     enemy.apply_dot(self.get_dot_damage(), self.get_dot_duration())
 
+class WeaknessSpell(Spell):
+    COST = 0
+    RADIUS = 90
+    COLOR = (128, 0, 128)  # Roxo
+    NAME = "Fraqueza"
+    WEAKNESS_DURATION = 90  # 1.5 segundos
+    COOLDOWN = 3600  # 1 minuto de cooldown
+    UPGRADE_COSTS = [2, 4, 6, 8, 10]  # Custo em orbes para cada nível
+    DURATION_INCREASE = 30  # Aumento da duração por nível (0.5 segundos)
+    MAX_LEVEL = 5
+    
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.duration = 30  # 0.5 segundos
+        self.current_duration = self.duration
+        self.level = 1  # Nível atual do feitiço
+        
+    def get_weakness_duration(self):
+        """Retorna a duração do congelamento baseado no nível"""
+        return self.WEAKNESS_DURATION + (self.level - 1) * self.DURATION_INCREASE
+        
+    def get_cooldown(self):
+        """Retorna o cooldown atual baseado no nível"""
+        return self.COOLDOWN
+        
+    def apply_effect(self, enemies):
+        """Aplica efeito de congelamento em área"""
+        affected = self.affect_enemies(enemies)
+        for enemy in affected:
+            if not isinstance(enemy, TankEnemy):  # Tanques são imunes ao slow
+                enemy.apply_weakness(self.get_weakness_duration())
+
 class RageSpell(Spell):
     COST = 0
     RADIUS = 100
@@ -463,7 +495,7 @@ class SpellButton:
         if self.rect.collidepoint(pos):
             if self.cooldown_timer <= 0:
                 self.selected = not self.selected
-            return True
+                return True
         return False
     
     def start_cooldown(self):

@@ -3,12 +3,13 @@ import math
 import os
 import sys
 import random
+import json
 from enemy import spawn_random_enemy, Enemy, SpeedEnemy, TankEnemy, ArmoredEnemy, HealerEnemy, FreezeAuraEnemy, RageEnemy, StealthEnemy, ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss
 from defender import Defender, BlueDefender, RedDefender, YellowDefender, DefenderButton, BasicDefender, GreenDefender, OrangeDefender, PurpleDefender, PinkDefender
 from wave_manager import WaveManager
-from base import Base, SkipButton, SpeedButton
+from base import Base, SkipButton, SpeedButton, PauseButton, PauseMenu
 from upgrade_menu import UpgradeMenu
-from spell import DamageSpell, FreezeSpell, DotSpell, SlowSpell, RageSpell, SpellButton
+from spell import DamageSpell, FreezeSpell, DotSpell, SlowSpell, WeaknessSpell, RageSpell, SpellButton
 from mission_manager import MissionManager
 
 # Inicialização do Pygame com flags otimizadas
@@ -23,6 +24,8 @@ GAME_HEIGHT = SCREEN_HEIGHT - WAVE_MENU_HEIGHT  # Altura do jogo ajustada
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF)
 pygame.display.set_caption("Tower Defense")
 
+INITIAL_GOLD = 250
+
 # Cores
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
@@ -32,6 +35,77 @@ MENU_LIGHT_GRAY = (60, 60, 60)
 # Carrega o background otimizado
 background = pygame.image.load(os.path.join('assets', 'background.png')).convert()
 background = pygame.transform.scale(background, (SCREEN_WIDTH, GAME_HEIGHT))
+
+class MenuPrincipal:
+    def __init__(self):
+        screen_width = pygame.display.get_surface().get_width()
+        screen_height = pygame.display.get_surface().get_height()
+        
+        self.font = pygame.font.Font(None, 40)
+        button_width = 200
+        button_height = 50
+        button_spacing = 20
+        
+        # Botão Novo Jogo
+        self.new_game_rect = pygame.Rect(
+            screen_width//2 - button_width//2,
+            screen_height//2 - button_height - button_spacing//2,
+            button_width,
+            button_height
+        )
+        self.new_game_text = self.font.render("NOVO JOGO", True, (255, 255, 255))
+        self.new_game_text_rect = self.new_game_text.get_rect(center=self.new_game_rect.center)
+        
+        # Botão Carregar Jogo
+        self.load_game_rect = pygame.Rect(
+            screen_width//2 - button_width//2,
+            screen_height//2 + button_spacing//2,
+            button_width,
+            button_height
+        )
+        self.load_game_text_rect = self.new_game_text.get_rect(center=self.load_game_rect.center)
+        self.active = True
+        self.has_save = self.check_save_exists()
+        
+    def check_save_exists(self):
+        """Verifica se existe um arquivo de save"""
+        return os.path.exists('save_game.json')
+        
+    def draw(self, screen):
+        if self.active:
+            # Preenche a tela com cinza
+            screen.fill(MENU_GRAY)
+            
+            # Desenha o botão Novo Jogo
+            pygame.draw.rect(screen, MENU_LIGHT_GRAY, self.new_game_rect)
+            pygame.draw.rect(screen, WHITE, self.new_game_rect, 2)
+            screen.blit(self.new_game_text, self.new_game_text_rect)
+            
+            # Desenha o botão Carregar Jogo
+            button_color = MENU_LIGHT_GRAY if self.has_save else (60, 60, 60)
+            text_color = WHITE if self.has_save else (150, 150, 150)
+            load_text = self.font.render("CARREGAR", True, text_color)
+            load_text_rect = load_text.get_rect(center=self.load_game_rect.center)
+            
+            pygame.draw.rect(screen, button_color, self.load_game_rect)
+            pygame.draw.rect(screen, WHITE, self.load_game_rect, 2)
+            screen.blit(load_text, load_text_rect)
+            
+    def handle_click(self, pos):
+        if self.active:
+            if self.new_game_rect.collidepoint(pos):
+                self.active = False
+                try:
+                    # Remove o arquivo de save ao iniciar um novo jogo
+                    if os.path.exists('save_game.json'):
+                        os.remove('save_game.json')
+                except:
+                    pass
+                return "new"
+            elif self.has_save and self.load_game_rect.collidepoint(pos):
+                self.active = False
+                return "load"
+        return None
 
 # Definição do caminho (waypoints)
 PATH = [
@@ -126,6 +200,40 @@ def is_valid_placement(x, y, path, game_height, defenders, is_spell=False):
 def draw_enemy_path(screen, path):
     """Desenha o caminho dos inimigos com uma cor semi-transparente"""
     pass  # Removida a visualização do caminho
+
+def reset_game():
+    """Reseta todos os elementos do jogo para o estado inicial"""
+    enemies = []
+    defenders = []
+    spells = []
+    gold = INITIAL_GOLD  # Ouro inicial
+    wave_manager = WaveManager()  # Reinicia na onda 1
+    mission_manager = MissionManager()  # Reinicia as missões
+    base = Base()  # Base com vida cheia
+    
+    # Reseta os botões de defensor para estado bloqueado
+    defender_buttons = [
+        DefenderButton(BasicDefender, 720, mission_manager),
+        DefenderButton(RedDefender, 720, mission_manager),
+        DefenderButton(YellowDefender, 720, mission_manager),
+        DefenderButton(GreenDefender, 720, mission_manager),
+        DefenderButton(BlueDefender, 720, mission_manager),
+        DefenderButton(PinkDefender, 720, mission_manager),
+        DefenderButton(OrangeDefender, 720, mission_manager),
+        DefenderButton(PurpleDefender, 720, mission_manager),
+    ]
+    
+    # Reseta os botões de feitiço para nível 1
+    spell_buttons = [
+        SpellButton(FreezeSpell, 0),
+        SpellButton(DotSpell, 0),
+        SpellButton(DamageSpell, 0),
+        SpellButton(SlowSpell, 0),
+        SpellButton(WeaknessSpell, 0),
+        SpellButton(RageSpell, 0),
+    ]
+    
+    return enemies, defenders, spells, gold, wave_manager, mission_manager, base, defender_buttons, spell_buttons
 
 class EnemyShopMenu:
     def __init__(self):
@@ -293,8 +401,8 @@ class DefenderShopMenu:
         self.selected_button = None
         self.current_page = 0  # Current page index
         self.defenders_per_page = 5  # Number of defenders per page
-        self.prev_button_rect = None  # Rectangle for previous page button
-        self.next_button_rect = None  # Rectangle for next page button
+        self.prev_button_rect = None
+        self.next_button_rect = None
         self.defender_buttons = []  # Initialize empty list first
         self.setup_buttons()  # Then call setup_buttons
         
@@ -692,7 +800,7 @@ class SpellShopMenu:
         self.spells_per_page = 4
         self.prev_button_rect = None
         self.next_button_rect = None
-        self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell, RageSpell]
+        self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell, WeaknessSpell, RageSpell]
         self.upgrade_buttons = {}  # Dicionário para armazenar os retângulos dos botões de upgrade
         
     def draw(self, screen, spell_buttons, mission_manager):
@@ -782,6 +890,14 @@ class SpellShopMenu:
                     desc_text = font.render("Desacelera inimigos na área", True, (50, 255, 50))
                     screen.blit(desc_text, (card_rect.x + 60, y_offset + 50))
                     immune_text = font.render("Inimigos Tanque são imunes", True, (255, 100, 100))
+                    screen.blit(immune_text, (card_rect.x + 60, y_offset + 65))
+                elif spell_class == WeaknessSpell:
+                    duration = (spell_button.spell_class.WEAKNESS_DURATION + (spell_button.level - 1) * spell_button.spell_class.DURATION_INCREASE) / 60
+                    stats_text = font.render(f"Raio: {spell_class.RADIUS}px | Duração: {duration:.1f}s", True, WHITE)
+                    screen.blit(stats_text, (card_rect.x + 60, y_offset + 35))
+                    desc_text = font.render("Enfraquece inimigos em 30%", True, (50, 255, 50))
+                    screen.blit(desc_text, (card_rect.x + 60, y_offset + 50))
+                    immune_text = font.render(f"por {duration:.1f} segundos", True, (50, 255, 50))
                     screen.blit(immune_text, (card_rect.x + 60, y_offset + 65))
                 elif spell_class == RageSpell:
                     duration = (spell_button.spell_class.VELOCITY_DURATION + (spell_button.level - 1) * spell_button.spell_class.DURATION_INCREASE) / 60
@@ -925,12 +1041,13 @@ class ThrowableSpellsMenu:
         self.width = 250
         self.height = 180
         self.header_rect = None
-        self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell]
+        self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell, WeaknessSpell]
+        self.spells_per_row = 4  # Maximum spells per row
         
     def draw(self, screen, spell_buttons):
         # Define a posição do header (parte inferior da tela)
-        header_width = 250  # Aumentado de 150 para 250
-        header_height = 35  # Aumentado de 30 para 35
+        header_width = 250  
+        header_height = 35  
         screen_width = pygame.display.get_surface().get_width()
         screen_height = pygame.display.get_surface().get_height()
         header_x = screen_width // 2 - header_width - 71
@@ -956,13 +1073,20 @@ class ThrowableSpellsMenu:
             pygame.draw.rect(screen, MENU_GRAY, menu_rect)
             pygame.draw.rect(screen, WHITE, menu_rect, 2)
             
-            # Desenha os feitiços
+            # Configuração da grid
             icon_size = 40
             spacing = 20
             x_start = menu_rect.x + 15
-            y_pos = menu_rect.y + + 15
+            y_start = menu_rect.y + 15
             
             for i, spell_class in enumerate(self.spells):
+                # Calcula posição na grid
+                row = i // self.spells_per_row
+                col = i % self.spells_per_row
+                
+                x_pos = x_start + (icon_size + spacing) * col
+                y_pos = y_start + (icon_size + spacing) * row
+                
                 # Encontra o botão correspondente
                 spell_button = next((button for button in spell_buttons 
                                    if button.spell_class == spell_class), None)
@@ -970,8 +1094,7 @@ class ThrowableSpellsMenu:
                     continue
                 
                 # Atualiza a posição do botão
-                spell_button.rect = pygame.Rect(x_start + (icon_size + spacing) * i, 
-                                              y_pos, icon_size, icon_size)
+                spell_button.rect = pygame.Rect(x_pos, y_pos, icon_size, icon_size)
                 
                 # Desenha o fundo do botão
                 pygame.draw.rect(screen, (60, 60, 60), spell_button.rect)
@@ -980,7 +1103,6 @@ class ThrowableSpellsMenu:
                 center_x = spell_button.rect.centerx
                 center_y = spell_button.rect.centery
                 if spell_button.cooldown_timer > 0:
-                    # Converte a cor para tons de cinza
                     color = spell_button.color
                     gray = (color[0] * 0.3 + color[1] * 0.59 + color[2] * 0.11) * 0.6
                     spell_color = (gray, gray, gray)
@@ -1010,6 +1132,12 @@ class ThrowableSpellsMenu:
         # Verifica clique no header
         if self.header_rect and self.header_rect.collidepoint(pos):
             self.is_expanded = not self.is_expanded
+            # Se o menu está fechando, desseleciona todos os feitiços e limpa suas posições
+            if not self.is_expanded:
+                for button in spell_buttons:
+                    button.selected = False
+                    if button.spell_class in self.spells:
+                        button.rect.x = 0  # Reseta a posição
             return True
             
         # Se expandido, verifica cliques nos feitiços
@@ -1017,7 +1145,7 @@ class ThrowableSpellsMenu:
             for button in spell_buttons:
                 if button.spell_class in self.spells and button.rect:
                     if button.rect.collidepoint(pos) and button.cooldown_timer <= 0:
-                        # Desseleciona todos os outros feitiços
+                        # Desseleciona outros botões
                         for other_button in spell_buttons:
                             if other_button != button:
                                 other_button.selected = False
@@ -1035,11 +1163,12 @@ class ConsumableSpellsMenu:
         self.height = 180
         self.header_rect = None
         self.spells = [RageSpell]
+        self.spells_per_row = 4  # Maximum spells per row
         
     def draw(self, screen, spell_buttons):
         # Define a posição do header (parte inferior da tela)
-        header_width = 250  # Aumentado de 150 para 250
-        header_height = 35  # Aumentado de 30 para 35
+        header_width = 250
+        header_height = 35
         screen_width = pygame.display.get_surface().get_width()
         screen_height = pygame.display.get_surface().get_height()
         header_x = screen_width // 2  - 72
@@ -1065,13 +1194,20 @@ class ConsumableSpellsMenu:
             pygame.draw.rect(screen, MENU_GRAY, menu_rect)
             pygame.draw.rect(screen, WHITE, menu_rect, 2)
             
-            # Desenha os feitiços
+            # Configuração da grid
             icon_size = 40
             spacing = 20
             x_start = menu_rect.x + 15
-            y_pos = menu_rect.y + + 15
+            y_start = menu_rect.y + 15
             
             for i, spell_class in enumerate(self.spells):
+                # Calcula posição na grid
+                row = i // self.spells_per_row
+                col = i % self.spells_per_row
+                
+                x_pos = x_start + (icon_size + spacing) * col
+                y_pos = y_start + (icon_size + spacing) * row
+                
                 # Encontra o botão correspondente
                 spell_button = next((button for button in spell_buttons 
                                    if button.spell_class == spell_class), None)
@@ -1079,8 +1215,7 @@ class ConsumableSpellsMenu:
                     continue
                 
                 # Atualiza a posição do botão
-                spell_button.rect = pygame.Rect(x_start + (icon_size + spacing) * i, 
-                                              y_pos, icon_size, icon_size)
+                spell_button.rect = pygame.Rect(x_pos, y_pos, icon_size, icon_size)
                 
                 # Desenha o fundo do botão
                 pygame.draw.rect(screen, (60, 60, 60), spell_button.rect)
@@ -1089,7 +1224,6 @@ class ConsumableSpellsMenu:
                 center_x = spell_button.rect.centerx
                 center_y = spell_button.rect.centery
                 if spell_button.cooldown_timer > 0:
-                    # Converte a cor para tons de cinza
                     color = spell_button.color
                     gray = (color[0] * 0.3 + color[1] * 0.59 + color[2] * 0.11) * 0.6
                     spell_color = (gray, gray, gray)
@@ -1119,6 +1253,12 @@ class ConsumableSpellsMenu:
         # Verifica clique no header
         if self.header_rect and self.header_rect.collidepoint(pos):
             self.is_expanded = not self.is_expanded
+            # Se o menu está fechando, desseleciona todos os feitiços e limpa suas posições
+            if not self.is_expanded:
+                for button in spell_buttons:
+                    button.selected = False
+                    if button.spell_class in self.spells:
+                        button.rect.x = 0  # Reseta a posição
             return True
             
         # Se expandido, verifica cliques nos feitiços
@@ -1126,7 +1266,7 @@ class ConsumableSpellsMenu:
             for button in spell_buttons:
                 if button.spell_class in self.spells and button.rect:
                     if button.rect.collidepoint(pos) and button.cooldown_timer <= 0:
-                        # Desseleciona todos os outros feitiços
+                        # Desseleciona outros botões
                         for other_button in spell_buttons:
                             if other_button != button:
                                 other_button.selected = False
@@ -1137,7 +1277,7 @@ class ConsumableSpellsMenu:
                         return True
         return False
 
-def close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager):
+def close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons):
     enemy_shop.is_expanded = False
     defender_shop.is_expanded = False
     boss_shop.is_expanded = False
@@ -1145,6 +1285,12 @@ def close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_
     throwable_spells_menu.is_expanded = False
     consumable_spells_menu.is_expanded = False
     mission_manager.is_expanded = False
+    
+    # Desseleciona todos os feitiços dos menus quando fecham
+    for button in spell_buttons:
+        button.selected = False
+        # Reseta a posição dos botões
+        button.rect.x = 0
 
 def main():
     # Lista de inimigos, defensores e feitiços
@@ -1154,10 +1300,13 @@ def main():
 
     # Sistema de ondas e recursos
     wave_manager = WaveManager()
-    gold = 250  # Ouro inicial
+    gold = INITIAL_GOLD  # Ouro inicial
     
     # Sistema de missões
     mission_manager = MissionManager()
+    
+    # Menu principal
+    menu_principal = MenuPrincipal()
 
     # Interface
     enemy_shop = EnemyShopMenu()
@@ -1169,15 +1318,19 @@ def main():
     selected_button = None
     skip_button = SkipButton()
     speed_button = SpeedButton()
+    pause_button = PauseButton()
+    pause_menu = PauseMenu()
+    game_paused = False
     base = Base()
     upgrade_menu = UpgradeMenu()
     
     # Interface - Botões de feitiço
     spell_buttons = [
-        SpellButton(FreezeSpell, 0),  # A posição x será definida pelos menus
+        SpellButton(FreezeSpell, 0),
         SpellButton(DotSpell, 0),
         SpellButton(DamageSpell, 0),
         SpellButton(SlowSpell, 0),
+        SpellButton(WeaknessSpell, 0),
         SpellButton(RageSpell, 0),
     ]
     selected_spell = None
@@ -1187,11 +1340,64 @@ def main():
 
     # Controle de seleção
     selected_defender = None
+    immunity_boss = None
+
+    # Carrega o jogo salvo se existir
+    if menu_principal.has_save:
+        try:
+            import json
+            with open('save_game.json', 'r') as f:
+                save_data = json.load(f)
+                
+            # Restaura recursos
+            wave_manager.set_wave(save_data['wave'])  # Usa o novo método
+            gold = save_data['gold']
+            base.health = save_data['base_health']
+            mission_manager.orbes = save_data['orbs']
+            
+            # Restaura o progresso das missões
+            mission_progress = save_data['mission_progress']
+            mission_manager.total_kills = mission_progress['total_kills']
+            mission_manager.total_waves = mission_progress['total_waves']
+            mission_manager.total_spells = mission_progress['total_spells']
+            mission_manager.total_upgrades = mission_progress['total_upgrades']
+            
+            # Restaura o estado de cada missão
+            for mission, mission_data in zip(mission_manager.missions, mission_progress['missions']):
+                mission.current_value = mission_data['current_value']
+                mission.completed = mission_data['completed']
+                mission.claimed = mission_data['claimed']
+                mission.base_value = mission_data['base_value']
+            
+            # Restaura níveis dos feitiços
+            for spell_button in spell_buttons:
+                spell_name = spell_button.spell_class.__name__
+                if spell_name in save_data['spell_levels']:
+                    spell_button.level = save_data['spell_levels'][spell_name]
+            
+            # Restaura torres desbloqueadas
+            for button in defender_shop.defender_buttons:
+                if button.defender_class.__name__ in save_data['unlocked_defenders']:
+                    button.unlocked = True
+            
+            # Restaura os defensores
+            for d_data in save_data['defenders']:
+                x, y, defender_type, level = d_data
+                defender_class = globals()[defender_type]
+                defender = defender_class(x, y, wave_manager.current_wave)
+                defender.level = level
+                defenders.append(defender)
+        except:
+            # Se houver algum erro ao carregar, começa um novo jogo
+            print("Erro ao carregar jogo salvo. Iniciando novo jogo.")
+            wave_manager = WaveManager()
+            gold = 250
+            mission_manager = MissionManager()
+            base = Base()
 
     # Game loop
     running = True
     clock = pygame.time.Clock()
-    immunity_boss = None  # Referência para o boss de imunidade
 
     while running:
         mouse_pos = pygame.mouse.get_pos()
@@ -1202,6 +1408,53 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # Verifica clique no menu principal
+                if menu_principal.active:
+                    action = menu_principal.handle_click(mouse_pos)
+                    if action == "new":
+                        # Reseta o jogo completamente
+                        (enemies, defenders, spells, gold, wave_manager, 
+                         mission_manager, base, defender_buttons, spell_buttons) = reset_game()
+                        
+                        # Atualiza os menus com os novos botões
+                        defender_shop = DefenderShopMenu(mission_manager)
+                        defender_shop.defender_buttons = defender_buttons
+                        
+                        menu_principal.active = False
+                        continue
+                    elif action == "load":
+                        menu_principal.active = False
+                        continue
+
+                # Verifica clique no botão de pausa
+                if pause_button.handle_click(mouse_pos):
+                    game_paused = True
+                    continue
+
+                # Se o jogo estiver pausado, verifica apenas cliques no menu de pausa
+                if game_paused:
+                    action = pause_menu.handle_click(mouse_pos)
+                    if action == "resume":
+                        game_paused = False
+                    elif action == "quit":
+                        # Salva o estado atual do jogo
+                        game_state = {
+                            'wave': wave_manager.current_wave,
+                            'gold': gold,
+                            'defenders': defenders,
+                            'enemies': enemies,
+                            'base': base,
+                            'mission_manager': mission_manager,
+                            'spell_buttons': spell_buttons,
+                            'defender_shop': defender_shop
+                        }
+                        pause_menu.save_game_state(game_state)
+                        # Atualiza o menu principal para mostrar que existe um save
+                        menu_principal.has_save = True
+                        menu_principal.active = True
+                        game_paused = False
+                    continue
+
                 # Verifica clique no botão de velocidade
                 if speed_button.handle_click(mouse_pos):
                     continue
@@ -1214,14 +1467,14 @@ def main():
                 # Verifica clique nas missões
                 if mission_manager.handle_click(mouse_pos):
                     if mission_manager.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons)
                         mission_manager.is_expanded = True
                     continue
                     
                 # Verifica clique no menu de inimigos
                 if enemy_shop.handle_click(mouse_pos):
                     if enemy_shop.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons)
                         enemy_shop.is_expanded = True
                     continue
                     
@@ -1229,7 +1482,7 @@ def main():
                 button, was_header_click = defender_shop.handle_click(mouse_pos, gold)
                 if was_header_click:
                     if defender_shop.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons)
                         defender_shop.is_expanded = True
                     continue
                 if button:
@@ -1246,39 +1499,47 @@ def main():
                 # Verifica clique no menu de chefões
                 if boss_shop.handle_click(mouse_pos):
                     if boss_shop.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons)
                         boss_shop.is_expanded = True
                     continue
                     
                 # Verifica clique no menu de feitiços
                 if spell_shop.handle_click(mouse_pos, spell_buttons, mission_manager):
                     if spell_shop.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons)
                         spell_shop.is_expanded = True
                     continue
                 
                 # Verifica clique no menu de feitiços arremessáveis
                 if throwable_spells_menu.handle_click(mouse_pos, spell_buttons):
                     if throwable_spells_menu.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons)
                         throwable_spells_menu.is_expanded = True
                     continue
                 
                 # Verifica clique no menu de feitiços consumíveis
                 if consumable_spells_menu.handle_click(mouse_pos, spell_buttons):
                     if consumable_spells_menu.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager)
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons)
                         consumable_spells_menu.is_expanded = True
                     continue
                     
                 # Verifica clique nos botões de feitiço
                 clicked_spell = False
                 for button in spell_buttons:
-                    if button.handle_click(mouse_pos, gold):
+                    # Só permite clicar se o menu correspondente estiver aberto
+                    can_click = False
+                    if button.spell_class in throwable_spells_menu.spells and throwable_spells_menu.is_expanded:
+                        can_click = True
+                    elif button.spell_class in consumable_spells_menu.spells and consumable_spells_menu.is_expanded:
+                        can_click = True
+                        
+                    if can_click and button.handle_click(mouse_pos, gold):
                         # Desseleciona outros botões
                         for other_button in spell_buttons:
                             if other_button != button:
                                 other_button.selected = False
+                        button.selected = not button.selected
                         selected_spell = button if button.selected else None
                         clicked_spell = True
                         # Desseleciona defensor e botão de defensor
@@ -1289,7 +1550,7 @@ def main():
                             selected_button.selected = False
                             selected_button = None
                         break
-                        
+
                 if clicked_spell:
                     continue
                     
@@ -1327,7 +1588,6 @@ def main():
                     # Desseleciona o defensor anterior
                     if selected_defender and selected_defender != clicked_defender:
                         selected_defender.selected = False
-                        
                     selected_defender = clicked_defender
                     
                     # Se selecionou um defensor, fecha os menus
@@ -1363,141 +1623,150 @@ def main():
                                 button.selected = False
                                 mission_manager.update_spell_use()
 
-        # Atualização da onda
-        wave_manager.update()
-        
-        # Atualização dos feitiços
-        for spell in spells[:]:  # Usa uma cópia da lista para poder modificá-la durante a iteração
-            if not isinstance(spell, RageSpell):
-                update_enemy_result = spell.update(enemies)  
-            else:
-                update_defender_result = spell.update(defenders)
+        # Se o jogo estiver pausado, não atualiza a lógica do jogo
+        if not game_paused and not menu_principal.active:
+            # Atualização da onda
+            wave_manager.update()
+            
+            # Atualização dos feitiços
+            for spell in spells[:]:  # Usa uma cópia da lista para poder modificá-la durante a iteração
+                if not isinstance(spell, RageSpell):
+                    update_enemy_result = spell.update(enemies)  
+                else:
+                    update_defender_result = spell.update(defenders)
 
-            # AQUI É ONDE PASSAMOS OS INIMIGOS PARA OS FEITIÇOS (PASSAR TAMBÉM OS DEFENSORES)
-            
-            if not isinstance(spell, RageSpell):
-                if update_enemy_result == "died":
-                    # Se o feitiço matou inimigos, dá a recompensa
-                    for enemy in spell.killed_enemies:
-                        if not enemy.reward_given:
-                            # Usa diretamente a recompensa definida na classe do inimigo
-                            gold += enemy.__class__.REWARD
-                            enemy.reward_given = True
-                            mission_manager.update_kills()
-                            
-                            # Adiciona orbes para bosses
-                            if isinstance(enemy, (ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss)):
-                                mission_manager.orbes += 1
-                                
-                            if enemy in enemies:  # Verifica se o inimigo ainda está na lista
-                                enemies.remove(enemy)
-                elif not update_enemy_result:  # Se o feitiço terminou
-                    spells.remove(spell)
-            else:
-                if not update_defender_result:  # Se o feitiço terminou
-                    spells.remove(spell)
-        
-        # Atualiza os cooldowns dos botões de feitiço
-        for button in spell_buttons:
-            button.update()
-        
-        # Atualização dos defensores e seus projéteis
-        for defender in defenders:
-            if isinstance(defender, YellowDefender):
-                defender.update(enemies, defenders)  # Passa a lista de defensores para o YellowDefender
-            else:
-                defender.update(enemies)
-            # Atualiza os projéteis
-            for projectile in defender.projectiles[:]:  # Usa uma cópia da lista para poder modificá-la
-                if projectile.move():  # Se o projétil atingiu o alvo
-                    if projectile.target in enemies:  # Se o alvo ainda está vivo
-                        damage_result = projectile.target.take_damage(projectile.damage)
-                        if damage_result:  # Se o inimigo morreu
-                            if not projectile.target.reward_given:
-                                gold += projectile.target.REWARD
-                                projectile.target.reward_given = True
+                # AQUI É ONDE PASSAMOS OS INIMIGOS PARA OS FEITIÇOS (PASSAR TAMBÉM OS DEFENSORES)
+                
+                if not isinstance(spell, RageSpell):
+                    if update_enemy_result == "died":
+                        # Se o feitiço matou inimigos, dá a recompensa
+                        for enemy in spell.killed_enemies:
+                            if not enemy.reward_given:
+                                # Usa diretamente a recompensa definida na classe do inimigo
+                                gold += enemy.__class__.REWARD
+                                enemy.reward_given = True
                                 mission_manager.update_kills()
-                                if isinstance(projectile.target, (ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss)):
-                                    mission_manager.orbes += 3
-                            enemies.remove(projectile.target)
-                    defender.projectiles.remove(projectile)
-        
-        # Spawn de inimigos
-        spawn_result = wave_manager.should_spawn_enemy()
-        if spawn_result:
-            if spawn_result == "immunity_boss":
-                immunity_boss = ImmunityBoss(PATH, wave_manager)
-                immunity_boss.set_enemies_list(enemies)
-                enemies.append(immunity_boss)
-            elif spawn_result == "speed_boss":
-                speed_boss = SpeedBoss(PATH, wave_manager)
-                speed_boss.set_enemies_list(enemies)
-                enemies.append(speed_boss)
-            elif spawn_result == "magnet_boss":
-                magnet_boss = MagnetBoss(PATH, wave_manager)
-                magnet_boss.set_enemies_list(enemies)
-                enemies.append(magnet_boss)
-            elif spawn_result == "vampiric_boss":
-                vampiric_boss = VampiricBoss(PATH, wave_manager)
-                vampiric_boss.set_enemies_list(enemies)
-                enemies.append(vampiric_boss)
-            elif spawn_result == "split_boss":
-                split_boss = SplitBoss(PATH, wave_manager)
-                split_boss.set_enemies_list(enemies)
-                enemies.append(split_boss)
-            else:
-                enemy, is_special = spawn_random_enemy(PATH, wave_manager)
-                enemy.set_enemies_list(enemies)
-                enemies.append(enemy)
+                                
+                                # Adiciona orbes para bosses
+                                if isinstance(enemy, (ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss)):
+                                    mission_manager.orbes += 1
+                                
+                                if enemy in enemies:  # Verifica se o inimigo ainda está na lista
+                                    enemies.remove(enemy)
+                    elif not update_enemy_result:  # Se o feitiço terminou
+                        spells.remove(spell)
+                else:
+                    if not update_defender_result:  # Se o feitiço terminou
+                        spells.remove(spell)
             
-        # Atualização dos inimigos
-        for enemy in enemies[:]:
-            if isinstance(enemy, MagnetBoss):
-                enemy._all_defenders = defenders  # Passa a referência dos defensores para o boss
-            if isinstance(enemy, FreezeAuraEnemy):
-                enemy._all_defenders = defenders  # Passa a referência dos defensores para o inimigo gelado
-            enemy.set_enemies_list(enemies)  # Mantém o código existente
-            move_result = enemy.move()
+            # Atualiza os cooldowns dos botões de feitiço
+            for button in spell_buttons:
+                button.update()
             
-            # Primeiro verifica se morreu por DoT
-            if move_result == "died":  # Se morreu por DoT
-                if not enemy.reward_given:
-                    gold += enemy.__class__.REWARD
-                    enemy.reward_given = True
-                    mission_manager.update_kills()
-                    if isinstance(enemy, (ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss)):
-                        mission_manager.orbes += 3
-                enemies.remove(enemy)
-                continue
+            # Atualização dos defensores e seus projéteis
+            for defender in defenders:
+                if isinstance(defender, YellowDefender):
+                    defender.update(enemies, defenders)  # Passa a lista de defensores para o YellowDefender
+                else:
+                    defender.update(enemies)
+                # Atualiza os projéteis
+                for projectile in defender.projectiles[:]:  # Usa uma cópia da lista para poder modificá-la
+                    if projectile.move():  # Se o projétil atingiu o alvo
+                        if projectile.target in enemies:  # Se o alvo ainda está vivo
+                            damage_result = projectile.target.take_damage(projectile.damage)
+                            if damage_result:  # Se o inimigo morreu
+                                if not projectile.target.reward_given:
+                                    gold += projectile.target.REWARD
+                                    projectile.target.reward_given = True
+                                    mission_manager.update_kills()
+                                    if isinstance(projectile.target, (ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss)):
+                                        mission_manager.orbes += 3
+                                enemies.remove(projectile.target)
+                        defender.projectiles.remove(projectile)
             
-            # Depois verifica se chegou ao final do caminho
-            if move_result is True:  # True significa que chegou ao final do caminho
-                enemies.remove(enemy)
-                if base.take_damage(10):  # Inimigo atingiu a base
-                    running = False  # Game over se a base for destruída
-                continue
+            # Spawn de inimigos
+            spawn_result = wave_manager.should_spawn_enemy()
+            if spawn_result:
+                if spawn_result == "immunity_boss":
+                    immunity_boss = ImmunityBoss(PATH, wave_manager)
+                    immunity_boss.set_enemies_list(enemies)
+                    enemies.append(immunity_boss)
+                elif spawn_result == "speed_boss":
+                    speed_boss = SpeedBoss(PATH, wave_manager)
+                    speed_boss.set_enemies_list(enemies)
+                    enemies.append(speed_boss)
+                elif spawn_result == "magnet_boss":
+                    magnet_boss = MagnetBoss(PATH, wave_manager)
+                    magnet_boss.set_enemies_list(enemies)
+                    enemies.append(magnet_boss)
+                elif spawn_result == "vampiric_boss":
+                    vampiric_boss = VampiricBoss(PATH, wave_manager)
+                    vampiric_boss.set_enemies_list(enemies)
+                    enemies.append(vampiric_boss)
+                elif spawn_result == "split_boss":
+                    split_boss = SplitBoss(PATH, wave_manager)
+                    split_boss.set_enemies_list(enemies)
+                    enemies.append(split_boss)
+                else:
+                    enemy, is_special = spawn_random_enemy(PATH, wave_manager)
+                    enemy.set_enemies_list(enemies)
+                    enemies.append(enemy)
+                
+            # Atualização dos inimigos
+            for enemy in enemies[:]:
+                if isinstance(enemy, MagnetBoss):
+                    enemy._all_defenders = defenders  # Passa a referência dos defensores para o boss
+                if isinstance(enemy, FreezeAuraEnemy):
+                    enemy._all_defenders = defenders  # Passa a referência dos defensores para o inimigo gelado
+                enemy.set_enemies_list(enemies)  # Mantém o código existente
+                move_result = enemy.move()
+                
+                # Primeiro verifica se morreu por DoT
+                if move_result == "died":  # Se morreu por DoT
+                    if not enemy.reward_given:
+                        gold += enemy.__class__.REWARD
+                        enemy.reward_given = True
+                        mission_manager.update_kills()
+                        if isinstance(enemy, (ImmunityBoss, SpeedBoss, MagnetBoss, VampiricBoss, SplitBoss)):
+                            mission_manager.orbes += 3
+                    enemies.remove(enemy)
+                    continue
+                
+                # Depois verifica se chegou ao final do caminho
+                if move_result is True:  # True significa que chegou ao final do caminho
+                    enemies.remove(enemy)
+                    if base.take_damage(10):  # Inimigo atingiu a base
+                        running = False  # Game over se a base for destruída
+                    continue
+                
+                # Depois verifica cura
+                if isinstance(enemy, HealerEnemy) and move_result == "heal":
+                    # Cria efeito visual de cura
+                    heal_effect = pygame.Surface((enemy.heal_radius * 2, enemy.heal_radius * 2), pygame.SRCALPHA)
+                    pygame.draw.circle(heal_effect, (*enemy.COLOR, 100), 
+                                    (enemy.heal_radius, enemy.heal_radius), enemy.heal_radius)
+                    screen.blit(heal_effect, (int(enemy.x - enemy.heal_radius), 
+                                    int(enemy.y - enemy.heal_radius)))
             
-            # Depois verifica cura
-            if isinstance(enemy, HealerEnemy) and move_result == "heal":
-                # Cria efeito visual de cura
-                heal_effect = pygame.Surface((enemy.heal_radius * 2, enemy.heal_radius * 2), pygame.SRCALPHA)
-                pygame.draw.circle(heal_effect, (*enemy.COLOR, 100), 
-                                (enemy.heal_radius, enemy.heal_radius), enemy.heal_radius)
-                screen.blit(heal_effect, (int(enemy.x - enemy.heal_radius), 
-                                int(enemy.y - enemy.heal_radius)))
-        
-        # Verifica se a onda terminou
-        if wave_manager.check_wave_complete(enemies):
-            if not wave_manager.start_next_wave():
-                # Jogador venceu o jogo
-                running = False
-                print("Parabéns! Você completou todas as ondas!")
-            else:
-                mission_manager.update_wave(wave_manager.current_wave - 1)  # Atualiza contagem de ondas
+            # Verifica se a onda terminou
+            if wave_manager.check_wave_complete(enemies):
+                if not wave_manager.start_next_wave():
+                    # Jogador venceu o jogo
+                    running = False
+                    print("Parabéns! Você completou todas as ondas!")
+                else:
+                    mission_manager.update_wave(wave_manager.current_wave - 1)  # Atualiza contagem de ondas
         
         # Desenho
         screen.fill(MENU_GRAY)
         
+        # Desenha o menu principal se ativo
+        if menu_principal.active:
+            menu_principal.draw(screen)
+            pygame.display.flip()
+            clock.tick(60)
+            continue
+
         # Desenha o menu superior de ondas
         draw_wave_menu(screen, wave_manager, skip_button)
         
@@ -1575,6 +1844,13 @@ def main():
         
         # Desenha o botão de velocidade
         speed_button.draw(screen)
+        
+        # Desenha o botão de pausa
+        pause_button.draw(screen)
+
+        # Se o jogo estiver pausado, desenha o menu de pausa
+        if game_paused:
+            pause_menu.draw(screen)
         
         pygame.display.flip()
         clock.tick(60)

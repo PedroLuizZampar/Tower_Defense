@@ -170,8 +170,21 @@ class WaveManager:
         self.wave_completed = False
         self.boss_spawned = False  # Reseta a flag do boss para a próxima onda
         return True
+
+    def set_wave(self, wave_number):
+        """Configura o gerenciador para uma onda específica"""
+        self.current_wave = wave_number
+        self.enemies_in_wave = self.calculate_wave_size()
+        self.enemies_spawned = 0
+        self.spawn_timer = 0
+        self.wave_completed = False
+        self.game_completed = False
+        self.preparation_timer = self.PREPARATION_TIME
+        self.wave_active = False
+        self.boss_spawned = False
+        self.boss_spawn_cooldown = 0
         
     def get_wave_status(self):
         if not self.wave_active:
             return f"Preparação para Onda {self.current_wave}/{self.MAX_WAVES} - {self.preparation_timer // 60}s"
-        return f"Onda {self.current_wave}/{self.MAX_WAVES}" 
+        return f"Onda {self.current_wave}/{self.MAX_WAVES}"

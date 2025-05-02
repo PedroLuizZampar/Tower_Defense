@@ -95,7 +95,7 @@ class Enemy:
             self.speed = self.base_speed * 0.5  # Reduz a velocidade pela metade
             self.is_slowed = True
         
-    def apply_weakness(self, duration_frames=240):  # 4 segundos = 240 frames
+    def apply_weakness(self, duration_frames=180):  # 3 segundos = 180 frames
         """Aplica efeito de fraqueza"""
         self.weakness_timer = duration_frames
         self.is_weakened = True
