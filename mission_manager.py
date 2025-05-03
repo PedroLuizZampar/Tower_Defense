@@ -70,6 +70,7 @@ class MissionManager:
         self.button_width = 40
         self.button_height = 30
         self.button_spacing = 200
+        self.rect = None  # Retângulo principal do menu
         
     def has_notifications(self):
         """Verifica se há missões completadas não resgatadas"""
@@ -127,6 +128,9 @@ class MissionManager:
         header_height = 40
         header_rect = pygame.Rect(x, 100, panel_width, header_height)
         self.header_rect = header_rect  # Salva para detecção de clique
+        
+        # Define o rect principal do menu
+        self.rect = pygame.Rect(x, header_rect.bottom, panel_width, 370)  # 370 é a altura do painel
         
         # Desenha o fundo do cabeçalho
         pygame.draw.rect(screen, (40, 40, 40), header_rect)

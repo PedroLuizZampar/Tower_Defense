@@ -678,7 +678,6 @@ class SplitMinion(Enemy):
     REWARD = 10  # Recompensa em ouro
     
     def __init__(self, path, path_index, wave_manager, x, y):
-        print(type(wave_manager_global))
         super().__init__(path, wave_manager_global)
         self.radius = 12  # Raio menor que o boss
         self.path_index = path_index  # Começa do ponto onde o boss morreu
