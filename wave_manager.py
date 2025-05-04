@@ -1,4 +1,3 @@
-import random
 from base import GameSpeed
 
 class WaveManager:
@@ -94,10 +93,6 @@ class WaveManager:
                 'rage': 6,
                 'stealth': 2
             }
-        
-    def get_gold_multiplier(self):
-        # Aumenta o ouro dropado pelos inimigos em 5% por onda
-        return 1 + (self.current_wave - 1) * 0.05
         
     def should_spawn_enemy(self):
         if not self.wave_active or self.enemies_spawned >= self.enemies_in_wave:

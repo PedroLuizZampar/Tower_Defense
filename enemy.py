@@ -248,7 +248,7 @@ class TankEnemy(Enemy):
     BASE_SPEED = 1.0  # Reduzido para 1.0
     SPAWN_CHANCE = 15  # Reduzido para 15%
     NAME = "Tanque"  # Nome do inimigo tanque
-    REWARD = 3  # Recompensa em ouro
+    REWARD = 4  # Recompensa em ouro
     
     def __init__(self, path, wave_manager):
         super().__init__(path, wave_manager)
@@ -270,7 +270,7 @@ class SpeedEnemy(Enemy):
     BASE_SPEED = 3.0  # Aumentado para 3.0
     SPAWN_CHANCE = 25  # Reduzido para 25%
     NAME = "Célere"  # Nome do inimigo veloz
-    REWARD = 1  # Recompensa em ouro
+    REWARD = 2  # Recompensa em ouro
     
     def __init__(self, path, wave_manager):
         super().__init__(path, wave_manager)
@@ -379,7 +379,7 @@ class FreezeAuraEnemy(Enemy):
     BASE_SPEED = 1.8
     SPAWN_CHANCE = 15
     NAME = "Gelado"
-    REWARD = 2
+    REWARD = 3
     
     def __init__(self, path, wave_manager):
         super().__init__(path, wave_manager)
