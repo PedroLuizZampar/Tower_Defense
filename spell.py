@@ -305,60 +305,6 @@ class WeaknessSpell(Spell):
             if not isinstance(enemy, TankEnemy):  # Tanques são imunes ao slow
                 enemy.apply_weakness(self.get_weakness_duration())
 
-class RageSpell(Spell):
-    COST = 0
-    RADIUS = 100
-    COLOR = (250, 60, 250)  # Rosa-claro
-    NAME = "Fúria"
-    COOLDOWN = 2700  # 45 segundos de cooldown
-    UPGRADE_COSTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  # Custo em orbes para cada nível
-    VELOCITY_DURATION = 180 # Duração do efeito (3 segundos)
-    VELOCITY_BOOST = 0.55 # 55% de boost de velocidade
-    VELOCITY_INCREASE_PERCENT = 0.05  # 5% de aumento de dano por nível
-    DURATION_INCREASE = 30  # Aumento da duração por nível (0.5 segundos)  (LOGICA NO CÓDIGO -> A CADA 2 NÍVEIS)
-    MAX_LEVEL = 10
-    
-    def __init__(self, x, y):
-        super().__init__(x, y)
-        self.duration = 60  # 1 segundo
-        self.current_duration = self.duration
-        self.level = 1  # Nível atual do feitiço
-        self.killed_enemies = []  # Lista para controlar inimigos mortos
-    
-    def get_velocity(self):
-        """Retorna o buff de velocidade baseado no nível"""
-        velocity_buff = self.VELOCITY_BOOST
-        for _ in range(self.level - 1):
-            velocity_buff += self.VELOCITY_INCREASE_PERCENT
-        return velocity_buff
-        
-    def get_velocity_duration(self):
-        """Retorna a duração do buff de velocidade baseado no nível"""
-        extra_duration = (self.level) // 2 * self.DURATION_INCREASE  # +0.5 segundos a cada 2 níveis
-        return self.VELOCITY_DURATION + extra_duration
-        
-    def get_cooldown(self):
-        """Retorna o cooldown atual baseado no nível"""
-        return self.COOLDOWN
-        
-    def update(self, defenders):
-        """Atualiza o feitiço e retorna True se ainda está ativo"""
-        if self.active and not self.effect_applied:
-            self.apply_effect(defenders)
-            self.effect_applied = True
-            
-        self.current_duration -= GameSpeed.get_instance().current_multiplier
-        if self.current_duration <= 0:
-            self.active = False
-            return False
-        return self.active
-        
-    def apply_effect(self, defenders):
-        """Aplica dano ao longo do tempo em área"""
-        affected = self.affect_defenders(defenders)
-        for defender in affected:
-            defender.apply_speed(self.get_velocity(), self.get_velocity_duration()) 
-
 class SpellButton:
     def __init__(self, spell_class, x_pos):
         self.spell_class = spell_class
@@ -421,13 +367,6 @@ class SpellButton:
             return {
                 "Duração": f"{duration:.1f}s",
                 "Recarga": f"{cooldown // 60}s"
-            }
-        elif isinstance(self.spell_class, RageSpell):
-            duration = (self.spell_class.get_velocity_duration()) / 60
-            buff = self.spell_class.get_velocity()
-            return {
-                "Duração": f"{duration:.1f}s",
-                "Incremento": f"{buff * 100}%"
             }
         elif isinstance(self.spell_class, DotSpell):
             damage = self.spell_class.get_dot_damage() * (1 + self.level * self.spell_class.DAMAGE_INCREASE_PERCENT)

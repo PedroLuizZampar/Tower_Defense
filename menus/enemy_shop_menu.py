@@ -25,9 +25,9 @@ class EnemyShopMenu:
     def draw(self, screen, wave_manager):
         # Desenha o cabeçalho (sempre visível)
         header_width = 40
-        header_height = 100
+        header_height = 104
         header_x = self.SCREEN_WIDTH - header_width
-        self.header_rect = pygame.Rect(header_x, self.WAVE_MENU_HEIGHT + 98, header_width, header_height)
+        self.header_rect = pygame.Rect(header_x, self.WAVE_MENU_HEIGHT + 102, header_width, header_height)
         
         # Define o rect principal do menu
         self.rect = pygame.Rect(self.SCREEN_WIDTH - self.width - header_width, self.WAVE_MENU_HEIGHT, 

@@ -34,8 +34,6 @@ class Enemy:
         self.is_weakened = False  # Flag para indicar se está sob efeito de fraqueza
         self.immunity_timer = 0  # Timer para o efeito de imunidade
         self.is_immunized = False  # Flag para indicar se está sob efeito de imunidade
-        self.speed_timer = 0  # Timer para o efeito de aceleração
-        self.is_accelerated = False  # Flag para indicar se está sob efeito de aceleração
         self._all_enemies = []  # Referência para a lista de todos os inimigos
         self.original_color = self.COLOR  # Guarda a cor original
         self.speed_boss_boost = False  # Nova flag para controlar o efeito visual
@@ -100,14 +98,6 @@ class Enemy:
         self.weakness_timer = duration_frames
         self.is_weakened = True
         
-    def apply_speed(self, duration_frames=120):  # 2 segundos de duração
-        """Aplica efeito de velocidade aumentada"""
-        self.speed_timer = duration_frames // GameSpeed.get_instance().current_multiplier  # Usa a duração base
-        self.is_accelerated = True
-        self.COLOR = SpeedEnemy.COLOR  # Muda a cor para a cor do SpeedEnemy
-        if not self.is_frozen and not self.is_slowed:  # Corrigido a condição também
-            self.speed = self.base_speed * 1.5  # Aumenta a velocidade em 50%
-        
     def update(self):
         """Atualiza os efeitos de status"""
         # Atualiza efeito de fraqueza
@@ -121,8 +111,6 @@ class Enemy:
             self.freeze_timer -= GameSpeed.get_instance().current_multiplier
             if self.freeze_timer <= 0:
                 self.speed = self.base_speed if not self.is_slowed else self.base_speed * 0.5
-                if self.is_accelerated:
-                    self.speed *= 1.5
                 self.is_frozen = False
                 
         # Atualiza efeito de slow
@@ -131,17 +119,6 @@ class Enemy:
             if self.slow_timer <= 0:
                 self.is_slowed = False
                 self.speed = self.base_speed
-                if self.is_accelerated:
-                    self.speed *= 1.5
-                
-        # Atualiza efeito de velocidade
-        if self.speed_timer > 0:
-            self.speed_timer -= GameSpeed.get_instance().current_multiplier
-            if self.speed_timer <= 0:
-                self.is_accelerated = False
-                self.COLOR = self.original_color
-                if not self.is_frozen:
-                    self.speed = self.base_speed if not self.is_slowed else self.base_speed * 0.5
                 
         # Atualiza dano ao longo do tempo
         if self.dot_timer > 0:
@@ -481,13 +458,9 @@ class RageEnemy(Enemy):
             self.speed = 0
         elif self.is_slowed:
             base_speed = self.original_speed * rage_multiplier
-            if self.is_accelerated:
-                base_speed *= 1.5
             self.speed = base_speed * 0.5
         else:
             base_speed = self.original_speed * rage_multiplier
-            if self.is_accelerated:
-                base_speed *= 1.5
             self.speed = base_speed
             
         return result
@@ -919,4 +892,4 @@ def spawn_random_enemy(path, wave_manager):
             break
             
     # Se algo der errado, retorna um inimigo normal
-    return Enemy(path), False 
+    return Enemy(path), False

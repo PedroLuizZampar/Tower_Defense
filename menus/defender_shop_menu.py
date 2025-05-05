@@ -101,7 +101,7 @@ class DefenderShopMenu:
             
     def draw(self, screen, gold, selected_button=None):
         header_width = 40
-        header_height = 100
+        header_height = 104
         header_x = self.screen_width - header_width
         self.header_rect = pygame.Rect(header_x, self.wave_menu_height, header_width, header_height)
         
@@ -144,11 +144,26 @@ class DefenderShopMenu:
                 pygame.draw.rect(screen, button.defender_class.COLOR, icon_rect)
                 pygame.draw.rect(screen, WHITE, icon_rect, 1)  # Borda branca
                 
-                # Dano e DPS
-                damage_text = font.render(f"Dano: {button.defender_class.BASE_DAMAGE}         DPS: {round(button.defender_class.BASE_DAMAGE * (60 / button.defender_class.BASE_ATTACK_COOLDOWN), 1)}", True, WHITE)
+                # Dano e DPS já com os buffs das vantagens
+                base_damage = button.defender_class.BASE_DAMAGE
+                if button.defender_class.advantages_menu and button.defender_class.advantages_menu.damage_advantage:
+                    damage_bonus = button.defender_class.advantages_menu.damage_advantage.get_current_bonus() / 100
+                    damage = base_damage * (1 + damage_bonus)
+                else:
+                    damage = base_damage
+
+                base_attack_speed = 60 / button.defender_class.BASE_ATTACK_COOLDOWN
+                if button.defender_class.advantages_menu and button.defender_class.advantages_menu.cooldown_advantage:
+                    cooldown_bonus = button.defender_class.advantages_menu.cooldown_advantage.get_current_bonus() / 100
+                    attack_speed = base_attack_speed * (1 + cooldown_bonus)
+                else:
+                    attack_speed = base_attack_speed
+
+                dps = damage * attack_speed
+                damage_text = font.render(f"Dano: {round(damage, 1)}         DPS: {round(dps, 1)}", True, WHITE)
                 screen.blit(damage_text, (card_rect.x + 60, y_offset + 35))
 
-                # Range e Hits para Ativação
+                # Range e informações adicionais
                 if button.defender_class.HITS_TO_ACTIVATE != 0:
                     range_text = font.render(f"Range: {button.defender_class.RANGE}     Ativar: {button.defender_class.HITS_TO_ACTIVATE}", True, WHITE)
                 else:

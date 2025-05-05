@@ -89,18 +89,18 @@ class UpgradeMenu:
         stats_x = menu_x + 10
         stats_y = menu_y + 40
         
-        # Dano atual
+        # Dano atual (já com buffs)
         damage = defender.get_total_damage()
         damage_text = self.font.render(f"Dano: {round(damage, 2)}", True, self.text_color)
         screen.blit(damage_text, (stats_x, stats_y))
         
-        # Velocidade de ataque
-        attack_speed = 60 / defender.attack_cooldown
-        speed_text = self.font.render(f"Vel. Ataque: {attack_speed:.1f}/s", True, self.text_color)
+        # Velocidade de ataque (já com buffs)
+        current_attack_speed = defender.get_attack_cooldown()
+        speed_text = self.font.render(f"Vel. Ataque: {current_attack_speed:.1f}/s", True, self.text_color)
         screen.blit(speed_text, (stats_x, stats_y + 25))
         
-        # DPS
-        dps = damage * attack_speed
+        # DPS (calculado com os valores atuais)
+        dps = damage * current_attack_speed
         dps_text = self.font.render(f"DPS: {dps:.1f}", True, self.text_color)
         screen.blit(dps_text, (stats_x, stats_y + 50))
         
@@ -140,4 +140,4 @@ class UpgradeMenu:
             if self.sell_button.collidepoint(pos):
                 return "sell", defender.get_sell_value(current_wave)
                 
-        return None, 0 
+        return None, 0

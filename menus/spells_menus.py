@@ -1,5 +1,5 @@
 import pygame
-from spell import DamageSpell, FreezeSpell, DotSpell, SlowSpell, WeaknessSpell, RageSpell, SpellButton
+from spell import DamageSpell, FreezeSpell, DotSpell, SlowSpell, WeaknessSpell, SpellButton
 
 # Cores
 MENU_GRAY = (40, 40, 40)
@@ -139,7 +139,7 @@ class ConsumableSpellsMenu:
         self.height = 180
         self.header_rect = None
         self.rect = None
-        self.spells = [RageSpell]
+        self.spells = []
         self.spells_per_row = 4  # Maximum spells per row
         
     def draw(self, screen, spell_buttons):

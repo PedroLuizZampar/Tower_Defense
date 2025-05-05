@@ -17,12 +17,19 @@ class Defender:
     BASE_DAMAGE = 8  # Dano base
     BASE_ATTACK_COOLDOWN = 30  # Frames base entre ataques
     
+    # Variável de classe para armazenar o menu de vantagens
+    advantages_menu = None
+    
+    @classmethod
+    def set_advantages_menu(cls, menu):
+        cls.advantages_menu = menu
+    
     def __init__(self, x, y, current_wave):
         self.x = x
         self.y = y
         self.color = self.COLOR
         self.base_attack_cooldown = self.BASE_ATTACK_COOLDOWN
-        self.attack_cooldown = self.base_attack_cooldown
+        self.attack_cooldown = self.get_attack_cooldown()
         self.cooldown_timer = 0
         self.projectiles = []
         self.current_target = None
@@ -37,9 +44,6 @@ class Defender:
         self.has_yellow_buff = False  # Novo atributo para controlar buff amarelo
         self.is_frozen = False  # Novo atributo para controlar efeito de congelamento
         self.freeze_timer = 0  # Timer para duração do efeito de congelamento
-        self.is_accelerated = False
-        self.velocity_timer = 0
-        self.velocity_buff = 0
 
     @classmethod
     def get_preview_color(cls):
@@ -63,19 +67,32 @@ class Defender:
         self.level += 1
         self.total_invested += cost
         self.bonus_damage += round(self.get_total_damage() * 0.2, 1)
-        self.attack_cooldown = self.base_attack_cooldown * (0.99 ** (self.level - 1))
+        self.attack_cooldown = self.get_attack_cooldown() * (0.99 ** (self.level - 1))
         self.upgrades_count += 1
         return cost
         
     def get_total_damage(self):
         # Calcula o dano total considerando o dano base, bônus de upgrade e buffs
         total = self.base_damage + self.bonus_damage
+        
+        # Aplica o bônus de dano global das vantagens
+        if self.advantages_menu and self.advantages_menu.damage_advantage:
+            bonus_percent = self.advantages_menu.damage_advantage.get_current_bonus() / 100
+            total *= (1 + bonus_percent)
+            
         if self.has_damage_buff:
             total += self.DAMAGE_BUFF
         if self.has_yellow_buff:
             total *= 1.5  # Aumenta o dano em 50% com buff amarelo
         return total
-        
+    
+    def get_attack_cooldown(self):
+        # Aplica o bônus de velocidade global das vantagens
+        if self.advantages_menu and self.advantages_menu.cooldown_advantage:
+            bonus_percent = self.advantages_menu.cooldown_advantage.get_current_bonus() / 100
+            total = (60 / self.base_attack_cooldown) * (1 + bonus_percent)
+        return total
+
     def find_target(self, enemies):
         # Se já tem um alvo e ele ainda está vivo, no alcance e não está invisível
         if self.current_target in enemies:
@@ -146,12 +163,6 @@ class Defender:
         self.is_frozen = True
         self.freeze_timer = duration_frames
 
-    def apply_speed(self, velocity_buff, duration_frames):
-        """Aplica efeito de velocidade na torre"""
-        self.is_accelerated = True
-        self.velocity_buff = velocity_buff
-        self.velocity_timer = duration_frames
-
     def update(self, enemies):
         # Atualiza o cooldown considerando o multiplicador de velocidade global
         if self.cooldown_timer > 0:
@@ -163,14 +174,6 @@ class Defender:
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
-        
-        if self.is_accelerated:
-            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
-            if self.velocity_timer <= 0:
-                self.attack_cooldown = self.base_attack_cooldown
-                self.is_accelerated = False
-            else:
-                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
             
         # Procura alvo e atira
         if self.cooldown_timer <= 0:
@@ -181,14 +184,22 @@ class Defender:
                         projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
                         projectile.damage = self.get_total_damage()
                         self.projectiles.append(projectile)
-                        self.cooldown_timer = self.attack_cooldown
+                        if self.advantages_menu and self.advantages_menu.cooldown_advantage:
+                            cooldown_bonus = self.advantages_menu.cooldown_advantage.get_current_bonus() / 100
+                            self.cooldown_timer = self.base_attack_cooldown * (1 - cooldown_bonus)
+                        else:
+                            self.cooldown_timer = self.attack_cooldown
                         self.has_damage_buff = False  # Remove o buff após o ataque
                         self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                 else:
                     projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
                     projectile.damage = self.get_total_damage()
                     self.projectiles.append(projectile)
-                    self.cooldown_timer = self.attack_cooldown
+                    if self.advantages_menu and self.advantages_menu.cooldown_advantage:
+                        cooldown_bonus = self.advantages_menu.cooldown_advantage.get_current_bonus() / 100
+                        self.cooldown_timer = self.base_attack_cooldown * (1 - cooldown_bonus)
+                    else:
+                        self.cooldown_timer = self.attack_cooldown
                     self.has_damage_buff = False  # Remove o buff após o ataque
                     self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
 
@@ -202,14 +213,6 @@ class Defender:
         if self.is_frozen:
             freeze_surface = pygame.Surface((self.SIZE + 20, self.SIZE + 20), pygame.SRCALPHA)
             pygame.draw.rect(freeze_surface, (135, 206, 235, 128),  # Azul claro semi-transparente
-                           (0, 0, self.SIZE + 20, self.SIZE + 20))
-            screen.blit(freeze_surface, (self.x - (self.SIZE + 20)//2, 
-                                     self.y - (self.SIZE + 20)//2))
-            
-        # Desenha o efeito de congelamento (quadrado translúcido rosa)
-        if self.is_accelerated:
-            freeze_surface = pygame.Surface((self.SIZE + 20, self.SIZE + 20), pygame.SRCALPHA)
-            pygame.draw.rect(freeze_surface, (255, 0, 180, 128),  # Rosa semi-transparente
                            (0, 0, self.SIZE + 20, self.SIZE + 20))
             screen.blit(freeze_surface, (self.x - (self.SIZE + 20)//2, 
                                      self.y - (self.SIZE + 20)//2))
@@ -305,14 +308,6 @@ class RedDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
-        
-        if self.is_accelerated:
-            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
-            if self.velocity_timer <= 0:
-                self.attack_cooldown = self.base_attack_cooldown
-                self.is_accelerated = False
-            else:
-                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
@@ -401,14 +396,6 @@ class YellowDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
-        
-        if self.is_accelerated:
-            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
-            if self.velocity_timer <= 0:
-                self.attack_cooldown = self.base_attack_cooldown
-                self.is_accelerated = False
-            else:
-                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
@@ -495,14 +482,6 @@ class GreenDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
-        
-        if self.is_accelerated:
-            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
-            if self.velocity_timer <= 0:
-                self.attack_cooldown = self.base_attack_cooldown
-                self.is_accelerated = False
-            else:
-                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
@@ -589,14 +568,6 @@ class BlueDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
-        
-        if self.is_accelerated:
-            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
-            if self.velocity_timer <= 0:
-                self.attack_cooldown = self.base_attack_cooldown
-                self.is_accelerated = False
-            else:
-                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
@@ -692,14 +663,6 @@ class PinkDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return
-        
-        if self.is_accelerated:
-            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
-            if self.velocity_timer <= 0:
-                self.attack_cooldown = self.base_attack_cooldown
-                self.is_accelerated = False
-            else:
-                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         if self.cooldown_timer > 0:
             self.cooldown_timer -= GameSpeed.get_instance().current_multiplier
@@ -801,14 +764,6 @@ class OrangeDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
-        
-        if self.is_accelerated:
-            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
-            if self.velocity_timer <= 0:
-                self.attack_cooldown = self.base_attack_cooldown
-                self.is_accelerated = False
-            else:
-                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:
@@ -856,14 +811,6 @@ class PurpleDefender(Defender):
             if self.freeze_timer <= 0:
                 self.is_frozen = False
             return  # Se estiver congelado, não faz mais nada
-        
-        if self.is_accelerated:
-            self.velocity_timer -= GameSpeed.get_instance().current_multiplier
-            if self.velocity_timer <= 0:
-                self.attack_cooldown = self.base_attack_cooldown
-                self.is_accelerated = False
-            else:
-                self.attack_cooldown = self.base_attack_cooldown / (1 + self.velocity_buff)
 
         # Atualiza o cooldown
         if self.cooldown_timer > 0:

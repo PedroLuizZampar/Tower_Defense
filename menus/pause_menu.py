@@ -66,6 +66,10 @@ class PauseMenu:
                 'total_spells': game_state['mission_manager'].total_spells,
                 'total_upgrades': game_state['mission_manager'].total_upgrades,
                 'missions': missions_data
+            },
+            'advantages_levels': {
+                'damage': game_state['advantages_menu'].damage_advantage.level,
+                'cooldown': game_state['advantages_menu'].cooldown_advantage.level
             }
         }
         

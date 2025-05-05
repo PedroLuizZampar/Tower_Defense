@@ -1,5 +1,5 @@
 import pygame
-from spell import DamageSpell, FreezeSpell, DotSpell, SlowSpell, WeaknessSpell, RageSpell, SpellButton
+from spell import DamageSpell, FreezeSpell, DotSpell, SlowSpell, WeaknessSpell, SpellButton
 
 # Cores
 MENU_GRAY = (40, 40, 40)
@@ -20,7 +20,7 @@ class SpellShopMenu:
         self.spells_per_page = 4
         self.prev_button_rect = None
         self.next_button_rect = None
-        self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell, WeaknessSpell, RageSpell]
+        self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell, WeaknessSpell]
         self.upgrade_buttons = {}  # Dicionário para armazenar os retângulos dos botões de upgrade
         
     def draw(self, screen, spell_buttons, mission_manager):
@@ -29,9 +29,9 @@ class SpellShopMenu:
         
         # Desenha o cabeçalho (sempre visível)
         header_width = 40
-        header_height = 100
+        header_height = 104
         header_x = self.SCREEN_WIDTH - header_width
-        self.header_rect = pygame.Rect(header_x, self.WAVE_MENU_HEIGHT + 294, header_width, header_height)
+        self.header_rect = pygame.Rect(header_x, self.WAVE_MENU_HEIGHT + 306, header_width, header_height)
         
         # Define o rect principal do menu
         self.rect = pygame.Rect(self.SCREEN_WIDTH - self.width - header_width, self.WAVE_MENU_HEIGHT, 
@@ -121,15 +121,6 @@ class SpellShopMenu:
                     screen.blit(desc_text, (card_rect.x + 60, y_offset + 50))
                     immune_text = font.render(f"por {duration:.1f} segundos", True, (50, 255, 50))
                     screen.blit(immune_text, (card_rect.x + 60, y_offset + 65))
-                elif spell_class == RageSpell:
-                    duration = (spell_button.spell_class.VELOCITY_DURATION + (spell_button.level - 1) * spell_button.spell_class.DURATION_INCREASE) / 60
-                    stats_text = font.render(f"Raio: {spell_class.RADIUS}px | Duração: {duration:.1f}s", True, WHITE)
-                    screen.blit(stats_text, (card_rect.x + 60, y_offset + 35))
-                    speed_buff = (spell_button.spell_class.VELOCITY_BOOST + (spell_button.level - 1) * spell_button.spell_class.VELOCITY_INCREASE_PERCENT) * 100
-                    desc_text = font.render("Acelera defensores na área", True, (50, 255, 50))
-                    screen.blit(desc_text, (card_rect.x + 60, y_offset + 50))
-                    desc_text = font.render(f"em {speed_buff:.0f}%", True, (50, 255, 50))
-                    screen.blit(desc_text, (card_rect.x + 60, y_offset + 65))
                 elif spell_class == DotSpell:
                     damage = spell_button.spell_class.DOT_DAMAGE
                     for _ in range(spell_button.level - 1):
@@ -210,7 +201,7 @@ class SpellShopMenu:
             
             # Page indicator
             total_pages = (len(self.spells) + self.spells_per_page - 1) // self.spells_per_page
-            page_text = font_title.render(f"{self.current_page + 1}/{total_pages}", True, WHITE)
+            page_text = font_upgrade.render(f"{self.current_page + 1}/{total_pages}", True, WHITE)
             page_rect = page_text.get_rect(centerx=self.rect.centerx, bottom=self.rect.bottom - 10)
             screen.blit(page_text, page_rect)
         
