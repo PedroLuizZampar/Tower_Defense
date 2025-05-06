@@ -54,7 +54,7 @@ class UpgradeMenu:
         screen.blit(damage_text, (stats_x, stats_y))
         
         # Velocidade de ataque
-        attack_speed = 60 / defender_class.BASE_ATTACK_COOLDOWN if hasattr(defender_class, 'BASE_ATTACK_COOLDOWN') else 2
+        attack_speed = 60 / defender_class.BASE_ATTACK_COOLDOWN
         speed_text = self.font.render(f"Vel. Ataque: {attack_speed:.1f}/s", True, self.text_color)
         screen.blit(speed_text, (stats_x, stats_y + 25))
         
@@ -95,7 +95,7 @@ class UpgradeMenu:
         screen.blit(damage_text, (stats_x, stats_y))
         
         # Velocidade de ataque (já com buffs)
-        current_attack_speed = defender.get_attack_cooldown()
+        current_attack_speed = 60 / defender.get_attack_cooldown()
         speed_text = self.font.render(f"Vel. Ataque: {current_attack_speed:.1f}/s", True, self.text_color)
         screen.blit(speed_text, (stats_x, stats_y + 25))
         

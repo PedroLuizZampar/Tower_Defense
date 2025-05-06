@@ -19,25 +19,19 @@ class Spell:
         self.effect_applied = False  # Flag para controlar se o efeito já foi aplicado
         
     def update(self, enemies=None, defenders=None):
-        # AQUI É ONDE RECEBE A LISTA DE INIMIGOS (PASSAR TAMBÉM A LISTA DE DEFENSORES)
-        if enemies:
-            if self.active and not self.effect_applied:
-                self.apply_effect(enemies)
-                self.effect_applied = True
-                
-            self.current_duration -= GameSpeed.get_instance().current_multiplier
-            if self.current_duration <= 0:
-                self.active = False
-            return self.active
-        elif defenders:
-            if self.active and not self.effect_aplied:
+        """Atualiza o feitiço e retorna True se ainda está ativo"""
+        if self.active and not self.effect_applied:
+            if defenders is not None:
                 self.apply_effect(defenders)
-                self.effect_applied = True
-
-            self.current_duration -= GameSpeed.get_instance().current_multiplier
-            if self.current_duration <= 0:
-                self.active = False
-            return self.active
+            elif enemies is not None:
+                self.apply_effect(enemies)
+            self.effect_applied = True
+            
+        self.current_duration -= GameSpeed.get_instance().current_multiplier
+        if self.current_duration <= 0:
+            self.active = False
+            return False
+        return self.active
             
     def draw(self, screen):
         if self.active:
@@ -152,7 +146,7 @@ class DamageSpell(Spell):
 
 class FreezeSpell(Spell):
     COST = 0
-    RADIUS = 150
+    RADIUS = 125
     COLOR = (50, 150, 255)  # Azul claro
     NAME = "Gelo"
     FREEZE_DURATION = 90  # 1.5 segundos
@@ -184,7 +178,7 @@ class FreezeSpell(Spell):
 
 class SlowSpell(Spell):
     COST = 0
-    RADIUS = 180
+    RADIUS = 150
     COLOR = (30, 180, 30)  # Verde
     NAME = "Lentidão"
     SLOW_DURATION = 90  # 1.5 segundos
@@ -216,10 +210,10 @@ class SlowSpell(Spell):
 
 class DotSpell(Spell):
     COST = 0
-    RADIUS = 200
+    RADIUS = 150
     COLOR = (255, 165, 0)  # Laranja
     NAME = "Fogo"
-    DOT_DAMAGE = 30  # Dano por segundo
+    DOT_DAMAGE = 20  # Dano por segundo
     DOT_DURATION = 300  # 5 segundos
     COOLDOWN = 2700  # 45 segundos de cooldown
     UPGRADE_COSTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  # Custo em orbes para cada nível
@@ -275,7 +269,7 @@ class DotSpell(Spell):
 
 class WeaknessSpell(Spell):
     COST = 0
-    RADIUS = 90
+    RADIUS = 120
     COLOR = (128, 0, 128)  # Roxo
     NAME = "Fraqueza"
     WEAKNESS_DURATION = 90  # 1.5 segundos

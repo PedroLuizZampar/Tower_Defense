@@ -15,8 +15,7 @@ from menus.defender_shop_menu import DefenderShopMenu
 from menus.enemy_shop_menu import EnemyShopMenu
 from menus.boss_shop_menu import BossShopMenu
 from menus.spell_shop_menu import SpellShopMenu
-from menus.spells_menus import ThrowableSpellsMenu
-from menus.spells_menus import ConsumableSpellsMenu
+from menus.spells_menus import SpellsMenu
 from menus.pause_menu import PauseMenu
 from menus.main_menu import MainMenu
 from menus.defender_menu_mini import DefenderMenuMini
@@ -180,21 +179,19 @@ def reset_game():
     
     return enemies, defenders, spells, gold, wave_manager, mission_manager, base, defender_buttons, spell_buttons, advantages_menu
 
-def close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons, advantages_menu):
+def close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, spells_menu, mission_manager, spell_buttons, advantages_menu):
     enemy_shop.is_expanded = False
     defender_shop.is_expanded = False
     boss_shop.is_expanded = False
     spell_shop.is_expanded = False
-    throwable_spells_menu.is_expanded = False
-    consumable_spells_menu.is_expanded = False
+    spells_menu.is_expanded = False
     mission_manager.is_expanded = False
     advantages_menu.is_expanded = False
     
     # Desseleciona todos os feitiços dos menus quando fecham
     for button in spell_buttons:
         button.selected = False
-        # Reseta a posição dos botões
-        button.rect.x = 0
+        button.rect.x = 0  # Reseta a posição dos botões
 
 def main():
     # Lista de inimigos, defensores e feitiços
@@ -217,8 +214,7 @@ def main():
     defender_shop = DefenderShopMenu(mission_manager, SCREEN_WIDTH, SCREEN_HEIGHT, WAVE_MENU_HEIGHT)
     boss_shop = BossShopMenu(SCREEN_WIDTH, SCREEN_HEIGHT, WAVE_MENU_HEIGHT)
     spell_shop = SpellShopMenu(SCREEN_WIDTH, SCREEN_HEIGHT, WAVE_MENU_HEIGHT)
-    throwable_spells_menu = ThrowableSpellsMenu()
-    consumable_spells_menu = ConsumableSpellsMenu()
+    spells_menu = SpellsMenu()
     defender_menu_mini = DefenderMenuMini(SCREEN_WIDTH, WAVE_MENU_HEIGHT)  # Novo mini menu
     advantages_menu = AdvantagesMenu(SCREEN_WIDTH, SCREEN_HEIGHT, WAVE_MENU_HEIGHT)
     Defender.set_advantages_menu(advantages_menu)  # Configura o menu de vantagens na classe Defender
@@ -232,14 +228,15 @@ def main():
     base = Base()
     upgrade_menu = UpgradeMenu()
     
-    # Interface - Botões de feitiço
+    # Interface - Botões de feitiço (removida a definição anterior de posições)
     spell_buttons = [
         SpellButton(FreezeSpell, 0),
         SpellButton(DotSpell, 0),
         SpellButton(DamageSpell, 0),
         SpellButton(SlowSpell, 0),
-        SpellButton(WeaknessSpell, 0),
+        SpellButton(WeaknessSpell, 0)
     ]
+
     selected_spell = None
 
     # Fonte para textos
@@ -320,8 +317,28 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
-                # Adiciona suporte para teclas numéricas
+                # Adiciona suporte para teclas numéricas e atalhos de feitiços
                 if not game_paused and not menu_principal.active:
+                    # Verifica os atalhos dos feitiços
+                    pressed_key = event.unicode.upper()
+                    for button in spell_buttons:
+                        if pressed_key == spells_menu.spell_shortcuts.get(button.spell_class, ''):
+                            # Desseleciona outros botões de feitiço
+                            for other_button in spell_buttons:
+                                if other_button != button:
+                                    other_button.selected = False
+                            # Alterna seleção do botão atual
+                            button.selected = not button.selected
+                            # Desseleciona defensores se houver
+                            if selected_defender:
+                                selected_defender.selected = False
+                                selected_defender = None
+                            if selected_button:
+                                selected_button.selected = False
+                                selected_button = None
+                            break
+                    
+                    # Verifica atalhos dos defensores (código existente)
                     new_button = defender_menu_mini.handle_key(event.key, defender_shop.defender_buttons, gold)
                     # Desseleciona se clicar no mesmo botão
                     if new_button and new_button == selected_button:
@@ -332,8 +349,7 @@ def main():
                         if selected_button:
                             # Fecha todos os menus quando seleciona por atalho
                             close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop,
-                                          throwable_spells_menu, consumable_spells_menu,
-                                          mission_manager, spell_buttons, advantages_menu)
+                                          spells_menu, mission_manager, spell_buttons, advantages_menu)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 # Verifica clique no menu principal
                 if menu_principal.active:
@@ -403,7 +419,7 @@ def main():
                     if selected_button:
                         selected_button.selected = False
                     if mission_manager.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons, advantages_menu)
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, spells_menu, mission_manager, spell_buttons, advantages_menu)
                         mission_manager.is_expanded = True
                     continue
                     
@@ -412,7 +428,7 @@ def main():
                     if selected_button:
                         selected_button.selected = False
                     if enemy_shop.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons, advantages_menu)
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, spells_menu, mission_manager, spell_buttons, advantages_menu)
                         enemy_shop.is_expanded = True
                     continue
                     
@@ -422,7 +438,7 @@ def main():
                     if selected_button:
                         selected_button.selected = False
                     if defender_shop.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons, advantages_menu)
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, spells_menu, mission_manager, spell_buttons, advantages_menu)
                         defender_shop.is_expanded = True
                     continue
                 if button:
@@ -437,7 +453,7 @@ def main():
                     if selected_button:
                         selected_button.selected = False
                     if boss_shop.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons, advantages_menu)
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, spells_menu, mission_manager, spell_buttons, advantages_menu)
                         boss_shop.is_expanded = True
                     continue
                     
@@ -446,56 +462,20 @@ def main():
                     if selected_button:
                         selected_button.selected = False
                     if spell_shop.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons, advantages_menu)
+                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop,
+                                      spells_menu, mission_manager, spell_buttons, advantages_menu)
                         spell_shop.is_expanded = True
                     continue
                 
-                # Verifica clique no menu de feitiços arremessáveis
-                if throwable_spells_menu.handle_click(mouse_pos, spell_buttons):
+                # Verifica clique nos botões de feitiço (atualizado)
+                if spells_menu.handle_click(mouse_pos, spell_buttons):
+                    # Desseleciona defensor e botão de defensor
+                    if selected_defender:
+                        selected_defender.selected = False
+                        selected_defender = None
                     if selected_button:
                         selected_button.selected = False
-                    if throwable_spells_menu.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons, advantages_menu)
-                        throwable_spells_menu.is_expanded = True
-                    continue
-                
-                # Verifica clique no menu de feitiços consumíveis
-                if consumable_spells_menu.handle_click(mouse_pos, spell_buttons):
-                    if selected_button:
-                        selected_button.selected = False
-                    if consumable_spells_menu.is_expanded:
-                        close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, throwable_spells_menu, consumable_spells_menu, mission_manager, spell_buttons, advantages_menu)
-                        consumable_spells_menu.is_expanded = True
-                    continue
-                    
-                # Verifica clique nos botões de feitiço
-                clicked_spell = False
-                for button in spell_buttons:
-                    # Só permite clicar se o menu correspondente estiver aberto
-                    can_click = False
-                    if button.spell_class in throwable_spells_menu.spells and throwable_spells_menu.is_expanded:
-                        can_click = True
-                    elif button.spell_class in consumable_spells_menu.spells and consumable_spells_menu.is_expanded:
-                        can_click = True
-                        
-                    if can_click and button.handle_click(mouse_pos, gold):
-                        # Desseleciona outros botões
-                        for other_button in spell_buttons:
-                            if other_button != button:
-                                other_button.selected = False
-                        button.selected = not button.selected
-                        selected_spell = button if button.selected else None
-                        clicked_spell = True
-                        # Desseleciona defensor e botão de defensor
-                        if selected_defender:
-                            selected_defender.selected = False
-                            selected_defender = None
-                        if selected_button:
-                            selected_button.selected = False
-                            selected_button = None
-                        break
-
-                if clicked_spell:
+                        selected_button = None
                     continue
                     
                 # Verifica clique nos botões de upgrade/venda
@@ -520,8 +500,7 @@ def main():
                     if selected_button:
                         selected_button.selected = False
                     close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop, 
-                                  throwable_spells_menu, consumable_spells_menu, 
-                                  mission_manager, spell_buttons, advantages_menu)
+                                  spells_menu, mission_manager, spell_buttons, advantages_menu)
                     advantages_menu.is_expanded = True
                     continue
                     
@@ -551,19 +530,16 @@ def main():
                 # Se um feitiço estiver selecionado e o mouse está numa posição válida
                 for button in spell_buttons:
                     if button.selected and button.cooldown_timer <= 0:
-                        # Para feitiços consumíveis, apenas verifica se clicou em defensores
-                        for defender in defenders:
-                            dx = defender.x - mouse_pos[0]
-                            dy = defender.y - mouse_pos[1]
-                            distance = math.sqrt(dx ** 2 + dy ** 2)
-                            if distance <= button.radius:
-                                spell = button.spell_class(mouse_pos[0], mouse_pos[1])
-                                spell.level = button.level
-                                spells.append(spell)
-                                button.start_cooldown()
-                                button.selected = False
-                                mission_manager.update_spell_use()
-                                break
+                        # Verifica se o mouse está em uma posição válida para usar o feitiço
+                        is_valid = is_valid_placement(mouse_pos[0], mouse_pos[1], PATH, GAME_HEIGHT, defenders, is_spell=True)
+                        if is_valid:
+                            # Para feitiços, apenas verifica se clicou em uma posição válida
+                            spell = button.spell_class(mouse_pos[0], mouse_pos[1])
+                            spell.level = button.level
+                            spells.append(spell)
+                            button.start_cooldown()
+                            button.selected = False
+                            mission_manager.update_spell_use()
 
                 # Se nenhum elemento foi clicado e não está no menu principal ou pausado,
                 # verifica se clicou fora dos menus para fechá-los
@@ -582,9 +558,7 @@ def main():
                         menus_clicked = True
                     if spell_shop.is_expanded and spell_shop.rect.collidepoint(mouse_pos):
                         menus_clicked = True
-                    if throwable_spells_menu.is_expanded and throwable_spells_menu.rect.collidepoint(mouse_pos):
-                        menus_clicked = True
-                    if consumable_spells_menu.is_expanded and consumable_spells_menu.rect.collidepoint(mouse_pos):
+                    if spells_menu.is_expanded and spells_menu.rect.collidepoint(mouse_pos):
                         menus_clicked = True
                     if mission_manager.is_expanded and mission_manager.header_rect and mission_manager.header_rect.collidepoint(mouse_pos):
                         menus_clicked = True
@@ -595,12 +569,10 @@ def main():
                     if not menus_clicked and (
                         enemy_shop.is_expanded or defender_shop.is_expanded or
                         boss_shop.is_expanded or spell_shop.is_expanded or
-                        throwable_spells_menu.is_expanded or consumable_spells_menu.is_expanded or
-                        mission_manager.is_expanded or advantages_menu.is_expanded
+                        spells_menu.is_expanded or mission_manager.is_expanded or advantages_menu.is_expanded
                     ):
                         close_all_menus(enemy_shop, defender_shop, boss_shop, spell_shop,
-                                      throwable_spells_menu, consumable_spells_menu,
-                                      mission_manager, spell_buttons, advantages_menu)
+                                      spells_menu, mission_manager, spell_buttons, advantages_menu)
 
         # Se o jogo estiver pausado, não atualiza a lógica do jogo
         if not game_paused and not menu_principal.active:
@@ -765,18 +737,18 @@ def main():
         defender_shop.draw(screen, gold, selected_button)
         boss_shop.draw(screen, wave_manager)
         spell_shop.draw(screen, spell_buttons, mission_manager)
-
-        # Desenha os novos menus de feitiço
-        throwable_spells_menu.draw(screen, spell_buttons)
-        consumable_spells_menu.draw(screen, spell_buttons)
+        spells_menu.draw(screen, spell_buttons)
         
         # Desenha o menu de upgrades (adicione antes de desenhar o menu de missões)
         advantages_menu.draw(screen, mission_manager)
         
-        # Se um feitiço estiver selecionado, mostra a prévia
-        for spell_button in spell_buttons:
-            if spell_button.selected:
-                spell_button.draw_preview(screen, mouse_pos[0], mouse_pos[1], is_valid_placement, PATH, GAME_HEIGHT)
+        # Desenha os botões de feitiço usando o novo sistema de mini menu
+        spells_menu.draw(screen, spell_buttons)
+        
+        # Desenha a prévia do feitiço selecionado
+        for button in spell_buttons:
+            if button.selected:
+                button.draw_preview(screen, mouse_pos[0], mouse_pos[1], is_valid_placement, PATH, GAME_HEIGHT)
         
         # Se um botão de defensor estiver selecionado, mostra a prévia
         if selected_button and selected_button.selected:

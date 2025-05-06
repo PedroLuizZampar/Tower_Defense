@@ -50,11 +50,13 @@ class MissionManager:
             Mission("Elimine 25 inimigos", 25, 1),  # 1 orbe de recompensa
             Mission("Elimine 50 inimigos", 50, 1),  # 1 orbe de recompensa
             Mission("Elimine 100 inimigos", 100, 1),  # 1 orbe de recompensa
-            Mission("Melhore torres 10 vezes", 10, 1), # 1 orbe de recompensa
+            Mission("Elimine 250 inimigos", 250, 1),  # 1 orbe de recompensa
             Mission("Sobreviva 5 ondas", 5, 1),      # 1 orbe de recompensa
             Mission("Sobreviva 10 ondas", 10, 1),     # 1 orbe de recompensa
             Mission("Use feitiços 5 vezes", 5, 1),    # 1 orbe de recompensa
             Mission("Use feitiços 10 vezes", 10, 1),  # 1 orbe de recompensa
+            Mission("Melhore torres 5 vezes", 5, 1), # 1 orbe de recompensa
+            Mission("Melhore torres 10 vezes", 10, 1), # 1 orbe de recompensa
         ]
         self.total_kills = 0
         self.total_waves = 0

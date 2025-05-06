@@ -3,37 +3,42 @@ import os
 
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
-MENU_GRAY = (40, 40, 40)
 MENU_LIGHT_GRAY = (60, 60, 60)
 
 class MainMenu:
     def __init__(self):
-        screen_width = pygame.display.get_surface().get_width()
-        screen_height = pygame.display.get_surface().get_height()
+        screen = pygame.display.get_surface()
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
         
         self.font = pygame.font.Font(None, 40)
         button_width = 200
         button_height = 50
         button_spacing = 20
-        
+
+        # Carrega a imagem de fundo
+        self.background = pygame.image.load(os.path.join('assets', 'main_menu.png')).convert()
+        self.background = pygame.transform.scale(self.background, (screen_width, screen_height))
+
         # Botão Novo Jogo
         self.new_game_rect = pygame.Rect(
-            screen_width//2 - button_width//2,
-            screen_height//2 - button_height - button_spacing//2,
+            screen_width // 2 - button_width // 2,
+            screen_height // 2 - button_height - button_spacing // 2,
             button_width,
             button_height
         )
-        self.new_game_text = self.font.render("NOVO JOGO", True, (255, 255, 255))
+        self.new_game_text = self.font.render("NOVO JOGO", True, WHITE)
         self.new_game_text_rect = self.new_game_text.get_rect(center=self.new_game_rect.center)
         
         # Botão Carregar Jogo
         self.load_game_rect = pygame.Rect(
-            screen_width//2 - button_width//2,
-            screen_height//2 + button_spacing//2,
+            screen_width // 2 - button_width // 2,
+            screen_height // 2 + button_spacing // 2,
             button_width,
             button_height
         )
         self.load_game_text_rect = self.new_game_text.get_rect(center=self.load_game_rect.center)
+        
         self.active = True
         self.has_save = self.check_save_exists()
         
@@ -43,8 +48,8 @@ class MainMenu:
         
     def draw(self, screen):
         if self.active:
-            # Preenche a tela com cinza
-            screen.fill(MENU_GRAY)
+            # Desenha a imagem de fundo
+            screen.blit(self.background, (0, 0))
             
             # Desenha o botão Novo Jogo
             pygame.draw.rect(screen, MENU_LIGHT_GRAY, self.new_game_rect)

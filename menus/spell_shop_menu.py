@@ -21,7 +21,42 @@ class SpellShopMenu:
         self.prev_button_rect = None
         self.next_button_rect = None
         self.spells = [FreezeSpell, DotSpell, DamageSpell, SlowSpell, WeaknessSpell]
-        self.upgrade_buttons = {}  # Dicionário para armazenar os retângulos dos botões de upgrade
+        self.upgrade_buttons = {}
+        
+    def handle_click(self, pos, spell_buttons, mission_manager):
+        # Verifica clique no header
+        if self.header_rect and self.header_rect.collidepoint(pos):
+            self.is_expanded = not self.is_expanded
+            return True
+            
+        # Se o menu estiver expandido
+        if self.is_expanded and self.rect and self.rect.collidepoint(pos):
+            # Verifica clique nos botões de paginação
+            if self.prev_button_rect and self.prev_button_rect.collidepoint(pos):
+                if self.current_page > 0:
+                    self.current_page -= 1
+                return True
+                
+            if self.next_button_rect and self.next_button_rect.collidepoint(pos):
+                total_pages = (len(self.spells) + self.spells_per_page - 1) // self.spells_per_page
+                if self.current_page < total_pages - 1:
+                    self.current_page += 1
+                return True
+                
+            # Verifica clique nos botões de upgrade
+            for spell_class, upgrade_button in self.upgrade_buttons.items():
+                if upgrade_button.collidepoint(pos):
+                    # Encontra o botão correspondente
+                    for button in spell_buttons:
+                        if button.spell_class == spell_class:
+                            if button.level < spell_class.MAX_LEVEL and button.can_upgrade(mission_manager.orbes):
+                                upgrade_cost = button.get_upgrade_cost()
+                                mission_manager.orbes -= upgrade_cost
+                                button.upgrade()
+                            return True
+            return True
+            
+        return False
         
     def draw(self, screen, spell_buttons, mission_manager):
         # Limpa os botões de upgrade para evitar ações em páginas anteriores
@@ -31,11 +66,23 @@ class SpellShopMenu:
         header_width = 40
         header_height = 104
         header_x = self.SCREEN_WIDTH - header_width
-        self.header_rect = pygame.Rect(header_x, self.WAVE_MENU_HEIGHT + 306, header_width, header_height)
+        header_y = self.WAVE_MENU_HEIGHT + 306
+        self.header_rect = pygame.Rect(header_x, header_y, header_width, header_height)
         
         # Define o rect principal do menu
         self.rect = pygame.Rect(self.SCREEN_WIDTH - self.width - header_width, self.WAVE_MENU_HEIGHT, 
                                self.width, self.height)
+        
+        # Desenha o botão da aba
+        pygame.draw.rect(screen, MENU_GRAY, self.header_rect)
+        pygame.draw.rect(screen, WHITE, self.header_rect, 2)
+        
+        # Desenha o texto "FEITIÇOS" na vertical
+        font = pygame.font.Font(None, 18)
+        text = font.render("Feitiços", True, WHITE)
+        text_vertical = pygame.transform.rotate(text, 270)
+        text_rect = text_vertical.get_rect(center=self.header_rect.center)
+        screen.blit(text_vertical, text_rect)
         
         # Se expandido, desenha o resto do menu
         if self.is_expanded:
@@ -98,16 +145,14 @@ class SpellShopMenu:
                 
                 # Descrição e imunidades
                 if spell_class == FreezeSpell:
-                    duration = (spell_button.spell_class.FREEZE_DURATION + (spell_button.level - 1) * spell_button.spell_class.DURATION_INCREASE) / 60
-                    stats_text = font.render(f"Raio: {spell_class.RADIUS}px | Duração: {duration:.1f}s", True, WHITE)
+                    stats_text = font.render(f"Raio: {spell_class.RADIUS}px", True, WHITE)
                     screen.blit(stats_text, (card_rect.x + 60, y_offset + 35))
                     desc_text = font.render("Congela inimigos na área", True, (50, 255, 50))
                     screen.blit(desc_text, (card_rect.x + 60, y_offset + 50))
                     immune_text = font.render("Inimigos Tanque são imunes", True, (255, 100, 100))
                     screen.blit(immune_text, (card_rect.x + 60, y_offset + 65))
                 elif spell_class == SlowSpell:
-                    duration = (spell_button.spell_class.SLOW_DURATION + (spell_button.level - 1) * spell_button.spell_class.DURATION_INCREASE) / 60
-                    stats_text = font.render(f"Raio: {spell_class.RADIUS}px | Duração: {duration:.1f}s", True, WHITE)
+                    stats_text = font.render(f"Raio: {spell_class.RADIUS}px", True, WHITE)
                     screen.blit(stats_text, (card_rect.x + 60, y_offset + 35))
                     desc_text = font.render("Desacelera inimigos na área", True, (50, 255, 50))
                     screen.blit(desc_text, (card_rect.x + 60, y_offset + 50))
@@ -170,80 +215,38 @@ class SpellShopMenu:
                 
                 y_offset += card_height + 10
             
-            # Draw pagination controls
-            button_width = 40
-            button_height = 30
-            spacing = 150
-            start_x = self.rect.right - 240
-            button_y = self.rect.top + 10
-            
-            font_back_next = pygame.font.Font(None, 35)
-            
-            # Previous page button
-            self.prev_button_rect = pygame.Rect(start_x, button_y, button_width, button_height)
-            prev_color = MENU_LIGHT_GRAY if self.current_page > 0 else (60, 60, 60)
-            pygame.draw.rect(screen, prev_color, self.prev_button_rect)
-            pygame.draw.rect(screen, WHITE, self.prev_button_rect, 1)
-            
-            prev_text = font_back_next.render("<", True, WHITE if self.current_page > 0 else (150, 150, 150))
-            prev_rect = prev_text.get_rect(center=self.prev_button_rect.center)
-            screen.blit(prev_text, prev_rect)
-            
-            # Next page button
-            self.next_button_rect = pygame.Rect(start_x + button_width + spacing, button_y, button_width, button_height)
-            next_color = MENU_LIGHT_GRAY if end_index < len(self.spells) else (60, 60, 60)
-            pygame.draw.rect(screen, next_color, self.next_button_rect)
-            pygame.draw.rect(screen, WHITE, self.next_button_rect, 1)
-            
-            next_text = font_back_next.render(">", True, WHITE if end_index < len(self.spells) else (150, 150, 150))
-            next_rect = next_text.get_rect(center=self.next_button_rect.center)
-            screen.blit(next_text, next_rect)
-            
-            # Page indicator
-            total_pages = (len(self.spells) + self.spells_per_page - 1) // self.spells_per_page
-            page_text = font_upgrade.render(f"{self.current_page + 1}/{total_pages}", True, WHITE)
-            page_rect = page_text.get_rect(centerx=self.rect.centerx, bottom=self.rect.bottom - 10)
-            screen.blit(page_text, page_rect)
-        
-        # Sempre desenha o botão da aba
-        pygame.draw.rect(screen, MENU_GRAY, self.header_rect)
-        pygame.draw.rect(screen, WHITE, self.header_rect, 2)
-        
-        # Desenha o texto "FEITIÇOS" na vertical
-        font = pygame.font.Font(None, 18)
-        text = font.render("Feitiços", True, WHITE)
-        text_vertical = pygame.transform.rotate(text, 270)
-        text_rect = text_vertical.get_rect(center=self.header_rect.center)
-        screen.blit(text_vertical, text_rect)
-        
-    def handle_click(self, pos, spell_buttons, mission_manager):
-        if self.header_rect and self.header_rect.collidepoint(pos):
-            self.is_expanded = not self.is_expanded
-            return True
-            
-        if self.is_expanded:
-            # Handle pagination button clicks
-            if self.prev_button_rect and self.prev_button_rect.collidepoint(pos) and self.current_page > 0:
-                self.current_page -= 1
-                return True
+            # Draw pagination controls if needed
+            if len(self.spells) > self.spells_per_page:
+                button_width = 40
+                button_height = 30
+                spacing = 150
+                start_x = self.rect.right - 240
+                button_y = self.rect.top + 10
                 
-            if self.next_button_rect and self.next_button_rect.collidepoint(pos):
-                next_page_start = (self.current_page + 1) * self.spells_per_page
-                if next_page_start < len(self.spells):
-                    self.current_page += 1
-                    return True
-                    
-            # Handle upgrade button clicks
-            for spell_class, button_rect in self.upgrade_buttons.items():
-                if button_rect.collidepoint(pos):
-                    # Encontra o botão do feitiço correspondente
-                    for spell_button in spell_buttons:
-                        if spell_button.spell_class == spell_class:
-                            if spell_button.can_upgrade(mission_manager.orbes):
-                                upgrade_cost = spell_button.get_upgrade_cost()
-                                mission_manager.orbes -= upgrade_cost
-                                spell_button.upgrade()
-                                return True
-                            break
-                    
-        return False
+                font_back_next = pygame.font.Font(None, 35)
+                
+                # Previous page button
+                self.prev_button_rect = pygame.Rect(start_x, button_y, button_width, button_height)
+                prev_color = MENU_LIGHT_GRAY if self.current_page > 0 else (60, 60, 60)
+                pygame.draw.rect(screen, prev_color, self.prev_button_rect)
+                pygame.draw.rect(screen, WHITE, self.prev_button_rect, 1)
+                
+                prev_text = font_back_next.render("<", True, WHITE if self.current_page > 0 else (150, 150, 150))
+                prev_rect = prev_text.get_rect(center=self.prev_button_rect.center)
+                screen.blit(prev_text, prev_rect)
+                
+                # Next page button
+                self.next_button_rect = pygame.Rect(start_x + button_width + spacing, button_y, button_width, button_height)
+                next_color = MENU_LIGHT_GRAY if end_index < len(self.spells) else (60, 60, 60)
+                pygame.draw.rect(screen, next_color, self.next_button_rect)
+                pygame.draw.rect(screen, WHITE, self.next_button_rect, 1)
+                
+                next_text = font_back_next.render(">", True, WHITE if end_index < len(self.spells) else (150, 150, 150))
+                next_rect = next_text.get_rect(center=self.next_button_rect.center)
+                screen.blit(next_text, next_rect)
+                
+                # Page indicator
+                total_pages = (len(self.spells) + self.spells_per_page - 1) // self.spells_per_page
+                page_text = font_upgrade.render(f"{self.current_page + 1}/{total_pages}", True, WHITE)
+                page_rect = page_text.get_rect(centerx=self.rect.centerx, bottom=self.rect.bottom - 10)
+                screen.blit(page_text, page_rect)

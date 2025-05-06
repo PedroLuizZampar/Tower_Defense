@@ -90,8 +90,8 @@ class Defender:
         # Aplica o bônus de velocidade global das vantagens
         if self.advantages_menu and self.advantages_menu.cooldown_advantage:
             bonus_percent = self.advantages_menu.cooldown_advantage.get_current_bonus() / 100
-            total = (60 / self.base_attack_cooldown) * (1 + bonus_percent)
-        return total
+            return self.base_attack_cooldown / (1 + bonus_percent)
+        return self.base_attack_cooldown
 
     def find_target(self, enemies):
         # Se já tem um alvo e ele ainda está vivo, no alcance e não está invisível
@@ -184,9 +184,10 @@ class Defender:
                         projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
                         projectile.damage = self.get_total_damage()
                         self.projectiles.append(projectile)
+                        # Sempre usa o cooldown base para aplicar a vantagem
                         if self.advantages_menu and self.advantages_menu.cooldown_advantage:
                             cooldown_bonus = self.advantages_menu.cooldown_advantage.get_current_bonus() / 100
-                            self.cooldown_timer = self.base_attack_cooldown * (1 - cooldown_bonus)
+                            self.cooldown_timer = self.base_attack_cooldown / (1 + cooldown_bonus)
                         else:
                             self.cooldown_timer = self.attack_cooldown
                         self.has_damage_buff = False  # Remove o buff após o ataque
@@ -195,13 +196,12 @@ class Defender:
                     projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
                     projectile.damage = self.get_total_damage()
                     self.projectiles.append(projectile)
+                    # Sempre usa o cooldown base para aplicar a vantagem
                     if self.advantages_menu and self.advantages_menu.cooldown_advantage:
                         cooldown_bonus = self.advantages_menu.cooldown_advantage.get_current_bonus() / 100
-                        self.cooldown_timer = self.base_attack_cooldown * (1 - cooldown_bonus)
+                        self.cooldown_timer = self.base_attack_cooldown / (1 + cooldown_bonus)
                     else:
                         self.cooldown_timer = self.attack_cooldown
-                    self.has_damage_buff = False  # Remove o buff após o ataque
-                    self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
 
     def draw(self, screen, show_range=False):
         # Desenha o range se solicitado ou se selecionado
