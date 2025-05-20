@@ -40,7 +40,6 @@ class Defender:
         self.selected = False
         self.placed_wave = current_wave
         self.upgrades_count = 0
-        self.has_damage_buff = False
         self.has_yellow_buff = False  # Novo atributo para controlar buff amarelo
         self.is_frozen = False  # Novo atributo para controlar efeito de congelamento
         self.freeze_timer = 0  # Timer para duração do efeito de congelamento
@@ -79,9 +78,7 @@ class Defender:
         if self.advantages_menu and self.advantages_menu.damage_advantage:
             bonus_percent = self.advantages_menu.damage_advantage.get_current_bonus() / 100
             total *= (1 + bonus_percent)
-            
-        if self.has_damage_buff:
-            total += self.DAMAGE_BUFF
+        
         if self.has_yellow_buff:
             total *= 1.5  # Aumenta o dano em 50% com buff amarelo
         return total
@@ -179,6 +176,7 @@ class Defender:
         if self.cooldown_timer <= 0:
             target = self.find_target(enemies)
             if target:
+                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                 if hasattr(target, "is_dying"):
                     if not target.is_dying:
                         projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
@@ -190,8 +188,6 @@ class Defender:
                             self.cooldown_timer = self.base_attack_cooldown / (1 + cooldown_bonus)
                         else:
                             self.cooldown_timer = self.attack_cooldown
-                        self.has_damage_buff = False  # Remove o buff após o ataque
-                        self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                 else:
                     projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
                     projectile.damage = self.get_total_damage()
@@ -321,14 +317,13 @@ class RedDefender(Defender):
         if self.cooldown_timer <= 0:
             target = self.find_target(enemies)
             if target:
+                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                 if hasattr(target, "is_dying"):
                     if not target.is_dying:
                         projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
                         projectile.damage = self.get_total_damage()
                         self.projectiles.append(projectile)
                         self.cooldown_timer = self.attack_cooldown
-                        self.has_damage_buff = False  # Remove o buff após o ataque
-                        self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                         
                         # Incrementa o contador de ataques
                         self.attack_counter += 1
@@ -346,8 +341,6 @@ class RedDefender(Defender):
                     projectile.damage = self.get_total_damage()
                     self.projectiles.append(projectile)
                     self.cooldown_timer = self.attack_cooldown
-                    self.has_damage_buff = False  # Remove o buff após o ataque
-                    self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                     
                     # Incrementa o contador de ataques
                     self.attack_counter += 1
@@ -409,14 +402,13 @@ class YellowDefender(Defender):
         if self.cooldown_timer <= 0:
             target = self.find_target(enemies)
             if target:
+                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                 if hasattr(target, "is_dying"):
                     if not target.is_dying:
                         projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
                         projectile.damage = self.get_total_damage()
                         self.projectiles.append(projectile)
                         self.cooldown_timer = self.attack_cooldown
-                        self.has_damage_buff = False  # Remove o buff após o ataque
-                        self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                         
                         # Incrementa o contador de ataques
                         self.attack_counter += 1
@@ -433,8 +425,6 @@ class YellowDefender(Defender):
                     projectile.damage = self.get_total_damage()
                     self.projectiles.append(projectile)
                     self.cooldown_timer = self.attack_cooldown
-                    self.has_damage_buff = False  # Remove o buff após o ataque
-                    self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                     
                     # Incrementa o contador de ataques
                     self.attack_counter += 1
@@ -495,14 +485,13 @@ class GreenDefender(Defender):
         if self.cooldown_timer <= 0:
             target = self.find_target(enemies)
             if target:
+                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                 if hasattr(target, "is_dying"):
                     if not target.is_dying:
                         projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
                         projectile.damage = self.get_total_damage()
                         self.projectiles.append(projectile)
                         self.cooldown_timer = self.attack_cooldown
-                        self.has_damage_buff = False  # Remove o buff após o ataque
-                        self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                         
                         # Incrementa o contador de ataques
                         self.attack_counter += 1
@@ -519,8 +508,6 @@ class GreenDefender(Defender):
                     projectile.damage = self.get_total_damage()
                     self.projectiles.append(projectile)
                     self.cooldown_timer = self.attack_cooldown
-                    self.has_damage_buff = False  # Remove o buff após o ataque
-                    self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                     
                     # Incrementa o contador de ataques
                     self.attack_counter += 1
@@ -581,14 +568,13 @@ class BlueDefender(Defender):
         if self.cooldown_timer <= 0:
             target = self.find_target(enemies)
             if target:
+                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                 if hasattr(target, "is_dying"):
                     if not target.is_dying:
                         projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
                         projectile.damage = self.get_total_damage()
                         self.projectiles.append(projectile)
                         self.cooldown_timer = self.attack_cooldown
-                        self.has_damage_buff = False  # Remove o buff após o ataque
-                        self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                         
                         # Incrementa o contador de ataques
                         self.attack_counter += 1
@@ -605,8 +591,6 @@ class BlueDefender(Defender):
                     projectile.damage = self.get_total_damage()
                     self.projectiles.append(projectile)
                     self.cooldown_timer = self.attack_cooldown
-                    self.has_damage_buff = False  # Remove o buff após o ataque
-                    self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                     
                     # Incrementa o contador de ataques
                     self.attack_counter += 1
@@ -773,6 +757,7 @@ class OrangeDefender(Defender):
         if self.cooldown_timer <= 0:
             targets = self.find_targets(enemies)
             if targets:
+                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                 for target in targets:
                     if hasattr(target, "is_dying"):
                         if not target.is_dying:
@@ -784,8 +769,6 @@ class OrangeDefender(Defender):
                         projectile.damage = self.get_total_damage()
                         self.projectiles.append(projectile)
                 self.cooldown_timer = self.attack_cooldown
-                self.has_damage_buff = False  # Remove o buff após o ataque
-                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
 
 class PurpleDefender(Defender):
     COLOR = (75, 0, 130)  # Roxo escuro
@@ -824,14 +807,13 @@ class PurpleDefender(Defender):
         if self.cooldown_timer <= 0:
             target = self.find_target(enemies)
             if target:
+                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                 if hasattr(target, "is_dying"):
                     if not target.is_dying:
                         projectile = Projectile(self.x, self.y, target, self.PROJECTILE_COLOR)
                         projectile.damage = self.get_total_damage()
                         self.projectiles.append(projectile)
                         self.cooldown_timer = self.attack_cooldown
-                        self.has_damage_buff = False  # Remove o buff após o ataque
-                        self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                         
                         # Incrementa o contador de hits
                         self.hits_counter += 1
@@ -849,8 +831,6 @@ class PurpleDefender(Defender):
                     projectile.damage = self.get_total_damage()
                     self.projectiles.append(projectile)
                     self.cooldown_timer = self.attack_cooldown
-                    self.has_damage_buff = False  # Remove o buff após o ataque
-                    self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                     
                     # Incrementa o contador de hits
                     self.hits_counter += 1
