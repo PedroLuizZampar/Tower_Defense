@@ -498,7 +498,7 @@ class StealthEnemy(Enemy):
         result = super().update()
         
         # Atualiza o timer de stealth
-        self.stealth_timer += 1
+        self.stealth_timer += GameSpeed.get_instance().current_multiplier
         if self.stealth_timer >= self.stealth_interval:
             self.is_stealthed = True
             if self.stealth_timer >= self.stealth_interval + self.stealth_duration:

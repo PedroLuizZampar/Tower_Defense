@@ -43,19 +43,19 @@ MENU_GRAY = (40, 40, 40)
 MENU_LIGHT_GRAY = (60, 60, 60)
 
 # Carrega o background otimizado
-background = pygame.image.load(os.path.join('assets', 'background.png')).convert()
+background = pygame.image.load(os.path.join('assets', 'background.jpg')).convert()
 background = pygame.transform.scale(background, (SCREEN_WIDTH, GAME_HEIGHT))
 
 # Definição do caminho (waypoints)
 PATH = [
-    (0, 400),      # Início
-    (165, 400),    # Primeiro ponto
-    (165, 235),    # Subida 1
-    (365, 235),    # Caminho reto superior
-    (365, 460),    # Descida
-    (630, 460),    # Caminho reto inferior
-    (630, 350),    # Subida 2
-    (SCREEN_WIDTH, 350)  # Final (ajustado para o novo menu lateral)
+    (0, 385),      # Início
+    (170, 385),    # Primeiro ponto
+    (170, 240),    # Subida 1
+    (340, 240),    # Caminho reto superior
+    (340, 440),    # Descida
+    (645, 440),    # Caminho reto inferior
+    (645, 340),    # Subida 2
+    (SCREEN_WIDTH, 340)  # Final (ajustado para o novo menu lateral)
 ]
 
 def is_point_on_path(x, y, path, margin=30):
@@ -382,19 +382,6 @@ def main():
                     if action == "resume":
                         game_paused = False
                     elif action == "quit":
-                        # Salva o estado atual do jogo
-                        game_state = {
-                            'wave': wave_manager.current_wave,
-                            'gold': gold,
-                            'defenders': defenders,
-                            'enemies': enemies,
-                            'base': base,
-                            'mission_manager': mission_manager,
-                            'spell_buttons': spell_buttons,
-                            'defender_shop': defender_shop,
-                            'advantages_menu': advantages_menu  # Adiciona o menu de vantagens
-                        }
-                        pause_menu.save_game_state(game_state)
                         # Atualiza o menu principal para mostrar que existe um save
                         menu_principal.has_save = True
                         menu_principal.active = True
@@ -694,6 +681,20 @@ def main():
             
             # Verifica se a onda terminou
             if wave_manager.check_wave_complete(enemies):
+                # Salva o estado atual do jogo
+                game_state = {
+                    'wave': wave_manager.current_wave,
+                    'gold': gold,
+                    'defenders': defenders,
+                    'enemies': enemies,
+                    'base': base,
+                    'mission_manager': mission_manager,
+                    'spell_buttons': spell_buttons,
+                    'defender_shop': defender_shop,
+                    'advantages_menu': advantages_menu  # Adiciona o menu de vantagens
+                }
+                wave_manager.save_game_state(game_state)
+
                 if not wave_manager.start_next_wave():
                     # Jogador venceu o jogo
                     running = False

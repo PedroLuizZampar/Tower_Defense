@@ -296,8 +296,7 @@ class WeaknessSpell(Spell):
         """Aplica efeito de congelamento em área"""
         affected = self.affect_enemies(enemies)
         for enemy in affected:
-            if not isinstance(enemy, TankEnemy):  # Tanques são imunes ao slow
-                enemy.apply_weakness(self.get_weakness_duration())
+            enemy.apply_weakness(self.get_weakness_duration())
 
 class SpellButton:
     def __init__(self, spell_class, x_pos):

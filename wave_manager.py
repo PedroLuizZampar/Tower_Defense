@@ -183,3 +183,44 @@ class WaveManager:
         if not self.wave_active:
             return f"Preparação para Onda {self.current_wave}/{self.MAX_WAVES} - {self.preparation_timer // 60}s"
         return f"Onda {self.current_wave}/{self.MAX_WAVES}"
+    
+    def save_game_state(self, game_state):
+        """Salva o estado do jogo quando o jogador abandona"""
+        import json
+        import os
+        
+        # Prepara os dados das missões
+        missions_data = []
+        for mission in game_state['mission_manager'].missions:
+            mission_data = {
+                'current_value': mission.current_value,
+                'completed': mission.completed,
+                'claimed': mission.claimed,
+                'base_value': mission.base_value
+            }
+            missions_data.append(mission_data)
+            
+        save_data = {
+            'wave': game_state['wave'],
+            'gold': game_state['gold'],
+            'base_health': game_state['base'].health,
+            'orbs': game_state['mission_manager'].orbes,
+            'spell_levels': {spell.spell_class.__name__: spell.level for spell in game_state['spell_buttons']},
+            'defenders': [(d.x, d.y, d.__class__.__name__, d.level) for d in game_state['defenders']],
+            'unlocked_defenders': [d.defender_class.__name__ for d in game_state['defender_shop'].defender_buttons if d.unlocked],
+            'mission_progress': {
+                'total_kills': game_state['mission_manager'].total_kills,
+                'total_waves': game_state['mission_manager'].total_waves,
+                'total_spells': game_state['mission_manager'].total_spells,
+                'total_upgrades': game_state['mission_manager'].total_upgrades,
+                'missions': missions_data
+            },
+            'advantages_levels': {
+                'damage': game_state['advantages_menu'].damage_advantage.level,
+                'cooldown': game_state['advantages_menu'].cooldown_advantage.level
+            }
+        }
+        
+        save_file = 'save_game.json'
+        with open(save_file, 'w') as f:
+            json.dump(save_data, f)
