@@ -40,7 +40,6 @@ class Defender:
         self.selected = False
         self.placed_wave = current_wave
         self.upgrades_count = 0
-        self.has_damage_buff = False
         self.has_yellow_buff = False  # Novo atributo para controlar buff amarelo
         self.is_frozen = False  # Novo atributo para controlar efeito de congelamento
         self.freeze_timer = 0  # Timer para duração do efeito de congelamento
@@ -79,9 +78,7 @@ class Defender:
         if self.advantages_menu and self.advantages_menu.damage_advantage:
             bonus_percent = self.advantages_menu.damage_advantage.get_current_bonus() / 100
             total *= (1 + bonus_percent)
-            
-        if self.has_damage_buff:
-            total += self.DAMAGE_BUFF
+        
         if self.has_yellow_buff:
             total *= 1.5  # Aumenta o dano em 50% com buff amarelo
         return total
@@ -724,6 +721,7 @@ class OrangeDefender(Defender):
         if self.cooldown_timer <= 0:
             targets = self.find_targets(enemies)
             if targets:
+                self.has_yellow_buff = False  # Remove o buff amarelo após o ataque
                 for target in targets:
                     if not hasattr(target, "is_dying") or not target.is_dying:
                         # Cria e configura o projétil
